@@ -65,6 +65,8 @@ export function createGameScreen(ctx: UiContext): ScreenHandle {
   let eventPromptDefId: string | null = null;
   let dismissedEventDefId: string | null = null;
   let autoPausedForEvent = false;
+  let outcomeReportId: number | null = null;
+  let autoPausedForOutcome = false;
   const subscriptions: (() => void)[] = [];
 
   /* ----------------------------- shell -------------------------------- */
@@ -158,6 +160,8 @@ export function createGameScreen(ctx: UiContext): ScreenHandle {
   center.el.appendChild(scene3dHost);
 
   const main = el("div", { cls: "tri-game-main" });
+  /* 桌面默认折叠右决策栏为窄条：舞台列宽同步收窄，避免中心视口被空列挤压。 */
+  if (ctx.state.rightCollapsed) main.classList.add("is-right-collapsed");
   append(main, center.el, right.el);
   const stage = el("div", { cls: "tri-game-stage" });
   append(stage, hud.el, main, dock.el);
@@ -327,6 +331,8 @@ export function createGameScreen(ctx: UiContext): ScreenHandle {
   function updateAll(view: ViewModel, scene: RenderScene | null): void {
     updateEraFlash(view);
     syncPendingEvent(view);
+    syncEventOutcome(view);
+    main.classList.toggle("is-right-collapsed", ctx.state.rightCollapsed);
     root.classList.toggle("is-drawer-open", left.drawerOpen());
     hud.update(view);
     left.update(view);
@@ -391,6 +397,41 @@ export function createGameScreen(ctx: UiContext): ScreenHandle {
       }
     }
     modals?.open("event");
+  }
+
+  /**
+   * v1.5：30 秒延迟结算报告到达后自动暂停并打开报告；关闭报告时
+   * modal-event-result 会确认报告，本函数在报告消失后恢复时间。
+   */
+  function syncEventOutcome(view: ViewModel): void {
+    const report = view.events?.outcomeReport ?? null;
+    const modalActive = modals?.active() ?? null;
+    if (!report) {
+      outcomeReportId = null;
+      if (autoPausedForOutcome) {
+        autoPausedForOutcome = false;
+        if (view.meta.paused && !isFinished(view)) {
+          try {
+            safeApi()?.actions.togglePause();
+          } catch (error) {
+            console.warn("[trisolaris] resume after event outcome failed", error);
+          }
+        }
+      }
+      return;
+    }
+    if (modalActive != null) return;
+    if (outcomeReportId === report.id) return;
+    outcomeReportId = report.id;
+    if (!view.meta.paused) {
+      try {
+        safeApi()?.actions.togglePause();
+        autoPausedForOutcome = true;
+      } catch (error) {
+        console.warn("[trisolaris] pause for event outcome failed", error);
+      }
+    }
+    modals?.open("eventResult");
   }
 
   /** One-shot era transition banner (pure decoration, no simulation effect). */

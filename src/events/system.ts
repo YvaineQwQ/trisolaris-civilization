@@ -16,7 +16,7 @@
  *
  * 写入范围：src/events/**。不修改 src/core/types.ts（仅用 declare module 追加可选字段）。
  */
-import { BASE_RESOURCE_CAPACITY, RESOURCE_IDS, resourceName } from "../civilization/resources";
+import { BASE_RESOURCE_CAPACITY, RESOURCE_DEFS, RESOURCE_IDS, resourceName } from "../civilization/resources";
 import { gainResource, workforceFor } from "../civilization/state";
 import { TURN_YEARS } from "../core/constants";
 import { clamp } from "../core/math";
@@ -25,9 +25,11 @@ import type {
   CivilizationState,
   DifficultyKey,
   EventChoiceDef,
+  EventEffectForecast,
   EventEffects,
   EventFollowUpDef,
   EventHistoryEntry,
+  EventOutcomeReport,
   EventRequirement,
   EventState,
   GameEventDef,
@@ -81,6 +83,8 @@ export interface EventContext {
   difficulty?: DifficultyKey;
   /** 游戏种子。缺省时回退到 EventState.eventSeed。 */
   randomSeed?: string;
+  /** 本局真实游玩秒数；用于 30 秒延迟结算。 */
+  elapsedRealSeconds?: number;
 }
 
 /** 事件日志（lead 转写成 LogEntry 时 category 固定 event）。 */
@@ -134,11 +138,16 @@ export interface AppliedEventEffects {
 
 /** 同时最多 1 个待处理事件。 */
 export const MAX_PENDING_EVENTS = 1;
-/** 抽签间隔（回合）。 */
-export const EVENT_INTERVAL_MIN = 20;
-export const EVENT_INTERVAL_MAX = 34;
-/** 开局到第一次事件的回合数下限。 */
-export const FIRST_EVENT_TURN_MIN = 12;
+/**
+ * 抽签间隔（回合）。1x 速度 = 0.5 模拟年/回合 ÷ 0.25 模拟年/秒 = 2 秒/回合，
+ * 因此 44–48 回合 ≈ 88–96 秒，达到“大约 90 秒一次”的目标。
+ */
+export const EVENT_INTERVAL_MIN = 44;
+export const EVENT_INTERVAL_MAX = 48;
+/** 开局到第一次事件的回合数下限（约 72–78 秒到第一次扰动）。 */
+export const FIRST_EVENT_TURN_MIN = 36;
+/** 玩家做出抉择后，等待多少真实秒才送达量化结算报告。 */
+export const EVENT_OUTCOME_DELAY_SECONDS = 30;
 /** tag 权重修正每回合衰减系数。 */
 export const MODIFIER_DECAY = 0.65;
 /** 单次事件效果的硬上限（与文档一致）。 */
@@ -474,7 +483,7 @@ function rollInterval(state: EventState, ctx: EventContext, turn: number): numbe
   const rng = new Rng(hashString(seedOf(state) + "|interval|" + turn + "|" + state.triggeredTotal));
   const span = EVENT_INTERVAL_MAX - EVENT_INTERVAL_MIN;
   const base = EVENT_INTERVAL_MIN + rng.int(0, span);
-  return clamp(base + difficultyAdj + eraAdj, 5, 20);
+  return clamp(base + difficultyAdj + eraAdj, EVENT_INTERVAL_MIN - 6, EVENT_INTERVAL_MAX + 4);
 }
 
 /* ------------------------------------------------------------------ *
@@ -545,6 +554,8 @@ export function maybeTriggerEvent(state: EventState, ctx: EventContext): Pending
   if (!state || !ctx || !ctx.civ) return null;
   if (!Array.isArray(state.pending)) state.pending = [];
   if (state.pending.length >= MAX_PENDING_EVENTS) return null;
+  // 30 秒结算尚未送达 / 报告尚未查看时，不再抽取新事件，避免弹窗互相打断。
+  if (state.pendingOutcome || state.outcomeReport) return null;
   const turn = normalizeTurn(ctx.turn);
   advanceEventClock(state, turn);
 
@@ -614,6 +625,206 @@ function choiceSeverity(summaryText: string, negative: number): LogEntry["severi
  * 把一组 EventEffects 直接写入 civ / politics / hazards，并夹到文档规定的硬上限。
  * 导出以便测试与 lead 复用；resolveEventChoice 内部使用同一实现。
  */
+/**
+ * 在**不修改任何状态**的前提下，把选项效果换算成玩家能比较的具体数字。
+ * 选择前面板用同一函数显示预估，结算报告用同一套数字，避免“预览”和“实际”不一致。
+ */
+export function forecastEventEffects(
+  effects: EventEffects | null | undefined,
+  ctx: EventContext | null | undefined,
+): EventEffectForecast[] {
+  if (!effects || !ctx || !ctx.civ) return [];
+  const civ = ctx.civ;
+  const out: EventEffectForecast[] = [];
+  const seen = new Set<string>();
+  const push = (entry: EventEffectForecast): void => {
+    if (seen.has(entry.key)) return;
+    seen.add(entry.key);
+    out.push(entry);
+  };
+  const toneOf = (delta: number | null): "gain" | "loss" | "neutral" =>
+    delta == null || Math.abs(delta) < 0.5 ? "neutral" : delta > 0 ? "gain" : "loss";
+
+  // 资源（按固定顺序，避免 UI 抖动）
+  if (effects.resources) {
+    for (const id of RESOURCE_IDS) {
+      const raw = effects.resources[id];
+      if (raw == null || !Number.isFinite(raw) || raw === 0) continue;
+      const stock = civ.resources[id];
+      if (!stock) continue;
+      const cap = resourceDeltaCap(id);
+      const requested = clamp(raw, -cap, cap);
+      const before = finite(stock.amount, 0);
+      const capacity = Math.max(0, finite(stock.capacity, cap));
+      const after = clamp(before + requested, 0, capacity);
+      const delta = round2(after - before);
+      push({
+        key: "resource:" + id,
+        label: resourceName(id),
+        kind: "resource",
+        before: round2(before),
+        after: round2(after),
+        delta,
+        unit: RESOURCE_DEFS[id]?.unit ?? "",
+        tone: toneOf(delta),
+        detail: null,
+      });
+    }
+  }
+
+  // 人口
+  const popBefore = finite(civ.population, 0);
+  if (popBefore > 0 && (effects.population != null || effects.populationPct != null)) {
+    const popCap = popBefore * EVENT_EFFECT_CAPS.populationPct;
+    const pctRaw = effects.populationPct != null && Number.isFinite(effects.populationPct) ? effects.populationPct : 0;
+    const flatRaw = effects.population != null && Number.isFinite(effects.population) ? effects.population : 0;
+    const pctDelta = clamp(pctRaw, -EVENT_EFFECT_CAPS.populationPct, EVENT_EFFECT_CAPS.populationPct) * popBefore;
+    const popDelta = clamp(pctDelta + clamp(flatRaw, -popCap, popCap), -popCap, popCap);
+    const next = Math.max(1, popBefore + Math.round(popDelta));
+    const delta = round2(next - popBefore);
+    push({
+      key: "population",
+      label: "人口",
+      kind: "population",
+      before: round2(popBefore),
+      after: round2(next),
+      delta,
+      unit: "人",
+      tone: toneOf(delta),
+      detail: "约 " + signed((delta / popBefore) * 100) + "%",
+    });
+  }
+
+  // 科研点单独效果
+  if (effects.science != null && Number.isFinite(effects.science) && effects.science !== 0) {
+    const stock = civ.resources.science;
+    if (stock) {
+      const cap = resourceDeltaCap("science");
+      const requested = clamp(effects.science, -cap, cap);
+      const before = finite(stock.amount, 0);
+      const capacity = Math.max(0, finite(stock.capacity, cap));
+      const after = clamp(before + requested, 0, capacity);
+      const delta = round2(after - before);
+      push({
+        key: "science:bonus",
+        label: "科研点",
+        kind: "science",
+        before: round2(before),
+        after: round2(after),
+        delta,
+        unit: "点",
+        tone: toneOf(delta),
+        detail: null,
+      });
+    }
+  }
+
+  // 稳定度
+  if (effects.stability != null && Number.isFinite(effects.stability) && effects.stability !== 0) {
+    const before = finite(civ.stability, 0);
+    const delta = round2(clamp(effects.stability, -EVENT_EFFECT_CAPS.stability, EVENT_EFFECT_CAPS.stability));
+    const after = clamp(before + delta, 0, 100);
+    push({
+      key: "stability",
+      label: "稳定度",
+      kind: "stability",
+      before: round2(before),
+      after: round2(after),
+      delta: round2(after - before),
+      unit: "点",
+      tone: toneOf(after - before),
+      detail: null,
+    });
+  }
+
+  // 政治资本
+  if (ctx.politics && effects.capital != null && Number.isFinite(effects.capital) && effects.capital !== 0) {
+    const before = finite(ctx.politics.capital, 0);
+    const delta = clamp(effects.capital, -EVENT_EFFECT_CAPS.capital, EVENT_EFFECT_CAPS.capital);
+    const after = clamp(before + delta, 0, 999);
+    push({
+      key: "capital",
+      label: "政治资本",
+      kind: "capital",
+      before: round2(before),
+      after: round2(after),
+      delta: round2(after - before),
+      unit: "点",
+      tone: toneOf(after - before),
+      detail: null,
+    });
+  }
+
+  // 灾害压力
+  if (ctx.hazards && effects.hazardStress != null && Number.isFinite(effects.hazardStress) && effects.hazardStress !== 0) {
+    const before = finite(ctx.hazards.stress, 0);
+    const delta = clamp(effects.hazardStress, -EVENT_EFFECT_CAPS.hazardStress, EVENT_EFFECT_CAPS.hazardStress);
+    const after = clamp(before + delta, 0, 100);
+    push({
+      key: "hazardStress",
+      label: "灾害压力",
+      kind: "hazard",
+      before: round2(before),
+      after: round2(after),
+      delta: round2(after - before),
+      unit: "点",
+      tone: toneOf(after - before),
+      detail: null,
+    });
+  }
+
+  // 部门关系
+  if (ctx.politics && effects.relation && effects.relation.a && effects.relation.b && Number.isFinite(effects.relation.delta)) {
+    const key = [effects.relation.a, effects.relation.b].sort().join("|");
+    const before = finite(ctx.politics.relations?.[key] ?? 0, 0);
+    const delta = clamp(effects.relation.delta, -EVENT_EFFECT_CAPS.relation, EVENT_EFFECT_CAPS.relation);
+    const after = clamp(before + delta, -100, 100);
+    push({
+      key: "relation",
+      label: "部门关系",
+      kind: "relation",
+      before: round2(before),
+      after: round2(after),
+      delta: round2(after - before),
+      unit: "点",
+      tone: toneOf(after - before),
+      detail: effects.relation.a + " ↔ " + effects.relation.b,
+    });
+  }
+
+  // 世界标记 / 后续概率：无数值，但让玩家知道“会改变什么”
+  if (effects.flags && effects.flags.length > 0) {
+    push({
+      key: "flags",
+      label: "世界局势",
+      kind: "flag",
+      before: null,
+      after: null,
+      delta: null,
+      unit: "",
+      tone: "neutral",
+      detail: effects.flags.join("、"),
+    });
+  }
+  if (effects.influence) {
+    for (const [tag, raw] of Object.entries(effects.influence)) {
+      if (!Number.isFinite(raw) || raw <= 0) continue;
+      push({
+        key: "influence:" + tag,
+        label: "后续事件",
+        kind: "influence",
+        before: null,
+        after: null,
+        delta: null,
+        unit: "",
+        tone: raw >= 1 ? "loss" : "gain",
+        detail: "「" + (TAG_LABELS[tag] ?? tag) + "」权重 ×" + round2(raw),
+      });
+    }
+  }
+  return out;
+}
+
 export function applyEventEffects(
   state: EventState,
   def: GameEventDef,
@@ -868,6 +1079,8 @@ export function resolveEventChoice(state: EventState, choiceId: string, ctx: Eve
 
   const turn = normalizeTurn(ctx.turn);
   advanceEventClock(state, turn);
+  // 先按“当前状态”量化，再落地；两者使用同一套上限与夹取规则。
+  const forecast = forecastEventEffects(choice.effects, ctx);
   const applied = applyEventEffects(state, def, choice, ctx);
 
   const year = yearOf(ctx);
@@ -896,6 +1109,23 @@ export function resolveEventChoice(state: EventState, choiceId: string, ctx: Eve
   }
 
   const followUp = pickFollowUp(state, def, ctx, turn);
+  // 选择后 30 真实秒送达结算报告；在此期间不再抽新事件，但模拟继续运行。
+  const elapsed = finite(ctx.elapsedRealSeconds ?? 0, 0);
+  state.pendingOutcome = {
+    defId: def.id,
+    title: def.title,
+    category: def.category,
+    choiceId: choice.id,
+    choiceLabel: choice.label,
+    outcome: choice.outcome,
+    turn,
+    year,
+    dueElapsedSeconds: round2(elapsed + EVENT_OUTCOME_DELAY_SECONDS),
+    summary: applied.summary,
+    effects: forecast,
+    followUpTitle: followUp ? followUp.label : null,
+  };
+  state.outcomeReport = null;
   state.pending = [];
 
   const logs: EventLog[] = [
@@ -925,6 +1155,42 @@ export function resolveEventChoice(state: EventState, choiceId: string, ctx: Eve
     historyEntry: entry,
     effects: choice.effects,
   };
+}
+
+/* ------------------------------------------------------------------ *
+ *  30 秒延迟结算
+ * ------------------------------------------------------------------ */
+
+/**
+ * 每个真实帧调用；到达 dueElapsedSeconds 后把 pendingOutcome 转成
+ * outcomeReport。返回新报告时调用方应写日志并让 UI 暂停展示。
+ */
+export function updateEventOutcome(
+  state: EventState | null | undefined,
+  elapsedRealSeconds: number,
+): EventOutcomeReport | null {
+  if (!state || !state.pendingOutcome) return null;
+  const elapsed = finite(elapsedRealSeconds, 0);
+  const due = finite(state.pendingOutcome.dueElapsedSeconds, 0);
+  if (elapsed + 1e-6 < due) return null;
+  const pending = state.pendingOutcome;
+  const nextId = Math.max(1, Math.floor(finite(state.nextOutcomeId ?? 1, 1)));
+  const report: EventOutcomeReport = {
+    ...pending,
+    id: nextId,
+    resolvedElapsedSeconds: elapsed,
+  };
+  state.nextOutcomeId = nextId + 1;
+  state.pendingOutcome = null;
+  state.outcomeReport = report;
+  return report;
+}
+
+/** 玩家看完报告后调用；清空报告并允许下一次事件抽取。 */
+export function acknowledgeEventOutcome(state: EventState | null | undefined): boolean {
+  if (!state || !state.outcomeReport) return false;
+  state.outcomeReport = null;
+  return true;
 }
 
 /* ------------------------------------------------------------------ *

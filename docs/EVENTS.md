@@ -36,9 +36,14 @@ const ctx: EventContext = {
   year: state.yearsElapsed,
   difficulty: state.meta.difficulty,
   randomSeed: state.meta.seed,
+  elapsedRealSeconds: state.meta.elapsedRealSeconds,
 };
 const pending = maybeTriggerEvent(state.events, ctx);
 if (pending) { /* 暂停时间，弹事件面板（getActiveEvent + eventModifiersView） */ }
+
+// 每个真实帧（Game.update）检查 30 秒延迟结算
+const report = updateEventOutcome(state.events, state.meta.elapsedRealSeconds);
+if (report) { /* UI 暂停并打开结算报告；关闭时 acknowledgeEventOutcome */ }
 
 // 玩家点选后
 const result = resolveEventChoice(state.events, choiceId, ctx);
@@ -58,7 +63,10 @@ for (const log of result.logs) addLog(log.category, log.severity, log.message);
 | `eligibleEvents(ctx, state?): GameEventDef[]` | 当前条件可出场事件（测试/调试）。 |
 | `eventCandidates(state, ctx): EventCandidate[]` | 可出场事件 + 最终权重分解（测试概率机制）。 |
 | `checkRequirements(req, ctx, state?)` / `isChoiceAvailable(choice, ctx, state)` | 返回 {ok, reason}，喂 EventChoiceView.available/unavailableReason。 |
-| `effectKeywords(effects): string[]` | 选项效果关键词，喂 EventChoiceView.preview。 |
+| `forecastEventEffects(effects, ctx): EventEffectForecast[]` | 选择前量化预估；与结算报告同源。 |
+| `updateEventOutcome(state, elapsedRealSeconds): EventOutcomeReport \| null` | 每帧检查 30 秒延迟；到期生成报告。 |
+| `acknowledgeEventOutcome(state): boolean` | 玩家查看报告后清空报告，允许下一次抽签。 |
+| `effectKeywords(effects): string[]` | 旧版关键词预览（保留兼容）。 |
 | `scheduledEventsView(state): ScheduledEvent[]` | 已排期的事件链（UI 时间线 / 调试）。 |
 | `applyEventEffects(state, def, choice, ctx)` | 效果落地（含上限夹紧），resolve 内部使用。 |
 | 常量 | `CHAIN_INFLUENCE / EVENT_EFFECT_CAPS / MAX_PENDING_EVENTS / MODIFIER_DECAY` 等 |
@@ -76,8 +84,11 @@ for (const log of result.logs) addLog(log.category, log.severity, log.message);
 | `eventSeed?` | string | createEventState 的种子；ctx.randomSeed 缺省时回退，保证可复现。 |
 | `chainQueue?` | ScheduledEvent[] | followUp 延迟排期（不占 pending，最多 8 条）；旧档缺字段自动补 []。 |
 | `modifierTurn?` | number | 概率修正已衰减到的回合，避免重复衰减。 |
+| `pendingOutcome?` | PendingEventOutcome \| null | 已选择、等待 30 秒送达的量化结算。 |
+| `outcomeReport?` | EventOutcomeReport \| null | 到期、待玩家查看的结算报告；存在时禁止抽新事件。 |
+| `nextOutcomeId?` | number | 报告自增 id。 |
 
-pending 恒 ≤ 1；history 上限 80 条；lastEventIds 记忆 6 个。
+pending 恒 ≤ 1；history 上限 80 条；lastEventIds 记忆 6 个；选择后存在 pendingOutcome/outcomeReport 时不再抽取新事件。
 
 ### 1.5 视图映射（src/game/viewTypes.ts）
 
@@ -94,9 +105,10 @@ pending 恒 ≤ 1；history 上限 80 条；lastEventIds 记忆 6 个。
 
 ### 2.1 触发节拍
 
-- 首次事件：第 `FIRST_EVENT_TURN_MIN(5)` + 0–3 回合。
-- 常规间隔：20–34 回合，按难度修正（easy +2 / normal 0 / hard −2 / nightmare −3）与时代修正（E2+ −1 / E4+ −2），夹在 5–20。
-- 到期时才抽签；pending 非空时不再触发（最多 1 个事件弹窗）。
+- 1x 速度 = 0.5 模拟年/回合 ÷ 0.25 模拟年/秒 = 2 秒/回合。
+- 首次事件：第 36 回合 + 0–3 回合（约 72–78 秒）。
+- 常规间隔：44–48 回合（约 88–96 秒），按难度修正（easy +2 / normal 0 / hard −2 / nightmare −3）与时代修正（E2+ −1 / E4+ −2），夹在 38–52 回合。
+- 到期时才抽签；pending 非空、pendingOutcome 未送达或 outcomeReport 未确认时不再触发（最多 1 个事件弹窗）。
 - 抽到的事件立即写入 pending 并记为 triggered（seenCounts+1、lastEventIds 更新、triggeredTotal+1）。
 
 ### 2.2 加权抽签公式
@@ -402,7 +414,7 @@ flowchart LR
 6. followUps 只引用真实事件 id，delayTurns 1–4；新增链请同步补充/校验 CHAIN_INFLUENCE。
 7. 改完跑：`node .\node_modules\typescript\bin\tsc --noEmit` 与 `node .\node_modules\vitest\vitest.mjs run tests/systems/events.test.ts`。
 
-## 7. 测试覆盖（tests/systems/events.test.ts，27 例）
+## 7. 测试覆盖（tests/systems/events.test.ts，31 例）
 
 - 内容完整性：数量 ≥60、id 唯一、8 类别、每回合时代可出场 ≥4、文本长度、插图路径、无占位符；
 - 选择与效果：2–3 选项/字段完整/效果上限/数值有限；
@@ -410,8 +422,17 @@ flowchart LR
 - 状态机：createEventState 可复现、节拍与 pending ≤1、结算写 civ 与历史、非法选项拒绝；
 - 概率：tag modifiers 精确乘算 + 向 1 衰减（1.8→1.0 回归用例）、CHAIN_INFLUENCE 权重、重复衰减、冷却、不可重复；
 - 事件链：resolve → chainQueue → 到期确定性触发；
-- 安全：越界效果夹紧、flags 读写、modifiers 视图、90 回合长跑无 NaN 且人口不灭。
+- 安全：越界效果夹紧、flags 读写、modifiers 视图、90 回合长跑无 NaN 且人口不灭；
+- v1.5：44–48 回合≈90 秒、量化预估与实际结算一致、30 秒延迟窗口、报告确认前不抽新事件、ack 幂等。
 
 ---
 
 _本文档随 src/events/definitions.ts 内容自动生成校对；最后刷新：事件 64 个 / 链边 189 条 / CHAIN_INFLUENCE 51 × 153。_
+
+
+## 8. v1.5 变更摘要
+
+- **节奏**：常规抽签 44–48 回合（1x≈88–96 秒）；首事件 36–39 回合。
+- **量化**：新增 `EventEffectForecast`，选择前显示具体收益/减益；结算报告显示 before → after。
+- **延迟结算**：`resolveEventChoice` 立即应用效果但只创建 `pendingOutcome`；30 真实秒后 `updateEventOutcome` 生成 `outcomeReport`，UI 自动暂停并弹出报告，关闭后 `acknowledgeEventOutcome` 清空。
+- **兼容**：旧存档缺 `pendingOutcome/outcomeReport/nextOutcomeId` 时全部按空值兜底；旧测试不传 `elapsedRealSeconds` 时仍走纯回合节拍。

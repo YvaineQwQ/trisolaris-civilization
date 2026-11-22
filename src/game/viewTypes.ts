@@ -610,6 +610,18 @@ export interface PoliticsView {
   tone: "stable" | "tense" | "fragile" | "crisis";
 }
 
+export interface EventEffectView {
+  key: string;
+  label: string;
+  kind: "population" | "stability" | "capital" | "science" | "resource" | "hazard" | "relation" | "flag" | "influence";
+  before: number | null;
+  after: number | null;
+  delta: number | null;
+  unit: string;
+  tone: "gain" | "loss" | "neutral";
+  detail: string | null;
+}
+
 export interface EventChoiceView {
   id: string;
   label: string;
@@ -617,7 +629,9 @@ export interface EventChoiceView {
   risk: string | null;
   available: boolean;
   unavailableReason: string | null;
-  /** 预估效果关键词（不泄露隐藏数值）。 */
+  /** 量化预估（与结算报告同源，直接显示具体数值）。 */
+  effects: EventEffectView[];
+  /** 兼容旧 UI 的短句预览。 */
   preview: string[];
 }
 
@@ -649,9 +663,32 @@ export interface EventHistoryView {
   illustration: string;
 }
 
+export interface EventOutcomePendingView {
+  title: string;
+  choiceLabel: string;
+  remainingSeconds: number;
+}
+
+export interface EventOutcomeView {
+  id: number;
+  title: string;
+  categoryName: string;
+  choiceLabel: string;
+  outcome: string;
+  turn: number;
+  year: number;
+  summary: string;
+  effects: EventEffectView[];
+  followUpTitle: string | null;
+}
+
 export interface EventsView {
   active: ActiveEventView | null;
   pendingCount: number;
+  /** 选择后 30 秒结算倒计时（存在时 HUD 显示提示）。 */
+  outcomePending: EventOutcomePendingView | null;
+  /** 已到期的量化结算报告；由 UI 自动打开并确认。 */
+  outcomeReport: EventOutcomeView | null;
   history: EventHistoryView[];
   /** 当前生效的事件链/概率修正，供玩家理解“上一回合的影响”。 */
   modifiers: { label: string; multiplier: number; tone: "up" | "down" }[];
@@ -728,6 +765,8 @@ export interface GameActions {
   holdSummit(): void;
   /** v1.3：处理当前随机事件。 */
   resolveEvent(choiceId: string): void;
+  /** v1.5：关闭 30 秒延迟结算报告，允许下一次事件抽取。 */
+  acknowledgeEventOutcome(): void;
   startObservation(kind: ObservationKind, target: StarTarget): void;
   cancelObservation(): void;
   upgradeObservatory(): void;

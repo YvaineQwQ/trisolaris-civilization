@@ -7,6 +7,7 @@ import type { GameShell, ModalInstance } from "./types";
 import { append, clear, delegate, el, setText } from "./dom";
 import { icon } from "./icons";
 import { num } from "./format";
+import "./event-report.css";
 
 export function buildEventModal(shell: GameShell, close: () => void): ModalInstance {
   const root = el("div", { cls: "tri-eventdoc" });
@@ -32,7 +33,7 @@ export function buildEventModal(shell: GameShell, close: () => void): ModalInsta
     if (!choiceId || !api) return;
     api.actions.resolveEvent(choiceId);
     shell.requestRefresh();
-    shell.notify("抉择已写入文明史 · 后果将在后续回合展开", "ok");
+    shell.notify("抉择已写入文明史 · 量化结算将在 30 秒后送达", "ok");
     close();
   });
   const offExpand = delegate(root, "[data-eventdoc-expand]", "click", () => {
@@ -97,7 +98,11 @@ export function buildEventModal(shell: GameShell, close: () => void): ModalInsta
     img.className = "tri-eventdoc-img";
     img.alt = active.title;
     img.decoding = "async";
+    img.loading = "eager";
     img.src = src;
+    // 图片加载完成前显示印刷斜纹占位，避免出现“黑框”观感。
+    figure.classList.add("is-missing");
+    img.addEventListener("load", () => figure.classList.remove("is-missing"));
     img.addEventListener("error", () => {
       img.remove();
       figure.classList.add("is-missing");
@@ -141,7 +146,29 @@ export function buildEventModal(shell: GameShell, close: () => void): ModalInsta
       main.appendChild(el("span", { cls: "tri-eventdoc-choicelabel", text: choice.label }));
       if (choice.description) main.appendChild(el("span", { cls: "tri-eventdoc-choicedesc", text: choice.description }));
       const meta = el("span", { cls: "tri-eventdoc-choicemeta" });
-      for (const preview of choice.preview) meta.appendChild(el("span", { cls: "tri-eventdoc-preview", text: preview }));
+      if (choice.effects.length > 0) {
+        const impacts = el("span", { cls: "tri-eventdoc-impacts" });
+        for (const effect of choice.effects) {
+          const chip = el("span", {
+            cls: "tri-eventdoc-impact",
+            attrs: { "data-tone": effect.tone, "data-kind": effect.kind },
+            text: (effect.delta != null
+              ? effect.label + " " + (effect.delta > 0 ? "+" : effect.delta < 0 ? "−" : "±")
+                + Math.abs(effect.delta) + (effect.unit ? " " + effect.unit : "")
+              : effect.label + " · " + (effect.detail ?? "状态变化")),
+          });
+          if (effect.before != null && effect.after != null) {
+            chip.title = effect.label + "：" + Math.round(effect.before) + " → " + Math.round(effect.after)
+              + (effect.detail ? "（" + effect.detail + "）" : "");
+          } else if (effect.detail) {
+            chip.title = effect.detail;
+          }
+          impacts.appendChild(chip);
+        }
+        meta.appendChild(impacts);
+      } else {
+        for (const preview of choice.preview) meta.appendChild(el("span", { cls: "tri-eventdoc-preview", text: preview }));
+      }
       if (choice.risk) meta.appendChild(el("span", { cls: "tri-eventdoc-risk", text: "风险 · " + choice.risk }));
       if (!choice.available) meta.appendChild(el("span", { cls: "tri-eventdoc-locked", text: choice.unavailableReason ?? "条件不足" }));
       main.appendChild(meta);
@@ -154,7 +181,7 @@ export function buildEventModal(shell: GameShell, close: () => void): ModalInsta
       choices.appendChild(button);
     });
     editorial.appendChild(choices);
-    editorial.appendChild(el("p", { cls: "tri-eventdoc-hint", text: "抉择会写入文明史，并调整后续事件的概率。" }));
+    editorial.appendChild(el("p", { cls: "tri-eventdoc-hint", text: "数值为按当前状态计算的量化结果；选择后 30 秒送达实际结算报告。" }));
     append(layout, figure, editorial);
     return layout;
   }

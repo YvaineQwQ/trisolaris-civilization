@@ -13,6 +13,7 @@ import { buildSettingsModal } from "./modal-settings";
 import { buildHelpModal } from "./modal-help";
 import { buildPoliticsModal } from "./modal-politics";
 import { buildEventModal } from "./modal-event";
+import { buildEventResultModal } from "./modal-event-result";
 
 const TITLES: Record<ModalKind, { title: string; icon: string; hint: string }> = {
   build: { title: "建造终端", icon: "build", hint: "资源与工业产能将立即扣除" },
@@ -25,6 +26,7 @@ const TITLES: Record<ModalKind, { title: string; icon: string; hint: string }> =
   help: { title: "帮助与科学假设", icon: "help", hint: "操作说明 · 模型边界" },
   politics: { title: "政治终端", icon: "system", hint: "六部门 · 派系 · 关系网 · 政治资本" },
   event: { title: "纪元事件档案", icon: "book", hint: "抉择会写入文明史，并影响后续事件概率" },
+  eventResult: { title: "事件结算报告", icon: "book", hint: "30 秒延迟结算 · 实际收益与减益" },
 };
 
 const BUILDERS: Record<ModalKind, ModalBuilder> = {
@@ -38,6 +40,7 @@ const BUILDERS: Record<ModalKind, ModalBuilder> = {
   help: buildHelpModal,
   politics: buildPoliticsModal,
   event: buildEventModal,
+  eventResult: buildEventResultModal,
 };
 
 export interface ModalsHandle {
@@ -116,6 +119,11 @@ export function createModals(shell: GameShell): ModalsHandle {
     current = null;
     shell.state.modal = null;
     layer.classList.add("tri-hidden");
+    try {
+      instance.onClose?.();
+    } catch (error) {
+      console.warn("[trisolaris] modal onClose failed", error);
+    }
     try {
       instance.destroy();
     } catch (error) {

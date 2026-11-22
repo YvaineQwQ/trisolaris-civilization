@@ -76,8 +76,12 @@ export function createRightPanel(shell: GameShell): RightPanelHandle {
   headTitle.appendChild(el("span", { cls: "tri-deck-name", text: "观测与决策" }));
   const headNote = el("span", { cls: "tri-deck-note", text: "仅显示已观测数据" });
   const collapseBtn = el("button", { cls: "tri-btn tri-btn-icon tri-panel-collapse tri-deck-collapse", attrs: { type: "button", title: "折叠右侧决策栏" } });
-  collapseBtn.appendChild(icon("chevronRight", 15));
-  append(head, headTitle, headNote, collapseBtn);
+  /* v1.5：默认折叠时按钮语义一开始就是「展开」（不依赖首次点击修正）。 */
+  collapseBtn.appendChild(icon(shell.state.rightCollapsed ? "chevronLeft" : "chevronRight", 15));
+  if (shell.state.rightCollapsed) collapseBtn.title = "展开右侧面板";
+  /* 折叠为窄条时显示的竖排标识（桌面默认折叠，点箭头展开）。 */
+  const railLabel = el("span", { cls: "tri-deck-rail", attrs: { "aria-hidden": "true" }, text: "决策" });
+  append(head, headTitle, headNote, collapseBtn, railLabel);
 
   const tabs = el("nav", { cls: "tri-tabs tri-tabs-right", attrs: { role: "tablist" } });
   const tabButtons = new Map<RightTab, HTMLButtonElement>();
@@ -98,10 +102,8 @@ export function createRightPanel(shell: GameShell): RightPanelHandle {
   deckCurveWrap.appendChild(deckCurve.el);
 
   const body = el("div", { cls: "tri-panel-body" });
-  const foot = el("footer", { cls: "tri-panel-foot" });
-  foot.appendChild(el("span", { text: "仅显示已观测数据 · 未观测保持未知" }));
 
-  append(root, head, tabs, deckCurveWrap, body, foot);
+  append(root, head, tabs, deckCurveWrap, body);
 
   const panes = new Map<RightTab, Pane>();
   let active: RightTab = shell.state.rightTab;
@@ -261,6 +263,8 @@ export function createRightPanel(shell: GameShell): RightPanelHandle {
       const view = shell.view();
       if (view) ensurePane(active).update(view);
     }
+    /* 立即通知舞台重排（窄条⇄展开不等待 100ms 视图刷新）。 */
+    shell.requestRefresh();
   }
 
   /** v1.4 移动端抽屉：全屏页签页的开合（桌面无副作用）。 */

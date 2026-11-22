@@ -1,5 +1,6 @@
 /**
- * v1.3 底部停靠坞 —— 细线时间控制 + 面板入口。
+ * v1.3 底部停靠坞 —— 面板入口 + 时间控制。
+ * v1.5：移除与顶部 HUD 重复的回合/时代/速度读数块与装饰刻度线；
  * 收起状态只保留图标；时间轴（暂停 / 倍速 / 单步）在此统一管理。
  */
 import { TIME_SPEEDS } from "../core/constants";
@@ -7,8 +8,6 @@ import type { ViewModel } from "../game/viewTypes";
 import type { GameShell, ModalKind } from "./types";
 import { append, clear, el, on, setClass, setText } from "./dom";
 import { icon } from "./icons";
-import { speedLabel } from "./format";
-import { eraTag } from "./era-ui";
 
 interface DockItem {
   kind: ModalKind;
@@ -46,18 +45,7 @@ export function createDock(shell: GameShell): DockHandle {
 
   const inner = el("div", { cls: "tri-dock-inner" });
 
-  /* 左：运行读数 */
-  const info = el("div", { cls: "tri-dock-info" });
-  const infoTurn = el("span", { cls: "tri-dock-turn", text: "回合 —" });
-  const infoEraRow = el("div", { cls: "tri-dock-erarow" });
-  const infoEraTag = eraTag(1, "tri-dock-era-tag");
-  const infoEra = el("span", { cls: "tri-dock-era", text: "—" });
-  append(infoEraRow, infoEraTag, infoEra);
-  const infoSpeed = el("span", { cls: "tri-dock-speed", text: "暂停" });
-  const infoLine = el("span", { cls: "tri-dock-info-line", attrs: { "aria-hidden": "true" } });
-  append(info, infoTurn, infoEraRow, infoSpeed, infoLine);
-
-  /* 中：面板入口 */
+  /* 面板入口（回合/时代/速度读数已并入顶部 HUD 摘要行，坞内不再重复） */
   const actions = el("nav", { cls: "tri-dock-actions", attrs: { "aria-label": "游戏面板" } });
   const buttons = new Map<ModalKind, HTMLButtonElement>();
   const badges = new Map<ModalKind, HTMLElement>();
@@ -109,7 +97,7 @@ export function createDock(shell: GameShell): DockHandle {
   collapseBtn.appendChild(icon("chevronDown", 15));
   right.appendChild(collapseBtn);
 
-  append(inner, info, actions, time, right);
+  append(inner, actions, time, right);
   root.appendChild(inner);
 
   subscriptions.push(
@@ -162,14 +150,6 @@ export function createDock(shell: GameShell): DockHandle {
       setBadge("saves", view.saving?.busy ? "…" : "");
       setBadge("map", view.observation.stars.some((star) => star.known.position) ? "" : "!");
       setBadge("settings", countDisabledSettings(view) > 0 ? String(countDisabledSettings(view)) : "");
-
-      setText(infoTurn, "回合 " + view.meta.turn + " · 星历 " + Math.floor(view.meta.calendarYear));
-      setText(infoEra, view.meta.eraName || "—");
-      infoEraTag.textContent = "E" + view.meta.era;
-      infoEraTag.dataset.era = String(view.meta.era);
-      infoEraTag.title = "E" + view.meta.era + " " + view.meta.eraName;
-      setText(infoSpeed, view.meta.paused ? "已暂停" : speedLabel(view.meta.speedValue));
-      infoSpeed.dataset.paused = view.meta.paused ? "true" : "false";
 
       setClass(pauseBtn, "is-active", view.meta.paused);
       clear(pauseIconWrap);

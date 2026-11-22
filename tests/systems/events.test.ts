@@ -16,12 +16,19 @@ import type {
 } from "../../src/core/types";
 import { createCivilizationState, BASE_RESOURCE_CAPACITY, RESOURCE_IDS } from "../../src/civilization";
 import { createTechState } from "../../src/technology";
+import { BASE_YEARS_PER_SECOND, TURN_YEARS } from "../../src/core/constants";
 import { createHazardState } from "../../src/events/hazards";
 import { EVENT_CATEGORY_NAMES, EVENT_DEFS, getEventDef } from "../../src/events/definitions";
 import {
   CHAIN_INFLUENCE,
   EVENT_EFFECT_CAPS,
+  EVENT_INTERVAL_MAX,
+  EVENT_INTERVAL_MIN,
+  EVENT_OUTCOME_DELAY_SECONDS,
   MAX_PENDING_EVENTS,
+  acknowledgeEventOutcome,
+  forecastEventEffects,
+  updateEventOutcome,
   MODIFIER_DECAY,
   applyEventEffects,
   checkRequirements,
@@ -126,9 +133,20 @@ function resolveAnyAvailable(state: EventState, ctx: EventContext): EventResolut
   if (!def) throw new Error("没有待处理事件");
   for (const choice of def.choices) {
     const result = resolveEventChoice(state, choice.id, ctx);
-    if (result.ok) return result;
+    if (result.ok) {
+      finishOutcome(state);
+      return result;
+    }
   }
   throw new Error("事件《" + def.title + "》没有任何可用选项");
+}
+
+/** 测试中跳过 30 秒等待：直接生成报告并确认，便于继续下一轮抽签。 */
+function finishOutcome(state: EventState): void {
+  if (state.pendingOutcome) {
+    updateEventOutcome(state, state.pendingOutcome.dueElapsedSeconds + 0.001);
+  }
+  acknowledgeEventOutcome(state);
 }
 
 function collectNumbers(value: unknown, path: string, out: string[]): void {
@@ -334,8 +352,8 @@ describe("初始状态与可复现性", () => {
     expect(a.flags).toEqual([]);
     expect(a.modifiers).toEqual({});
     expect(a.triggeredTotal).toBe(0);
-    expect(a.nextRollTurn).toBeGreaterThanOrEqual(1);
-    expect(a.nextRollTurn).toBeLessThanOrEqual(16);
+    expect(a.nextRollTurn).toBeGreaterThanOrEqual(36);
+    expect(a.nextRollTurn).toBeLessThanOrEqual(40);
     const c = createEventState("SEED-OTHER");
     expect(c.nextRollTurn).toBeGreaterThanOrEqual(1);
   });
@@ -527,6 +545,7 @@ describe("概率与事件链机制", () => {
     expect(followUp.dueTurn - 5).toBeLessThanOrEqual(4);
     expect(scheduledEventsView(state).length).toBe(1);
     expect(state.pending).toEqual([]);
+    finishOutcome(state);
     // 到期前不触发后续事件
     for (let turn = 6; turn < followUp.dueTurn; turn++) {
       ctx.turn = turn;
@@ -724,5 +743,70 @@ describe("概率与事件链机制", () => {
     for (let i = 1; i < state.history.length; i++) {
       expect(state.history[i].id).toBeGreaterThan(state.history[i - 1].id);
     }
+  });
+});
+
+
+describe("v1.5 事件节奏 / 量化 / 30 秒延迟结算", () => {
+  it("间隔约 90 秒（1x 下 44–48 回合），且难度/时代修正后仍在合理范围", () => {
+    const minSeconds = EVENT_INTERVAL_MIN * TURN_YEARS / BASE_YEARS_PER_SECOND;
+    const maxSeconds = EVENT_INTERVAL_MAX * TURN_YEARS / BASE_YEARS_PER_SECOND;
+    expect(minSeconds).toBeGreaterThanOrEqual(85);
+    expect(maxSeconds).toBeLessThanOrEqual(100);
+    expect(EVENT_OUTCOME_DELAY_SECONDS).toBe(30);
+  });
+
+  it("选择前量化预估与实际结算一致，包含资源/稳定度/后续概率", () => {
+    const ctx = makeCtx({ era: 2, stability: 60, population: 1200 });
+    ctx.elapsedRealSeconds = 12;
+    const state = createEventState("FORECAST");
+    const def = getEventDef("env_red_dawn")!;
+    state.pending = [{ defId: def.id, triggerTurn: 0, triggerYear: 0, context: "测试" }];
+    const choice = def.choices.find((item) => item.id === "shelter")!;
+    const forecast = forecastEventEffects(choice.effects, ctx);
+    expect(forecast.some((effect) => effect.key === "resource:food" && effect.delta != null)).toBe(true);
+    expect(forecast.some((effect) => effect.key === "stability" && effect.delta != null)).toBe(true);
+    expect(forecast.some((effect) => effect.kind === "influence")).toBe(true);
+    const beforeFood = ctx.civ.resources.food.amount;
+    const beforeStability = ctx.civ.stability;
+    expect(resolveEventChoice(state, "shelter", ctx).ok).toBe(true);
+    const foodEffect = forecast.find((effect) => effect.key === "resource:food")!;
+    const stabilityEffect = forecast.find((effect) => effect.key === "stability")!;
+    expect(ctx.civ.resources.food.amount - beforeFood).toBeCloseTo(foodEffect.delta ?? 0, 5);
+    expect(ctx.civ.stability - beforeStability).toBeCloseTo(stabilityEffect.delta ?? 0, 5);
+    expect(state.pendingOutcome).not.toBeNull();
+    expect(state.pendingOutcome!.effects.length).toBeGreaterThan(0);
+  });
+
+  it("选择后 30 秒才生成报告；报告未确认前不会抽取新事件", () => {
+    const ctx = makeCtx({ era: 2 });
+    ctx.elapsedRealSeconds = 100;
+    const state = createEventState("DELAY");
+    const def = getEventDef("env_red_dawn")!;
+    state.pending = [{ defId: def.id, triggerTurn: 3, triggerYear: 1.5, context: "测试" }];
+    state.pendingOutcome = null;
+    const result = resolveEventChoice(state, "shelter", ctx);
+    expect(result.ok).toBe(true);
+    expect(state.pendingOutcome).not.toBeNull();
+    expect(state.pendingOutcome!.dueElapsedSeconds).toBeCloseTo(130, 5);
+    expect(updateEventOutcome(state, 129.9)).toBeNull();
+    expect(updateEventOutcome(state, 130)).not.toBeNull();
+    expect(state.outcomeReport).not.toBeNull();
+    expect(state.outcomeReport!.effects.length).toBeGreaterThan(0);
+    finishOutcome(state);
+    expect(state.outcomeReport).toBeNull();
+    expect(state.pendingOutcome).toBeNull();
+  });
+
+  it("acknowledgeEventOutcome 幂等；无报告时安全", () => {
+    const state = createEventState("ACK");
+    expect(acknowledgeEventOutcome(state)).toBe(false);
+    state.outcomeReport = {
+      id: 1, defId: "env_red_dawn", title: "t", category: "environment", choiceId: "shelter",
+      choiceLabel: "c", outcome: "o", turn: 0, year: 0, dueElapsedSeconds: 30, resolvedElapsedSeconds: 30,
+      summary: "s", effects: [], followUpTitle: null,
+    };
+    expect(acknowledgeEventOutcome(state)).toBe(true);
+    expect(acknowledgeEventOutcome(state)).toBe(false);
   });
 });

@@ -150,10 +150,7 @@ export function createLeftPanel(shell: GameShell): LeftPanelHandle {
   drawerCurveWrap.appendChild(drawerCurve.el);
 
   const body = el("div", { cls: "tri-panel-body" });
-  const foot = el("footer", { cls: "tri-panel-foot" });
-  foot.appendChild(el("span", { text: "快捷键 1–4 翻阅档案 · 5 收起" }));
-  foot.appendChild(el("span", { cls: "tri-drawer-foot-mark", text: "PRINT // TRISOLARIS" }));
-  append(drawer, head, drawerTabs, drawerCurveWrap, drawerTools, body, foot);
+  append(drawer, head, drawerTabs, drawerCurveWrap, drawerTools, body);
   root.append(rail, drawer);
   if (open) root.classList.add("is-open");
 

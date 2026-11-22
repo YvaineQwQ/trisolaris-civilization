@@ -46,7 +46,7 @@ import {
 import { deleteSaveSlot, exportSaveToFile, listSaveSlots, loadGameFromSlot, persistGame } from "../save/storage";
 import { parseGameFile } from "../save/serializer";
 import {
-  getActiveEvent, maybeTriggerEvent, resolveEventChoice,
+  acknowledgeEventOutcome, getActiveEvent, maybeTriggerEvent, resolveEventChoice, updateEventOutcome,
 } from "../events";
 import {
   appointMinister as appointPoliticsMinister,
@@ -127,6 +127,15 @@ export class Game implements GameApi, GameActions {
     if (this.state.gameOver) return;
     const dtReal = Math.min(0.06, Math.max(0, realDtSeconds));
     this.state.meta.elapsedRealSeconds += dtReal;
+    // 30 秒延迟结算：即使暂停也按真实时间推进，保证报告准时送达。
+    const report = updateEventOutcome(this.state.events, this.state.meta.elapsedRealSeconds);
+    if (report) {
+      this.addLog(
+        "event",
+        report.effects.some((effect) => effect.tone === "loss") ? "warning" : "success",
+        "事件结算报告送达：《" + report.title + "》· " + report.summary,
+      );
+    }
     if (this.paused) return;
     const speed = TIME_SPEEDS[this.speedIndex] ?? 0;
     if (speed <= 0) return;
@@ -736,6 +745,7 @@ export class Game implements GameApi, GameActions {
       year,
       difficulty: s.meta.difficulty,
       randomSeed: s.meta.seed,
+      elapsedRealSeconds: s.meta.elapsedRealSeconds,
     });
     if (!result.ok) {
       this.addLog("event", "warning", "无法处理事件：" + (result.reason ?? "条件不足"));
@@ -745,7 +755,14 @@ export class Game implements GameApi, GameActions {
       this.log.add("event", entry.severity, entry.message, year, s.civ.turn);
     }
     this.addLog("event", "info", "事件结果：" + result.effectsSummary);
+    this.addLog("event", "info", "量化结算将在 " + 30 + " 秒后送达；期间模拟继续运行。");
     this.paused = false;
+  }
+
+  acknowledgeEventOutcome(): void {
+    if (acknowledgeEventOutcome(this.state.events)) {
+      this.addLog("event", "info", "已确认事件结算报告。");
+    }
   }
 
   private yearNumber(): number {

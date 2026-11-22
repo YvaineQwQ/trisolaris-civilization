@@ -4,7 +4,9 @@
  *  - 人口环形仪表：环 = 住房覆盖比，圆心 = 人口总数；
  *  - 稳定度环形仪表：环 = 稳定度 0–100，圆心 = 当前值；
  *  - 资源环形摘要：食物 / 能源 / 科研 三个小环（储备比），替代原先的直线进度条；
- *  - ≤1024：折叠为「顶栏 + 读数摘要」，点右上「读数」展开完整仪表；
+ *  - 桌面（v1.5）：默认只留「品牌行 + 读数/警报 + 一行关键摘要」，完整仪表收起；
+ *    点右上「读数」展开、再点收起；HUD 高度随内容自适应，主舞台自动补满。
+ *  - ≤1024：同样折叠为「顶栏 + 读数摘要」，展开时以浮层显示完整仪表；
  *  - ≤720：摘要行 + 安全区，触摸区 ≥44px。
  * 时间控制仍在底部停靠坞；此处只保留读数与灾害入口。
  */
@@ -50,8 +52,6 @@ export function createHud(shell: GameShell): HudHandle {
   const band = el("div", { cls: "tri-hud-band", attrs: { "aria-hidden": "true" } });
   band.appendChild(el("span", { cls: "tri-hud-band-mark", text: "三体纪元 · TRISOLARIS: CIVILIZATION" }));
   band.appendChild(el("span", { cls: "tri-hud-band-rule" }));
-  band.appendChild(el("span", { cls: "tri-hud-band-tag", text: "PRINT E1—E5" }));
-  band.appendChild(el("span", { cls: "tri-hud-band-rule" }));
   const bandTurn = el("span", { cls: "tri-hud-band-turn", text: "TURN 000" });
   band.appendChild(bandTurn);
 
@@ -72,7 +72,8 @@ export function createHud(shell: GameShell): HudHandle {
     attrs: { type: "button", title: "展开/收起完整读数", "aria-expanded": "false" },
   });
   toggleBtn.appendChild(icon("chart", 15));
-  toggleBtn.appendChild(el("span", { cls: "tri-hud-act-label", text: "读数" }));
+  const toggleLabel = el("span", { cls: "tri-hud-act-label", text: "读数" });
+  toggleBtn.appendChild(toggleLabel);
   const alertBtn = el("button", { cls: "tri-hud-alert tri-hud-act", attrs: { type: "button", title: "灾害与预警" } });
   alertBtn.appendChild(icon("bell", 15));
   alertBtn.appendChild(el("span", { cls: "tri-hud-act-label", text: "警报" }));
@@ -81,8 +82,8 @@ export function createHud(shell: GameShell): HudHandle {
   append(actions, toggleBtn, alertBtn);
   append(top, brand, actions);
 
-  /* 移动端读数摘要（折叠时也能一眼看到关键数值） */
-  const mobileSum = el("div", { cls: "tri-hud-mobilesum", attrs: { "aria-hidden": "true" } });
+  /* 折叠态关键摘要（桌面与移动端共用一行：年 / 回合 / 时代 / 人口 / 稳定 / 食能研） */
+  const mobileSum = el("div", { cls: "tri-hud-mobilesum" });
   const mobileYear = summaryCell(mobileSum, "星历");
   const mobileTurn = summaryCell(mobileSum, "回合");
   const mobileEra = summaryCell(mobileSum, "时代");
@@ -185,6 +186,7 @@ export function createHud(shell: GameShell): HudHandle {
     root.classList.toggle("is-expanded", expanded);
     toggleBtn.setAttribute("aria-expanded", expanded ? "true" : "false");
     toggleBtn.title = expanded ? "收起完整读数" : "展开完整读数";
+    mobileSum.setAttribute("aria-hidden", expanded ? "true" : "false");
   }
 
   return {

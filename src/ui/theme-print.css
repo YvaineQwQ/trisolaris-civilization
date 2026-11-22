@@ -5256,3 +5256,110 @@ h1, h2, h3, h4, .tri-panel-title span, .tri-modal-title-text h2, .tri-menu-title
     padding-right: env(safe-area-inset-right);
   }
 }
+
+
+/* ================================================================== *
+ * V7. v1.5 桌面 UI 精简
+ *  1) HUD 默认只留「品牌 + 读数/警报按钮 + 一行关键摘要」，完整圆弧仪表
+ *     由「读数」按钮展开/收起；HUD 高度自适应，收起后主舞台自动补满。
+ *  2) 右决策栏默认折叠为窄条（保留展开箭头），展开后 8 个页签照常可用；
+ *     舞台网格列宽同步收窄，中心观测视口不被空列挤压。
+ *  3) 停靠坞移除与 HUD 重复的回合/时代/速度读数块与装饰刻度线，只留
+ *     全部面板入口 + 时间控制 + 收起钮。
+ *  4) 左右面板重复页脚已在组件层移除；此节只负责版式收口。
+ *  只在桌面 (>1024px) 生效，移动端竖屏/横屏规则保持原样。
+ * ================================================================== */
+/* 窄条竖排标识只在桌面折叠态出现，移动端全屏抽屉不显示。 */
+.tri-deck-rail { display: none; }
+
+/* 移动端右决策页脚移除后，正文滚动到底保留安全区呼吸位（原页脚承担该间距）。 */
+@media (max-width: 1024px) {
+  .tri-panel-right .tri-panel-body { padding-bottom: calc(12px + env(safe-area-inset-bottom)); }
+}
+
+@media (min-width: 1025px) {
+  :root { --dock-h: 54px; }
+
+  /* --- 1) HUD：折叠态为顶栏 + 摘要行；展开态回到完整印刷版式 --- */
+  .tri-hud { height: auto; }
+  .tri-hud-band { display: none; }
+  .tri-hud.is-expanded .tri-hud-band { display: flex; }
+  .tri-hud-top { min-height: 34px; padding: 6px 18px 0; gap: 12px; }
+  .tri-hud-toggle { display: inline-flex; }
+  .tri-hud.is-expanded .tri-hud-toggle { background: var(--ink); border-color: var(--ink); color: #fff; }
+  .tri-hud-mobilesum {
+    display: flex;
+    align-items: center;
+    gap: 5px 20px;
+    flex-wrap: nowrap;
+    padding: 2px 18px 8px;
+    border-top: 1px solid var(--grey-2);
+    min-width: 0;
+    overflow: hidden;
+  }
+  .tri-hud-mobilecell { display: inline-flex; align-items: baseline; gap: 5px; flex: none; min-width: 0; }
+  .tri-hud-mobilelabel {
+    font-style: normal;
+    font-family: var(--mono);
+    font-size: 7px;
+    letter-spacing: 0.12em;
+    color: var(--faint);
+    white-space: nowrap;
+  }
+  .tri-hud-mobilevalue {
+    font-family: var(--mono);
+    font-size: 10.5px;
+    font-weight: 500;
+    color: var(--ink);
+    white-space: nowrap;
+  }
+  .tri-hud-mobilecell:last-child { flex: 1 1 auto; min-width: 0; }
+  .tri-hud-mobilecell:last-child .tri-hud-mobilevalue {
+    color: var(--muted);
+    font-size: 9.5px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .tri-hud-main { display: none; flex: none; }
+  .tri-hud.is-expanded .tri-hud-main { display: grid; padding-top: 2px; }
+  .tri-hud.is-expanded .tri-hud-mobilesum { display: none; }
+
+  /* --- 2) 右决策栏：默认窄条 --- */
+  .tri-game-main.is-right-collapsed { grid-template-columns: minmax(0, 1fr) 46px; }
+  .tri-panel-right.is-collapsed {
+    width: 100%;
+    max-width: 46px;
+    background-color: var(--paper-2);
+    background-image: var(--hatch-grey);
+  }
+  .tri-panel-right.is-collapsed .tri-panel-head { flex-direction: column; gap: 9px; padding: 10px 6px; }
+  .tri-panel-right.is-collapsed .tri-deck-rail {
+    display: block;
+    writing-mode: vertical-rl;
+    text-orientation: upright;
+    font-family: var(--mono);
+    font-size: 7.5px;
+    letter-spacing: 0.3em;
+    color: rgba(255, 255, 255, 0.72);
+    white-space: nowrap;
+  }
+
+  /* --- 3) 停靠坞：入口与时间控制排成一条细线 --- */
+  .tri-dock-info { display: none; }
+  .tri-dock-inner { gap: 10px; padding: 0 14px 0 18px; }
+  .tri-dock-actions { justify-content: center; }
+}
+
+@media (min-width: 1025px) and (max-width: 1366px) {
+  .tri-hud-top { min-height: 30px; padding: 5px 14px 0; }
+  .tri-hud-mobilesum { gap: 4px 12px; padding: 2px 14px 6px; }
+  .tri-hud-mobilevalue { font-size: 9.5px; }
+  .tri-hud-mobilelabel { font-size: 6.5px; }
+}
+
+
+/* v1.5: 3D host 已在中央视口内，不能再额外偏移 --hud-h（旧规则会造成顶部白块） */
+.tri-scene3d-host.is-3d-active { top: 12px; }
+@media (max-width: 1024px) {
+  .tri-scene3d-host.is-3d-active { top: 8px; }
+}

@@ -50,8 +50,9 @@ function buildState(host: AppController): UiState {
     leftTab: "overview",
     rightTab: "stars",
     // v1.3：主舞台优先，导航轨常驻；文明档案抽屉默认收起。
+    // v1.5：桌面右决策栏默认折叠为窄条（点箭头展开），主舞台优先。
     leftCollapsed: true,
-    rightCollapsed: false,
+    rightCollapsed: true,
     dockCollapsed: false,
     viewMode: "2d",
     modal: null,

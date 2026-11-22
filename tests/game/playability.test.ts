@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { createGameState } from "../../src/game/state";
 import { Game } from "../../src/game/game";
 import { setSaveStorage, MemorySaveStorage } from "../../src/save/storage";
+import { acknowledgeEventOutcome, updateEventOutcome } from "../../src/events";
 
 function makeGame(seed: string, difficulty: "easy" | "normal" | "hard") {
   setSaveStorage(new MemorySaveStorage());
@@ -13,7 +14,14 @@ function resolvePendingEvent(game: Game): void {
   const active = game.view().events?.active;
   if (!active) return;
   const choice = active.choices.find((c) => c.available) ?? active.choices[0];
-  if (choice) game.actions.resolveEvent(choice.id);
+  if (choice) {
+    game.actions.resolveEvent(choice.id);
+    const events = game.state.events;
+    if (events?.pendingOutcome) {
+      updateEventOutcome(events, events.pendingOutcome.dueElapsedSeconds + 0.001);
+      acknowledgeEventOutcome(events);
+    }
+  }
 }
 
 function play(game: Game, years: number, dt = 0.04): void {

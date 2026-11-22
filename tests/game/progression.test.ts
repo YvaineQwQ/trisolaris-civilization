@@ -3,6 +3,7 @@ import { createGameState } from "../../src/game/state";
 import { Game } from "../../src/game/game";
 import { setSaveStorage, MemorySaveStorage } from "../../src/save/storage";
 import type { ObservationKind } from "../../src/core/types";
+import { acknowledgeEventOutcome, updateEventOutcome } from "../../src/events";
 
 setSaveStorage(new MemorySaveStorage());
 
@@ -37,7 +38,14 @@ function autoPlay(game: Game, targetYears: number): void {
     const pendingView = game.view().events?.active;
     if (pendingView) {
       const choice = pendingView.choices.find((c) => c.available) ?? pendingView.choices[0];
-      if (choice) game.actions.resolveEvent(choice.id);
+      if (choice) {
+        game.actions.resolveEvent(choice.id);
+        const events = game.state.events;
+        if (events?.pendingOutcome) {
+          updateEventOutcome(events, events.pendingOutcome.dueElapsedSeconds + 0.001);
+          acknowledgeEventOutcome(events);
+        }
+      }
       continue;
     }
     const s = game.state;

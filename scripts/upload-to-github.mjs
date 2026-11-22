@@ -75,7 +75,7 @@ for (const file of files) {
   if (done % 20 === 0 || done === files.length) console.log("上传", done + "/" + files.length);
 }
 const treeRes = await api("/repos/" + owner + "/" + repoName + "/git/trees", { method: "POST", body: JSON.stringify({ tree }) });
-const commit = await api("/repos/" + owner + "/" + repoName + "/git/commits", { method: "POST", body: JSON.stringify({ message: "TRISOLARIS v1.4.0 — 三体纪元完整源码", tree: treeRes.sha, parents: parentSha ? [parentSha] : [] }) });
+const commit = await api("/repos/" + owner + "/" + repoName + "/git/commits", { method: "POST", body: JSON.stringify({ message: "TRISOLARIS v1.4.1 — 手机横屏适配", tree: treeRes.sha, parents: parentSha ? [parentSha] : [] }) });
 try { await api("/repos/" + owner + "/" + repoName + "/git/refs", { method: "POST", body: JSON.stringify({ ref: "refs/heads/main", sha: commit.sha }) }); }
 catch (e) { if (!String(e).includes(" 422 ")) throw e; await api("/repos/" + owner + "/" + repoName + "/git/refs/heads/main", { method: "PATCH", body: JSON.stringify({ sha: commit.sha, force: true }) }); }
 await api("/repos/" + owner + "/" + repoName, { method: "PATCH", body: JSON.stringify({ default_branch: "main" }) });

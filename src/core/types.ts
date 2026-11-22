@@ -902,6 +902,55 @@ export interface EventHistoryEntry {
   effectsSummary: string;
 }
 
+/** 事件选项的量化影响（选择前预估 / 结算后实际值共用）。 */
+export type EventEffectKind =
+  | "population"
+  | "stability"
+  | "capital"
+  | "science"
+  | "resource"
+  | "hazard"
+  | "relation"
+  | "flag"
+  | "influence";
+
+export interface EventEffectForecast {
+  /** 稳定唯一键（例如 population / resource:food）。 */
+  key: string;
+  label: string;
+  kind: EventEffectKind;
+  /** 数字类效果给出变化前 / 后与差值；旗帜、后续概率等无数字。 */
+  before: number | null;
+  after: number | null;
+  delta: number | null;
+  unit: string;
+  tone: "gain" | "loss" | "neutral";
+  /** 附加说明：百分比、标签名、后续事件倾向等。 */
+  detail: string | null;
+}
+
+/** 玩家做出选择后，等待 30 秒再送达的结算数据。 */
+export interface PendingEventOutcome {
+  defId: string;
+  title: string;
+  category: EventCategory;
+  choiceId: string;
+  choiceLabel: string;
+  outcome: string;
+  turn: number;
+  year: number;
+  /** 达到 meta.elapsedRealSeconds 时生成报告。 */
+  dueElapsedSeconds: number;
+  summary: string;
+  effects: EventEffectForecast[];
+  followUpTitle: string | null;
+}
+
+export interface EventOutcomeReport extends PendingEventOutcome {
+  id: number;
+  resolvedElapsedSeconds: number;
+}
+
 export interface EventState {
   pending: PendingEventState[];
   history: EventHistoryEntry[];
@@ -915,6 +964,11 @@ export interface EventState {
   seenCounts: Record<string, number>;
   triggeredTotal: number;
   nextRollTurn: number;
+  /** 已选择、等待 30 秒送达的结算；存在时暂停抽取新事件。 */
+  pendingOutcome?: PendingEventOutcome | null;
+  /** 已到期待玩家查看的结算报告；查看后 acknowledgeEventOutcome 清空。 */
+  outcomeReport?: EventOutcomeReport | null;
+  nextOutcomeId?: number;
 }
 
 /** ---------------------------------------------------------------- *

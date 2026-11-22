@@ -5,6 +5,7 @@ import { advancePhysics } from "../../src/physics/nbody";
 import { MemorySaveStorage, setSaveStorage } from "../../src/save/storage";
 import { parseGameFile, serializeGame } from "../../src/save/serializer";
 import type { GameState } from "../../src/core/types";
+import { acknowledgeEventOutcome, updateEventOutcome } from "../../src/events";
 
 function makeGame(seed = "INTEGRATION-1", difficulty: "easy" | "normal" | "hard" = "normal"): Game {
   const state = createGameState({ seed, difficulty, mode: "normal" });
@@ -16,7 +17,14 @@ function resolvePendingEvent(game: Game): void {
   const active = game.view().events?.active;
   if (!active) return;
   const choice = active.choices.find((c) => c.available) ?? active.choices[0];
-  if (choice) game.actions.resolveEvent(choice.id);
+  if (choice) {
+    game.actions.resolveEvent(choice.id);
+    const events = game.state.events;
+    if (events?.pendingOutcome) {
+      updateEventOutcome(events, events.pendingOutcome.dueElapsedSeconds + 0.001);
+      acknowledgeEventOutcome(events);
+    }
+  }
 }
 
 function run(game: Game, frames = 400, frameSeconds = 0.05): void {

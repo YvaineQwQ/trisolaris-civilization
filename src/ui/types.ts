@@ -32,7 +32,9 @@ export type ModalKind =
   /** v1.3 政治终端（六部门 / 派系 / 关系矩阵）。 */
   | "politics"
   /** v1.3 纪元事件档案与抉择面板。 */
-  | "event";
+  | "event"
+  /** v1.4.2 事件抉择 30 秒后的量化结算报告。 */
+  | "eventResult";
 export type ScreenKind = "menu" | "newgame" | "game";
 export type Tone = "info" | "ok" | "warn" | "danger";
 /** 2D is the X-Z top-down projection; 3D is the auxiliary spatial view. */
@@ -104,6 +106,8 @@ export interface ModalInstance {
   el: HTMLElement;
   update(view: ViewModel): void;
   destroy(): void;
+  /** 关闭时调用（结算报告用它来确认并清空 pending outcome）。 */
+  onClose?(): void;
 }
 
 export type ModalBuilder = (shell: GameShell, close: () => void) => ModalInstance;
