@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 48 48" role="img" aria-label="45 degree hatch tile" shape-rendering="geometricPrecision">
+  <title>45 degree hatch tile</title>
+  <defs>
+    <pattern id="hatchFine" width="8" height="8" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+      <line x1="0" y1="0" x2="0" y2="8" stroke="#37E5FF" stroke-opacity=".13" stroke-width="1"/>
+    </pattern>
+    <pattern id="hatchAccent" width="32" height="32" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+      <line x1="0" y1="0" x2="0" y2="32" stroke="#37E5FF" stroke-opacity=".055" stroke-width="1"/>
+      <line x1="6" y1="0" x2="6" y2="32" stroke="#37E5FF" stroke-opacity=".30" stroke-width="1"/>
+      <line x1="19" y1="0" x2="19" y2="32" stroke="#FFC857" stroke-opacity=".14" stroke-width="1"/>
+    </pattern>
+  </defs>
+  <rect width="48" height="48" fill="url(#hatchFine)"/>
+  <rect width="48" height="48" fill="url(#hatchAccent)"/>
+</svg>

@@ -1,0 +1,142 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>启动动画 PV · 本地预览 | 三体纪元 v1.4</title>
+    <style>
+      /* 仅预览页自己的假游戏背景：启动动画播完后 / 跳过时露出，方便验收"揭幕"效果 */
+      html, body { margin: 0; height: 100%; overflow: hidden; background: #f4f1ea; }
+      #mock-game {
+        position: fixed; inset: 0; display: flex; flex-direction: column;
+        background: #f4f1ea; color: #111;
+        font-family: "Microsoft YaHei", "PingFang SC", sans-serif;
+      }
+      #mock-game .mock-top {
+        height: 54px; display: flex; align-items: center; justify-content: space-between;
+        padding: 0 26px; border-bottom: 1px solid rgba(17,17,17,.16);
+        font-size: 11px; letter-spacing: .14em; color: #6b6b6b;
+      }
+      #mock-game .mock-top b { font-size: 13px; letter-spacing: .1em; color: #111; }
+      #mock-game .mock-body { flex: 1; display: flex; gap: 18px; padding: 18px 26px 22px; }
+      #mock-game .mock-rail {
+        width: 62px; border: 1px solid rgba(17,17,17,.14); display: flex; flex-direction: column;
+        align-items: center; gap: 14px; padding: 16px 0; background: #fff;
+        font-family: "Cascadia Mono", Consolas, monospace; font-size: 10px; color: #9a9a9a;
+      }
+      #mock-game .mock-rail i { width: 18px; height: 18px; border: 1px solid #c9c9c9; display: block; }
+      #mock-game .mock-main { flex: 1; display: flex; flex-direction: column; gap: 12px; }
+      #mock-game .mock-hero {
+        flex: 1; position: relative; overflow: hidden; background: #070b12;
+        border: 1px solid rgba(17,17,17,.2);
+        background-image:
+          radial-gradient(2px 2px at 22% 30%, rgba(255,255,255,.85), transparent 60%),
+          radial-gradient(1.4px 1.4px at 68% 22%, rgba(255,255,255,.7), transparent 60%),
+          radial-gradient(1.2px 1.2px at 44% 68%, rgba(255,255,255,.6), transparent 60%),
+          radial-gradient(1.6px 1.6px at 82% 62%, rgba(255,255,255,.75), transparent 60%),
+          radial-gradient(1px 1px at 12% 78%, rgba(255,255,255,.55), transparent 60%),
+          radial-gradient(circle at 50% 46%, #12213a 0%, #070b12 62%);
+      }
+      #mock-game .mock-hero .plate {
+        position: absolute; left: 14px; top: 12px; padding: 3px 8px; background: #fff;
+        font-family: "Cascadia Mono", Consolas, monospace; font-size: 9px; letter-spacing: .16em;
+        color: #111; border: 1px solid rgba(17,17,17,.2);
+      }
+      #mock-game .mock-hero .tag {
+        position: absolute; right: 14px; top: 12px; padding: 3px 8px;
+        background: #fdfd1f; font-family: "Cascadia Mono", Consolas, monospace;
+        font-size: 9px; letter-spacing: .16em; color: #111;
+      }
+      #mock-game .mock-strip { display: flex; gap: 12px; }
+      #mock-game .mock-card {
+        flex: 1; height: 92px; background: #fff; border: 1px solid rgba(17,17,17,.14);
+        padding: 10px 12px; display: flex; flex-direction: column; gap: 6px;
+        font-family: "Cascadia Mono", Consolas, monospace; font-size: 9px; color: #6b6b6b;
+      }
+      #mock-game .mock-card b { color: #111; font-size: 10px; letter-spacing: .08em; }
+      #mock-game .mock-card .bar { height: 4px; background: #ededed; margin-top: auto; }
+      #mock-game .mock-card .bar i { display: block; width: 62%; height: 100%; background: #111; }
+      #mock-night {
+        position: fixed; left: 14px; bottom: 12px; z-index: 5;
+        font-family: "Cascadia Mono", Consolas, monospace; font-size: 10px;
+        letter-spacing: .12em; color: #9a9a9a; pointer-events: none;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="mock-game" aria-hidden="true">
+      <div class="mock-top">
+        <b>三体纪元 · TRISOLARIS</b>
+        <span>星历 2187.03 · 第 42 回合 · 恒纪元</span>
+        <span>观测 / 守护 / 存续</span>
+      </div>
+      <div class="mock-body">
+        <div class="mock-rail">
+          <i></i><i></i><i></i><i></i><i></i><i></i>
+        </div>
+        <div class="mock-main">
+          <div class="mock-hero">
+            <span class="plate">// OPTICAL PLATE 01 · LIVE</span>
+            <span class="tag">2D</span>
+          </div>
+          <div class="mock-strip">
+            <div class="mock-card"><b>人口 / POPULATION</b><span>1,284,006</span><div class="bar"><i></i></div></div>
+            <div class="mock-card"><b>稳定度 / STABILITY</b><span>72.4</span><div class="bar"><i></i></div></div>
+            <div class="mock-card"><b>观测站 / OBSERVATORY</b><span>LV.3</span><div class="bar"><i></i></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div id="mock-night">MOCK GAME BACKGROUND · 启动动画结束后露出的假界面（仅本地预览用）</div>
+
+    <script type="module">
+      import {
+        runStartup,
+        replayStartup,
+        getStartupHandle,
+        clearStartupSession,
+      } from "./index.ts";
+
+      const params = new URLSearchParams(window.location.search);
+      const baseOptions = {
+        assetBase: "/",
+        remember: params.get("remember") === "1",
+        speed: Number(params.get("speed") || "1"),
+        sound: params.get("sound") === "1",
+        observerName: params.get("observer") || "OBSERVER-01",
+        reducedMotion: params.get("rm") === "1" ? true : "auto",
+        onPhase: function (progress) {
+          console.info("[preview] phase", progress.phase, "step", progress.step);
+        },
+      };
+
+      window.__SU_PREVIEW__ = {
+        run: function (extra) {
+          return replayStartup(Object.assign({}, baseOptions, extra || {}));
+        },
+        advance: function () {
+          getStartupHandle()?.advance();
+        },
+        skip: function () {
+          getStartupHandle()?.skip();
+        },
+        phase: function () {
+          return getStartupHandle()?.phase ?? "done";
+        },
+        step: function () {
+          return getStartupHandle()?.step ?? 0;
+        },
+        clearSession: function () {
+          clearStartupSession();
+        },
+      };
+
+      if (params.get("manual") === "1") {
+        console.info("[preview] manual mode: call window.__SU_PREVIEW__.run()");
+      } else {
+        clearStartupSession();
+        runStartup(Object.assign({}, baseOptions, { force: true }));
+      }
+    </script>
+  </body>
+</html>

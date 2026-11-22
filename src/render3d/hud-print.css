@@ -1,0 +1,476 @@
+/* ================================================================== *
+ *  hud-print.css —— 3D 辅助视图 HUD / 标签的「终末地工业画册」印刷语言
+ *  （v1.4 §4.2：与主 UI 一致的纸白 + 墨黑 + 单一信号黄、直角/微圆角、等宽微标）
+ *
+ *  只在 src/render3d/index.ts 动态加载 3D 模块时注入；不修改 src/ui/**。
+ *  设计 token 优先复用主 UI 的 :root 变量（--paper/--ink/--signal/--mono...），
+ *  并提供本地回退值，保证 render3d 模块可独立预览时不塌陷。
+ *  所有卡片默认 pointer-events:none，仅按钮/切换条接收指针，避免遮挡画布拾取。
+ * ================================================================== */
+
+.r3d-hud {
+  --r3d-paper: var(--paper-2, #ffffff);
+  --r3d-paper-soft: var(--paper-3, #f7f4ec);
+  --r3d-ink: var(--ink, #111111);
+  --r3d-ink-2: var(--ink-2, #2b2b2b);
+  --r3d-muted: var(--muted, #6b6b6b);
+  --r3d-faint: var(--faint, #9a9a9a);
+  --r3d-grey: var(--grey, #d9d9d9);
+  --r3d-grey-2: var(--grey-2, #e7e4dc);
+  --r3d-signal: var(--signal, #fdfd1f);
+  --r3d-warn: var(--warn-ink, #7a5200);
+  --r3d-ok: var(--ok-ink, #1c6b46);
+  --r3d-mono: var(--mono, "Cascadia Mono", "Cascadia Code", Consolas, ui-monospace, monospace);
+  --r3d-sans: var(--sans, "Segoe UI", "Microsoft YaHei", system-ui, sans-serif);
+
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+  overflow: hidden;
+  pointer-events: none;
+  contain: layout style;
+  font-family: var(--r3d-sans);
+  color: var(--r3d-ink);
+  -webkit-font-smoothing: antialiased;
+}
+
+.r3d-hud *,
+.r3d-hud *::before,
+.r3d-hud *::after {
+  box-sizing: border-box;
+}
+
+/* ------------------------------ 通用卡片 ------------------------------ */
+.r3d-card {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 8px 10px 9px;
+  background: var(--r3d-paper);
+  border: 1px solid var(--r3d-ink);
+  border-radius: 2px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.22);
+  pointer-events: none;
+  color: var(--r3d-ink);
+}
+
+.r3d-kicker {
+  font-family: var(--r3d-mono);
+  font-size: 8px;
+  line-height: 1.2;
+  letter-spacing: 0.16em;
+  color: var(--r3d-muted);
+  text-transform: uppercase;
+}
+
+.r3d-title {
+  font-family: var(--r3d-sans);
+  font-size: 13px;
+  font-weight: 650;
+  line-height: 1.25;
+  letter-spacing: 0.04em;
+  color: var(--r3d-ink);
+}
+
+.r3d-meta {
+  font-family: var(--r3d-mono);
+  font-size: 8.5px;
+  line-height: 1.35;
+  color: var(--r3d-ink-2);
+  letter-spacing: 0.02em;
+  font-variant-numeric: tabular-nums;
+}
+
+.r3d-line {
+  margin-top: 2px;
+  padding-top: 4px;
+  border-top: 1px solid var(--r3d-grey);
+  font-family: var(--r3d-mono);
+  font-size: 8px;
+  line-height: 1.45;
+  color: var(--r3d-ink-2);
+  letter-spacing: 0.02em;
+}
+
+.r3d-note {
+  font-family: var(--r3d-mono);
+  font-size: 7.5px;
+  line-height: 1.45;
+  color: var(--r3d-warn);
+  letter-spacing: 0.03em;
+}
+
+/* ------------------------------ 左上：观测状态卡 ------------------------------ */
+.r3d-status {
+  left: 18px;
+  top: 46px;
+  width: 292px;
+  max-width: 38%;
+}
+
+.r3d-status .r3d-title::before {
+  content: "";
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  margin-right: 6px;
+  background: var(--r3d-signal);
+  border: 1px solid var(--r3d-ink);
+  vertical-align: 1px;
+}
+
+/* ------------------------------ 右下：视角卡 ------------------------------ */
+.r3d-view {
+  right: 18px;
+  bottom: 44px;
+  width: 262px;
+  max-width: 34%;
+  gap: 5px;
+}
+
+.r3d-view-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.r3d-view-preset {
+  font-family: var(--r3d-sans);
+  font-size: 12.5px;
+  font-weight: 650;
+  letter-spacing: 0.08em;
+  color: var(--r3d-ink);
+}
+
+.r3d-tag {
+  font-family: var(--r3d-mono);
+  font-size: 7.5px;
+  letter-spacing: 0.1em;
+  padding: 1px 5px;
+  color: var(--r3d-ink);
+  background: var(--r3d-signal);
+  border: 1px solid var(--r3d-ink);
+  border-radius: 1px;
+  white-space: nowrap;
+}
+
+.r3d-hint {
+  font-family: var(--r3d-mono);
+  font-size: 8px;
+  line-height: 1.5;
+  color: var(--r3d-muted);
+  letter-spacing: 0.01em;
+}
+
+.r3d-scale-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 1px;
+  padding-top: 5px;
+  border-top: 1px solid var(--r3d-grey);
+}
+
+.r3d-scale-bar {
+  position: relative;
+  display: block;
+  flex: none;
+  height: 6px;
+  width: 80px;
+  border: 1px solid var(--r3d-ink);
+  border-top: none;
+  background: repeating-linear-gradient(90deg, var(--r3d-ink) 0 1px, transparent 1px 8px);
+}
+
+.r3d-scale-tick {
+  position: absolute;
+  top: -3px;
+  width: 1px;
+  height: 8px;
+  background: var(--r3d-ink);
+}
+
+.r3d-scale-tick.is-start { left: 0; }
+.r3d-scale-tick.is-mid { left: 50%; top: -2px; height: 6px; }
+.r3d-scale-tick.is-end { right: 0; }
+
+.r3d-scale-label {
+  font-family: var(--r3d-mono);
+  font-size: 8px;
+  letter-spacing: 0.05em;
+  color: var(--r3d-ink);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.r3d-perf {
+  margin-top: 1px;
+  padding-top: 4px;
+  border-top: 1px solid var(--r3d-grey-2);
+  font-family: var(--r3d-mono);
+  font-size: 7.5px;
+  line-height: 1.4;
+  letter-spacing: 0.02em;
+  color: var(--r3d-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ------------------------------ 右上：近景卡 ------------------------------ */
+.r3d-near {
+  right: 18px;
+  top: 46px;
+  width: 312px;
+  max-width: 40%;
+  max-height: calc(100% - 92px);
+  overflow: auto;
+  gap: 6px;
+  pointer-events: auto;
+  scrollbar-width: thin;
+}
+
+.r3d-near-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid var(--r3d-grey);
+}
+
+.r3d-near-headtext {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.r3d-near-title {
+  font-family: var(--r3d-sans);
+  font-size: 15px;
+  font-weight: 650;
+  line-height: 1.2;
+  letter-spacing: 0.06em;
+  color: var(--r3d-ink);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.r3d-icon-btn {
+  flex: none;
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  border: 1px solid var(--r3d-grey);
+  border-radius: 2px;
+  background: transparent;
+  color: var(--r3d-muted);
+  font-family: var(--r3d-mono);
+  font-size: 13px;
+  line-height: 1;
+  cursor: pointer;
+  pointer-events: auto;
+}
+
+.r3d-icon-btn:hover {
+  border-color: var(--r3d-ink);
+  background: var(--r3d-signal);
+  color: var(--r3d-ink);
+}
+
+.r3d-near-accent {
+  height: 3px;
+  background: var(--r3d-ink);
+  opacity: 0.85;
+}
+
+.r3d-near-sub {
+  font-family: var(--r3d-mono);
+  font-size: 8.5px;
+  line-height: 1.4;
+  letter-spacing: 0.02em;
+  color: var(--r3d-ink-2);
+}
+
+.r3d-near-warning {
+  padding: 4px 7px;
+  border: 1px solid var(--r3d-warn);
+  border-left: 3px solid var(--r3d-signal);
+  background: var(--r3d-paper-soft);
+  font-family: var(--r3d-mono);
+  font-size: 8px;
+  line-height: 1.5;
+  color: var(--r3d-warn);
+}
+
+.r3d-near-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  border: 1px solid var(--r3d-grey);
+  background: var(--r3d-grey);
+}
+
+.r3d-near-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 3px 6px;
+  background: var(--r3d-paper);
+}
+
+.r3d-near-label {
+  font-family: var(--r3d-mono);
+  font-size: 7.5px;
+  line-height: 1.4;
+  letter-spacing: 0.06em;
+  color: var(--r3d-muted);
+  white-space: nowrap;
+}
+
+.r3d-near-value {
+  font-family: var(--r3d-mono);
+  font-size: 9px;
+  line-height: 1.4;
+  color: var(--r3d-ink);
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.r3d-near-value[data-tone="muted"] { color: var(--r3d-ink-2); }
+.r3d-near-value[data-tone="warn"] { color: var(--r3d-warn); }
+.r3d-near-value[data-tone="ok"] { color: var(--r3d-ok); }
+
+.r3d-near-targets {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 4px;
+}
+
+.r3d-target-btn {
+  padding: 4px 2px;
+  border: 1px solid var(--r3d-grey);
+  border-radius: 2px;
+  background: var(--r3d-paper);
+  color: var(--r3d-ink);
+  font-family: var(--r3d-mono);
+  font-size: 8.5px;
+  line-height: 1.2;
+  letter-spacing: 0.02em;
+  cursor: pointer;
+  pointer-events: auto;
+  white-space: nowrap;
+}
+
+.r3d-target-btn:hover {
+  border-color: var(--r3d-ink);
+  background: var(--r3d-signal);
+}
+
+.r3d-target-btn.is-active {
+  background: var(--r3d-ink);
+  border-color: var(--r3d-ink);
+  color: #ffffff;
+}
+
+.r3d-near-footer {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding-top: 5px;
+  border-top: 1px solid var(--r3d-grey);
+}
+
+.r3d-near-note {
+  font-family: var(--r3d-mono);
+  font-size: 7.5px;
+  letter-spacing: 0.04em;
+  color: var(--r3d-muted);
+}
+
+.r3d-near-zoom {
+  font-family: var(--r3d-mono);
+  font-size: 7.5px;
+  line-height: 1.4;
+  color: var(--r3d-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.r3d-return-btn {
+  margin-top: 2px;
+  padding: 5px 8px;
+  border: 1px solid var(--r3d-ink);
+  border-radius: 2px;
+  background: var(--r3d-paper);
+  color: var(--r3d-ink);
+  font-family: var(--r3d-sans);
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  cursor: pointer;
+  pointer-events: auto;
+}
+
+.r3d-return-btn:hover {
+  background: var(--r3d-signal);
+}
+
+.r3d-return-btn:active {
+  background: var(--signal-deep, #e8e800);
+}
+
+/* ------------------------------ 天体标签（投影 HTML 芯片） ------------------------------ */
+.r3d-label {
+  padding: 2px 5px;
+  background: var(--r3d-paper, #ffffff);
+  border: 1px solid var(--r3d-ink, #111111);
+  border-radius: 2px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.28);
+  font-family: var(--r3d-mono, Consolas, monospace);
+  line-height: 1.18;
+  pointer-events: none;
+}
+
+.r3d-label-line {
+  white-space: nowrap;
+}
+
+/* ------------------------------ 小屏/低高度适配 ------------------------------ */
+@media (max-height: 780px) {
+  .r3d-status {
+    top: 40px;
+    width: 258px;
+  }
+  .r3d-near {
+    top: 40px;
+    max-height: calc(100% - 80px);
+  }
+  .r3d-view {
+    bottom: 36px;
+    width: 238px;
+  }
+  .r3d-hint {
+    display: none;
+  }
+}
+
+@media (max-width: 1280px) {
+  .r3d-status {
+    width: 252px;
+  }
+  .r3d-near {
+    width: 268px;
+  }
+  .r3d-view {
+    width: 226px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .r3d-hud * {
+    transition: none !important;
+  }
+}

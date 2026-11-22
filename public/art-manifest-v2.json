@@ -1,0 +1,607 @@
+{
+  "project": "TRISOLARIS: CIVILIZATION",
+  "title": "三体纪元 · 美术资产清单 V2（几何科幻 UI 装饰 + 五时代插图）",
+  "version": "2.0.0",
+  "generatedAt": "2026-11-21T00:15:05+08:00",
+  "spec": "docs/ART_V2_SPEC.md",
+  "scope": "public/ui/**、public/backgrounds/{menu-bg-v2,nebula-v2}.jpg、public/images/era-{1..5}-v2.jpg、public/icons/era-{1..5}.svg",
+  "generator": {
+    "method": "procedural-render",
+    "engine": "numpy 2.3（fBm 噪声/体积光/球面光照/几何栅格）+ Pillow 12（合成/羽化/JPEG）",
+    "designSpace": "字体肌理与构图在 1920x1080 设计空间绘制，最后 LANCZOS 放大到 2048x1152；JPEG quality=91 progressive",
+    "scripts": "%TEMP%\\artgen_v2（v2lib.py / gen_backgrounds_v2.py / gen_eras_v2.py）与 %TEMP%\\artgen_finish（finishlib.py / gen_e3.py / gen_e4.py / gen_e5.py / scan-assets.mjs）；生成脚本不随仓库分发，资产可复现",
+    "seeds": "全部 seeded deterministic（1310-1321 / 1401-1410 / 1501-1508）",
+    "externalAssets": "none",
+    "generateImage": "本批未调用；按规格与历史（此前 generate_image 在环境不可用）采用本地程序化绘制兜底",
+    "handoffFix": "交接时 public/images/era-1-v2.jpg 为 244,455 字节全零损坏文件（JPEG 头缺失），已重新生成并通过真实文件头校验"
+  },
+  "style": {
+    "keywords": [
+      "hard sci-fi",
+      "geometric HUD",
+      "dark terminal",
+      "cyan + amber",
+      "no text burnt-in"
+    ],
+    "palette": {
+      "bg": "#05070D",
+      "bg2": "#0A101C",
+      "panel": "rgba(10,18,32,0.82)",
+      "line": "rgba(90,160,220,0.22)",
+      "text": "#CFE3F5",
+      "muted": "#7890A8",
+      "accent": "#37E5FF",
+      "accentHot": "#8FE9FF",
+      "warn": "#FFC857",
+      "danger": "#FF5D6C",
+      "ok": "#4EF2B0",
+      "starPurple": "#B48CFF"
+    },
+    "guidelines": [
+      "背景保持低对比、暗部为主，主体避开左上/左侧 UI 负空间",
+      "所有插画禁止烧录文字；文案由 DOM 渲染，便于本地化与可访问性",
+      "时代插图统一 16:9 2048x1152，作为卡片/过场时用 object-fit: cover",
+      "SVG 装饰均为几何矢量，可任意缩放；颜色以冷青 #37E5FF 为基准"
+    ]
+  },
+  "checks": {
+    "method": "Node 读取真实文件头：JPEG SOF0/SOF2 段、PNG IHDR；SVG 解析 <svg> 根节点 width/height/viewBox；同时验证非空、非全零、无占位文本",
+    "verifiedAt": "2026-11-21T00:15:05+08:00",
+    "command": "node %TEMP%\\artgen_finish\\scan-assets.mjs（等价校验脚本）",
+    "expected": {
+      "eraIllustrations": "2048x1152 (>=1600x900)",
+      "backgrounds": "2048x1152",
+      "noise": "128x128",
+      "eraIcons": "128x128 矢量（viewBox 0 0 128 128）"
+    },
+    "assetCount": 19,
+    "failCount": 0,
+    "results": [
+      {
+        "path": "public/ui/orbit-ring.svg",
+        "width": 512,
+        "height": 512,
+        "bytes": 3885,
+        "status": "OK"
+      },
+      {
+        "path": "public/ui/frame-corner.svg",
+        "width": 96,
+        "height": 96,
+        "bytes": 1477,
+        "status": "OK"
+      },
+      {
+        "path": "public/ui/hatch.svg",
+        "width": 48,
+        "height": 48,
+        "bytes": 1031,
+        "status": "OK"
+      },
+      {
+        "path": "public/ui/slash-divider.svg",
+        "width": 320,
+        "height": 24,
+        "bytes": 1332,
+        "status": "OK"
+      },
+      {
+        "path": "public/ui/parallelogram-tab.svg",
+        "width": 240,
+        "height": 56,
+        "bytes": 1394,
+        "status": "OK"
+      },
+      {
+        "path": "public/ui/radar.svg",
+        "width": 512,
+        "height": 512,
+        "bytes": 3593,
+        "status": "OK"
+      },
+      {
+        "path": "public/ui/noise.png",
+        "width": 128,
+        "height": 128,
+        "bytes": 23017,
+        "status": "OK"
+      },
+      {
+        "path": "public/backgrounds/menu-bg-v2.jpg",
+        "width": 2048,
+        "height": 1152,
+        "bytes": 259484,
+        "status": "OK"
+      },
+      {
+        "path": "public/backgrounds/nebula-v2.jpg",
+        "width": 2048,
+        "height": 1152,
+        "bytes": 275592,
+        "status": "OK"
+      },
+      {
+        "path": "public/images/era-1-v2.jpg",
+        "width": 2048,
+        "height": 1152,
+        "bytes": 275700,
+        "status": "OK"
+      },
+      {
+        "path": "public/images/era-2-v2.jpg",
+        "width": 2048,
+        "height": 1152,
+        "bytes": 280432,
+        "status": "OK"
+      },
+      {
+        "path": "public/images/era-3-v2.jpg",
+        "width": 2048,
+        "height": 1152,
+        "bytes": 300330,
+        "status": "OK"
+      },
+      {
+        "path": "public/images/era-4-v2.jpg",
+        "width": 2048,
+        "height": 1152,
+        "bytes": 287225,
+        "status": "OK"
+      },
+      {
+        "path": "public/images/era-5-v2.jpg",
+        "width": 2048,
+        "height": 1152,
+        "bytes": 332942,
+        "status": "OK"
+      },
+      {
+        "path": "public/icons/era-1.svg",
+        "width": 128,
+        "height": 128,
+        "bytes": 2381,
+        "status": "OK"
+      },
+      {
+        "path": "public/icons/era-2.svg",
+        "width": 128,
+        "height": 128,
+        "bytes": 2421,
+        "status": "OK"
+      },
+      {
+        "path": "public/icons/era-3.svg",
+        "width": 128,
+        "height": 128,
+        "bytes": 1836,
+        "status": "OK"
+      },
+      {
+        "path": "public/icons/era-4.svg",
+        "width": 128,
+        "height": 128,
+        "bytes": 2258,
+        "status": "OK"
+      },
+      {
+        "path": "public/icons/era-5.svg",
+        "width": 128,
+        "height": 128,
+        "bytes": 2510,
+        "status": "OK"
+      }
+    ]
+  },
+  "assets": [
+    {
+      "id": "ui-orbit-ring",
+      "path": "public/ui/orbit-ring.svg",
+      "url": "/ui/orbit-ring.svg",
+      "category": "ui-decoration",
+      "type": "svg",
+      "bytes": 3885,
+      "sha256": "bb5df6d3b4b99e7bf964cb4397adc79f4e59c683009eecb7499abcaf155d6de7",
+      "status": "OK",
+      "width": 512,
+      "height": 512,
+      "aspect": 1,
+      "viewBox": "0 0 512 512",
+      "blendMode": "overlay/screen 可选",
+      "source": "原创手写 SVG 几何（矢量，无外部素材/无字体依赖/无 AI 生图）",
+      "usage": "同心圆 HUD 环：时代进度环、观测瞄准环、资源环形表底；可 CSS 旋转/描边动画（slow rotate）",
+      "tags": [
+        "ui-decoration",
+        "svg",
+        "512x512"
+      ]
+    },
+    {
+      "id": "ui-frame-corner",
+      "path": "public/ui/frame-corner.svg",
+      "url": "/ui/frame-corner.svg",
+      "category": "ui-decoration",
+      "type": "svg",
+      "bytes": 1477,
+      "sha256": "54340b1ce61cbb53aeecf07df6871cee74c8e1b75d5dbcaf49a0ea83f96ccf03",
+      "status": "OK",
+      "width": 96,
+      "height": 96,
+      "aspect": 1,
+      "viewBox": "0 0 96 96",
+      "blendMode": "overlay/screen 可选",
+      "source": "原创手写 SVG 几何（矢量，无外部素材/无字体依赖/无 AI 生图）",
+      "usage": "切角面板角标：面板四角用 background-image 四角定位，或 9-slice；pointer-events:none",
+      "tags": [
+        "ui-decoration",
+        "svg",
+        "96x96"
+      ]
+    },
+    {
+      "id": "ui-hatch",
+      "path": "public/ui/hatch.svg",
+      "url": "/ui/hatch.svg",
+      "category": "ui-texture",
+      "type": "svg",
+      "bytes": 1031,
+      "sha256": "b71276490a4f6cc1c9700eb8ee4635ceade6c490fb4998800a3f20ddf1d199e7",
+      "status": "OK",
+      "width": 48,
+      "height": 48,
+      "aspect": 1,
+      "viewBox": "0 0 48 48",
+      "blendMode": "overlay/screen 可选",
+      "source": "原创手写 SVG 几何（矢量，无外部素材/无字体依赖/无 AI 生图）",
+      "usage": "45° 排线平铺：面板页脚/侧栏/空态底纹，background-repeat:repeat，透明度 0.05-0.12",
+      "tags": [
+        "ui-texture",
+        "svg",
+        "48x48"
+      ]
+    },
+    {
+      "id": "ui-slash-divider",
+      "path": "public/ui/slash-divider.svg",
+      "url": "/ui/slash-divider.svg",
+      "category": "ui-decoration",
+      "type": "svg",
+      "bytes": 1332,
+      "sha256": "606f57bfc0357e6d3fd72cdeddcb685e082a12e8ab5400e0f701000b0b402250",
+      "status": "OK",
+      "width": 320,
+      "height": 24,
+      "aspect": 13.3333,
+      "viewBox": "0 0 320 24",
+      "blendMode": "overlay/screen 可选",
+      "source": "原创手写 SVG 几何（矢量，无外部素材/无字体依赖/无 AI 生图）",
+      "usage": "斜切分隔条：标题下/段落间分隔，background-size:100% 100% 横向拉伸",
+      "tags": [
+        "ui-decoration",
+        "svg",
+        "320x24"
+      ]
+    },
+    {
+      "id": "ui-parallelogram-tab",
+      "path": "public/ui/parallelogram-tab.svg",
+      "url": "/ui/parallelogram-tab.svg",
+      "category": "ui-decoration",
+      "type": "svg",
+      "bytes": 1394,
+      "sha256": "28e9bf5b01b05f4fa65d676584f061e6519619d4832e53396b808b2080688561",
+      "status": "OK",
+      "width": 240,
+      "height": 56,
+      "aspect": 4.2857,
+      "viewBox": "0 0 240 56",
+      "blendMode": "overlay/screen 可选",
+      "source": "原创手写 SVG 几何（矢量，无外部素材/无字体依赖/无 AI 生图）",
+      "usage": "平行四边形页签底型：右侧面板页签、底部 dock 图标底板，background-size:100% 100%",
+      "tags": [
+        "ui-decoration",
+        "svg",
+        "240x56"
+      ]
+    },
+    {
+      "id": "ui-radar",
+      "path": "public/ui/radar.svg",
+      "url": "/ui/radar.svg",
+      "category": "ui-decoration",
+      "type": "svg",
+      "bytes": 3593,
+      "sha256": "f22409cdc45eb689cd9ea92808458fdce4d117020e5099085859e2ffa2aad099",
+      "status": "OK",
+      "width": 512,
+      "height": 512,
+      "aspect": 1,
+      "viewBox": "0 0 512 512",
+      "blendMode": "overlay/screen 可选",
+      "source": "原创手写 SVG 几何（矢量，无外部素材/无字体依赖/无 AI 生图）",
+      "usage": "雷达同心圆+扫描扇形：灾害警报、观测扫描状态；CSS rotate 扫描动画",
+      "tags": [
+        "ui-decoration",
+        "svg",
+        "512x512"
+      ]
+    },
+    {
+      "id": "ui-noise",
+      "path": "public/ui/noise.png",
+      "url": "/ui/noise.png",
+      "category": "ui-texture",
+      "type": "png",
+      "bytes": 23017,
+      "sha256": "3949c67643bd2d51e4c1c49a9ec4ec357c7d7975105c278b82e23c922d5f9e07",
+      "status": "OK",
+      "width": 128,
+      "height": 128,
+      "aspect": 1,
+      "blendMode": "overlay/screen 可选",
+      "source": "原创程序化噪声纹理由 Pillow 生成（无外部素材/无网络下载）",
+      "usage": "胶片噪点：叠加在背景/面板上，mix-blend-mode:overlay 或 soft-light，opacity .04-.08",
+      "tags": [
+        "ui-texture",
+        "png",
+        "128x128"
+      ]
+    },
+    {
+      "id": "bg-menu-v2",
+      "path": "public/backgrounds/menu-bg-v2.jpg",
+      "url": "/backgrounds/menu-bg-v2.jpg",
+      "category": "background",
+      "type": "jpeg",
+      "bytes": 259484,
+      "sha256": "003188d1b0a31272e39fcdade66aece57fde38fa6f4e2b4869d03b193a9c5673",
+      "status": "OK",
+      "width": 2048,
+      "height": 1152,
+      "aspect": 1.7778,
+      "blendMode": "normal",
+      "source": "原创程序化几何绘制（numpy + Pillow 合成/后期）；无外部素材、无网络下载、无 AI 生图。详见 docs/ART_V2.md",
+      "usage": "主菜单全屏背景（三恒星+观测站剪影，左侧负空间）：object-fit:cover + 线性渐变遮罩 + 扫描线",
+      "tags": [
+        "background",
+        "jpg",
+        "2048x1152"
+      ]
+    },
+    {
+      "id": "bg-nebula-v2",
+      "path": "public/backgrounds/nebula-v2.jpg",
+      "url": "/backgrounds/nebula-v2.jpg",
+      "category": "background",
+      "type": "jpeg",
+      "bytes": 275592,
+      "sha256": "43fe4d2d71a82751c1b957190179dd0c1c1e642350489b0eaa0fa74b32aef66a",
+      "status": "OK",
+      "width": 2048,
+      "height": 1152,
+      "aspect": 1.7778,
+      "blendMode": "normal",
+      "source": "原创程序化几何绘制（numpy + Pillow 合成/后期）；无外部素材、无网络下载、无 AI 生图。详见 docs/ART_V2.md",
+      "usage": "深空网格星云底图：游戏主视图/3D 视图背后、弹窗背后低调叠加，适合上面压 HUD",
+      "tags": [
+        "background",
+        "jpg",
+        "2048x1152"
+      ]
+    },
+    {
+      "id": "era-1-v2",
+      "path": "public/images/era-1-v2.jpg",
+      "url": "/images/era-1-v2.jpg",
+      "category": "era-illustration",
+      "type": "jpeg",
+      "bytes": 275700,
+      "sha256": "7679743ce6fffa19fab8c28865a98981d16864df4b14f5f798646e982906d503",
+      "status": "OK",
+      "width": 2048,
+      "height": 1152,
+      "aspect": 1.7778,
+      "blendMode": "normal",
+      "source": "原创程序化几何绘制（numpy + Pillow 合成/后期）；无外部素材、无网络下载、无 AI 生图。详见 docs/ART_V2.md",
+      "usage": "E1 原始时代插图：时代时间线/新时代解锁过场/新游戏预览；主体在右下、左上留白",
+      "tags": [
+        "era-illustration",
+        "jpg",
+        "2048x1152"
+      ]
+    },
+    {
+      "id": "era-2-v2",
+      "path": "public/images/era-2-v2.jpg",
+      "url": "/images/era-2-v2.jpg",
+      "category": "era-illustration",
+      "type": "jpeg",
+      "bytes": 280432,
+      "sha256": "40af5dc71aaa6f60cadfbef00cad6b3f4499611be948440cc8592825f3417d85",
+      "status": "OK",
+      "width": 2048,
+      "height": 1152,
+      "aspect": 1.7778,
+      "blendMode": "normal",
+      "source": "原创程序化几何绘制（numpy + Pillow 合成/后期）；无外部素材、无网络下载、无 AI 生图。详见 docs/ART_V2.md",
+      "usage": "E2 农业城邦插图：时代卡片与过场；梯田/城墙/观星台",
+      "tags": [
+        "era-illustration",
+        "jpg",
+        "2048x1152"
+      ]
+    },
+    {
+      "id": "era-3-v2",
+      "path": "public/images/era-3-v2.jpg",
+      "url": "/images/era-3-v2.jpg",
+      "category": "era-illustration",
+      "type": "jpeg",
+      "bytes": 300330,
+      "sha256": "a7a4c606cda5cabfb251b32cf81e3439608f323636b1474296cfa317a7f9894b",
+      "status": "OK",
+      "width": 2048,
+      "height": 1152,
+      "aspect": 1.7778,
+      "blendMode": "normal",
+      "source": "原创程序化几何绘制（numpy + Pillow 合成/后期）；无外部素材、无网络下载、无 AI 生图。详见 docs/ART_V2.md",
+      "usage": "E3 蒸汽与电气插图：工业烟囱/电网/望远镜/机械计算机；时代卡片与过场",
+      "tags": [
+        "era-illustration",
+        "jpg",
+        "2048x1152"
+      ]
+    },
+    {
+      "id": "era-4-v2",
+      "path": "public/images/era-4-v2.jpg",
+      "url": "/images/era-4-v2.jpg",
+      "category": "era-illustration",
+      "type": "jpeg",
+      "bytes": 287225,
+      "sha256": "789e61d9972c37c5a2f87ba852b2731bafa71597e78e29a04acb8074003b945f",
+      "status": "OK",
+      "width": 2048,
+      "height": 1152,
+      "aspect": 1.7778,
+      "blendMode": "normal",
+      "source": "原创程序化几何绘制（numpy + Pillow 合成/后期）；无外部素材、无网络下载、无 AI 生图。详见 docs/ART_V2.md",
+      "usage": "E4 信息与航天插图：超算中心/雷达阵/轨道站/火箭发射；时代卡片与过场",
+      "tags": [
+        "era-illustration",
+        "jpg",
+        "2048x1152"
+      ]
+    },
+    {
+      "id": "era-5-v2",
+      "path": "public/images/era-5-v2.jpg",
+      "url": "/images/era-5-v2.jpg",
+      "category": "era-illustration",
+      "type": "jpeg",
+      "bytes": 332942,
+      "sha256": "b696cebff098b7073470376a040ead960ba1894a85b70bd140407eaa04ea78da",
+      "status": "OK",
+      "width": 2048,
+      "height": 1152,
+      "aspect": 1.7778,
+      "blendMode": "normal",
+      "source": "原创程序化几何绘制（numpy + Pillow 合成/后期）；无外部素材、无网络下载、无 AI 生图。详见 docs/ART_V2.md",
+      "usage": "E5 星际文明插图：星环/行星发动机/聚变环/太空港/殖民穹顶；结局与时代卡片",
+      "tags": [
+        "era-illustration",
+        "jpg",
+        "2048x1152"
+      ]
+    },
+    {
+      "id": "icon-era-1",
+      "path": "public/icons/era-1.svg",
+      "url": "/icons/era-1.svg",
+      "category": "era-emblem",
+      "type": "svg",
+      "bytes": 2381,
+      "sha256": "02901159ca9f803f32a084f7d386575cdbc10207c9b54345a8278c0d2342ba6c",
+      "status": "OK",
+      "width": 128,
+      "height": 128,
+      "aspect": 1,
+      "viewBox": "0 0 128 128",
+      "blendMode": "overlay/screen 可选",
+      "source": "原创手写 SVG 几何（矢量，无外部素材/无字体依赖/无 AI 生图）",
+      "usage": "E1 时代徽记：顶部 HUD 时代标记、时代时间线节点、建造/科技面板时代标签（128 viewBox）",
+      "tags": [
+        "era-emblem",
+        "svg",
+        "128x128"
+      ]
+    },
+    {
+      "id": "icon-era-2",
+      "path": "public/icons/era-2.svg",
+      "url": "/icons/era-2.svg",
+      "category": "era-emblem",
+      "type": "svg",
+      "bytes": 2421,
+      "sha256": "4122070855e02212dd1345770c4cdcecb61716804d4a3ecb1a1da61b8acbc645",
+      "status": "OK",
+      "width": 128,
+      "height": 128,
+      "aspect": 1,
+      "viewBox": "0 0 128 128",
+      "blendMode": "overlay/screen 可选",
+      "source": "原创手写 SVG 几何（矢量，无外部素材/无字体依赖/无 AI 生图）",
+      "usage": "E2 时代徽记（同上）",
+      "tags": [
+        "era-emblem",
+        "svg",
+        "128x128"
+      ]
+    },
+    {
+      "id": "icon-era-3",
+      "path": "public/icons/era-3.svg",
+      "url": "/icons/era-3.svg",
+      "category": "era-emblem",
+      "type": "svg",
+      "bytes": 1836,
+      "sha256": "3f4c686559ba4faf0381a699747ef7227661fa681eb27a34edcfdf986db02106",
+      "status": "OK",
+      "width": 128,
+      "height": 128,
+      "aspect": 1,
+      "viewBox": "0 0 128 128",
+      "blendMode": "overlay/screen 可选",
+      "source": "原创手写 SVG 几何（矢量，无外部素材/无字体依赖/无 AI 生图）",
+      "usage": "E3 时代徽记（同上）",
+      "tags": [
+        "era-emblem",
+        "svg",
+        "128x128"
+      ]
+    },
+    {
+      "id": "icon-era-4",
+      "path": "public/icons/era-4.svg",
+      "url": "/icons/era-4.svg",
+      "category": "era-emblem",
+      "type": "svg",
+      "bytes": 2258,
+      "sha256": "ec623b9c05a5a7a0f072a4a089f46b3bc5a87bb2f77b402d7633c664e75aca75",
+      "status": "OK",
+      "width": 128,
+      "height": 128,
+      "aspect": 1,
+      "viewBox": "0 0 128 128",
+      "blendMode": "overlay/screen 可选",
+      "source": "原创手写 SVG 几何（矢量，无外部素材/无字体依赖/无 AI 生图）",
+      "usage": "E4 时代徽记（同上）",
+      "tags": [
+        "era-emblem",
+        "svg",
+        "128x128"
+      ]
+    },
+    {
+      "id": "icon-era-5",
+      "path": "public/icons/era-5.svg",
+      "url": "/icons/era-5.svg",
+      "category": "era-emblem",
+      "type": "svg",
+      "bytes": 2510,
+      "sha256": "cfd054667361c5cd0735e9c9b25c6e1e7de4f7d0a6fa85c346755054f949b544",
+      "status": "OK",
+      "width": 128,
+      "height": 128,
+      "aspect": 1,
+      "viewBox": "0 0 128 128",
+      "blendMode": "overlay/screen 可选",
+      "source": "原创手写 SVG 几何（矢量，无外部素材/无字体依赖/无 AI 生图）",
+      "usage": "E5 时代徽记（同上）",
+      "tags": [
+        "era-emblem",
+        "svg",
+        "128x128"
+      ]
+    }
+  ]
+}

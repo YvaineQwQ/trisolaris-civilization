@@ -1,0 +1,976 @@
+{
+  "project": "TRISOLARIS: CIVILIZATION",
+  "title": "三体纪元 · 美术资产清单",
+  "version": "1.0.0",
+  "generatedAt": "2026-11-15T23:14:23+08:00",
+  "generator": {
+    "method": "procedural-render",
+    "engine": "numpy 2.3 fBm/体积光/球面光照 + Pillow 12 合成",
+    "script": "%TEMP%\\artgen_artdev\\ (artlib.py / gen_backgrounds.py / gen_scenes.py / gen_icons.py)",
+    "seeds": "deterministic (501-2208)",
+    "attempts_generate_image": 10,
+    "images_requested_from_api": 14,
+    "api_status": "unavailable",
+    "fallback_reason": "N image(s) failed to generate"
+  },
+  "style": {
+    "keywords": [
+      "hard sci-fi",
+      "deep space observatory",
+      "cinematic",
+      "cyan+amber",
+      "dark UI"
+    ],
+    "baseStylePrompt": "hard science fiction, deep-space observatory, cinematic matte painting, dark navy/charcoal, cyan #3FD0FF + amber #FFC857 accents, volumetric light, no text, no watermark, no logo, composition leaves negative space for HUD panels",
+    "palette": {
+      "bg": "#05070D",
+      "bg2": "#0A101C",
+      "panel": "rgba(10,18,32,0.82)",
+      "line": "rgba(90,160,220,0.22)",
+      "text": "#CFE3F5",
+      "muted": "#7890A8",
+      "accent": "#3FD0FF",
+      "warn": "#FFC857",
+      "danger": "#FF5B6E",
+      "ok": "#4EF2B0",
+      "starA": "#FF6B4A",
+      "starB": "#5AD2FF",
+      "starC": "#B48CFF"
+    },
+    "guidelines": [
+      "背景保持低对比、暗部为主，避免与 HUD 面板抢注意力",
+      "恒星/母星 PNG 为纯黑底 + 干净边缘，适合 mix-blend-mode: screen",
+      "所有插画禁止烧录文字；文案由 DOM 渲染，便于本地化与可访问性",
+      "16:9 插画主体居中偏右或偏下，左上/左侧留 UI 负空间",
+      "作为全屏背景时插画曝光略高于纯黑 UI，保证叠加 HUD 后仍可读"
+    ]
+  },
+  "assets": [
+    {
+      "id": "menu-bg",
+      "path": "backgrounds/menu-bg.jpg",
+      "url": "/backgrounds/menu-bg.jpg",
+      "type": "jpeg",
+      "category": "background",
+      "width": 2048,
+      "height": 1152,
+      "bytes": 218804,
+      "aspect": 1.7778,
+      "blendMode": "normal",
+      "source": "程序化渲染（numpy + Pillow，本地生成；无外部素材/无版权风险）。generate_image（Agnes）在本次会话中尝试 10 次、共 14 个 prompt 全部失败（ToolCallError: N image(s) failed to generate），故按任务要求改用程序化兜底。",
+      "promptSummary": "主菜单背景：三颗不同色温恒星（赤橙/青蓝/幽紫）悬在异星地平线上，巨大环行星与深空观测站剪影，冷峻硬科幻电影感，左侧留出 UI 负空间。统一风格：hard science fiction, deep-space observatory, cinematic matte painting, dark navy/charcoal, cyan #3FD0FF + amber #FFC857 accents, volumetric light, no text, no watermark, no logo, composition leaves negative space for HUD panels",
+      "usage": "主菜单全屏背景（src/ui/screen-menu.ts 已引用 backgrounds/menu-bg.jpg，解析为 /backgrounds/menu-bg.jpg）；建议配渐变遮罩 + 扫描线。",
+      "tags": [
+        "menu",
+        "hero",
+        "16:9"
+      ]
+    },
+    {
+      "id": "nebula-bg",
+      "path": "backgrounds/nebula-bg.jpg",
+      "url": "/backgrounds/nebula-bg.jpg",
+      "type": "jpeg",
+      "category": "background",
+      "width": 2048,
+      "height": 1152,
+      "bytes": 197519,
+      "aspect": 1.7778,
+      "blendMode": "normal",
+      "source": "程序化渲染（numpy + Pillow，本地生成；无外部素材/无版权风险）。generate_image（Agnes）在本次会话中尝试 10 次、共 14 个 prompt 全部失败（ToolCallError: N image(s) failed to generate），故按任务要求改用程序化兜底。",
+      "promptSummary": "深空星云与银河背景：暗色、低对比、细碎星点，无强焦点，适合半透明面板叠加。统一风格：hard science fiction, deep-space observatory, cinematic matte painting, dark navy/charcoal, cyan #3FD0FF + amber #FFC857 accents, volumetric light, no text, no watermark, no logo, composition leaves negative space for HUD panels",
+      "usage": "新游戏 / 读档 / 结算等界面的叠加底图；建议 opacity 0.35-0.55 + mix-blend-mode: screen。",
+      "tags": [
+        "nebula",
+        "overlay",
+        "16:9"
+      ]
+    },
+    {
+      "id": "star-a",
+      "path": "images/star-a.png",
+      "url": "/images/star-a.png",
+      "type": "png",
+      "category": "stellar",
+      "width": 1600,
+      "height": 1600,
+      "bytes": 1803759,
+      "aspect": 1.0,
+      "blendMode": "screen",
+      "source": "程序化渲染（numpy + Pillow，本地生成；无外部素材/无版权风险）。generate_image（Agnes）在本次会话中尝试 10 次、共 14 个 prompt 全部失败（ToolCallError: N image(s) failed to generate），故按任务要求改用程序化兜底。",
+      "promptSummary": "赤橙色恒星特写（色温约 3000K），黑底、边缘干净，球面颗粒纹理、临边昏暗、日冕与磁环耀斑，用于 screen 混合。",
+      "usage": "恒星 A「赤曜」档案 / 观测面板 / 3D 辅助视图贴图；CSS mix-blend-mode: screen，背景自动透出。",
+      "tags": [
+        "star-a",
+        "1:1",
+        "screen"
+      ]
+    },
+    {
+      "id": "star-b",
+      "path": "images/star-b.png",
+      "url": "/images/star-b.png",
+      "type": "png",
+      "category": "stellar",
+      "width": 1600,
+      "height": 1600,
+      "bytes": 1760271,
+      "aspect": 1.0,
+      "blendMode": "screen",
+      "source": "程序化渲染（numpy + Pillow，本地生成；无外部素材/无版权风险）。generate_image（Agnes）在本次会话中尝试 10 次、共 14 个 prompt 全部失败（ToolCallError: N image(s) failed to generate），故按任务要求改用程序化兜底。",
+      "promptSummary": "青蓝色恒星特写（色温约 12000K），黑底、边缘干净，蓝白日冕与耀斑。",
+      "usage": "恒星 B「青曜」档案 / 观测面板 / 3D 视图贴图；mix-blend-mode: screen。",
+      "tags": [
+        "star-b",
+        "1:1",
+        "screen"
+      ]
+    },
+    {
+      "id": "star-c",
+      "path": "images/star-c.png",
+      "url": "/images/star-c.png",
+      "type": "png",
+      "category": "stellar",
+      "width": 1600,
+      "height": 1600,
+      "bytes": 1764487,
+      "aspect": 1.0,
+      "blendMode": "screen",
+      "source": "程序化渲染（numpy + Pillow，本地生成；无外部素材/无版权风险）。generate_image（Agnes）在本次会话中尝试 10 次、共 14 个 prompt 全部失败（ToolCallError: N image(s) failed to generate），故按任务要求改用程序化兜底。",
+      "promptSummary": "幽紫色恒星特写（假想高能谱段），黑底、边缘干净，紫色日冕与耀斑。",
+      "usage": "恒星 C「幽曜」档案 / 观测面板 / 3D 视图贴图；mix-blend-mode: screen。",
+      "tags": [
+        "star-c",
+        "1:1",
+        "screen"
+      ]
+    },
+    {
+      "id": "planet",
+      "path": "images/planet.png",
+      "url": "/images/planet.png",
+      "type": "png",
+      "category": "planet",
+      "width": 1600,
+      "height": 1600,
+      "bytes": 1891281,
+      "aspect": 1.0,
+      "blendMode": "screen",
+      "source": "程序化渲染（numpy + Pillow，本地生成；无外部素材/无版权风险）。generate_image（Agnes）在本次会话中尝试 10 次、共 14 个 prompt 全部失败（ToolCallError: N image(s) failed to generate），故按任务要求改用程序化兜底。",
+      "promptSummary": "文明母星：类地行星，海洋/大陆/云层，夜侧琥珀色城市灯光，蓝色大气边缘，纯黑背景 1:1。",
+      "usage": "母星观测面板 / 文明概况插图 / 结局页面；mix-blend-mode: screen 可去掉黑底。",
+      "tags": [
+        "planet",
+        "1:1",
+        "screen"
+      ]
+    },
+    {
+      "id": "era-1",
+      "path": "images/era-1.jpg",
+      "url": "/images/era-1.jpg",
+      "type": "jpeg",
+      "category": "era",
+      "width": 2048,
+      "height": 1152,
+      "bytes": 243267,
+      "aspect": 1.7778,
+      "blendMode": "normal",
+      "source": "程序化渲染（numpy + Pillow，本地生成；无外部素材/无版权风险）。generate_image（Agnes）在本次会话中尝试 10 次、共 14 个 prompt 全部失败（ToolCallError: N image(s) failed to generate），故按任务要求改用程序化兜底。",
+      "promptSummary": "时代 1「仰望星空」：黄昏原始农业文明，石阵观星台与围火人群，三颗太阳低垂地平线，青蓝+琥珀统一色调。 统一风格：hard science fiction, deep-space observatory, cinematic matte painting, dark navy/charcoal, cyan #3FD0FF + amber #FFC857 accents, volumetric light, no text, no watermark, no logo, composition leaves negative space for HUD panels",
+      "usage": "左侧面板「文明阶段」插图、新游戏时代预览、读档缩略图、时代晋升弹窗。",
+      "tags": [
+        "era",
+        "era-1",
+        "16:9"
+      ]
+    },
+    {
+      "id": "era-2",
+      "path": "images/era-2.jpg",
+      "url": "/images/era-2.jpg",
+      "type": "jpeg",
+      "category": "era",
+      "width": 2048,
+      "height": 1152,
+      "bytes": 250640,
+      "aspect": 1.7778,
+      "blendMode": "normal",
+      "source": "程序化渲染（numpy + Pillow，本地生成；无外部素材/无版权风险）。generate_image（Agnes）在本次会话中尝试 10 次、共 14 个 prompt 全部失败（ToolCallError: N image(s) failed to generate），故按任务要求改用程序化兜底。",
+      "promptSummary": "时代 2「文明曙光」：工业城市剪影、烟囱烟羽、黄铜望远镜观测穹顶，雾霾橙色地平线与青色天光。 统一风格：hard science fiction, deep-space observatory, cinematic matte painting, dark navy/charcoal, cyan #3FD0FF + amber #FFC857 accents, volumetric light, no text, no watermark, no logo, composition leaves negative space for HUD panels",
+      "usage": "左侧面板「文明阶段」插图、新游戏时代预览、读档缩略图、时代晋升弹窗。",
+      "tags": [
+        "era",
+        "era-2",
+        "16:9"
+      ]
+    },
+    {
+      "id": "era-3",
+      "path": "images/era-3.jpg",
+      "url": "/images/era-3.jpg",
+      "type": "jpeg",
+      "category": "era",
+      "width": 2048,
+      "height": 1152,
+      "bytes": 296374,
+      "aspect": 1.7778,
+      "blendMode": "normal",
+      "source": "程序化渲染（numpy + Pillow，本地生成；无外部素材/无版权风险）。generate_image（Agnes）在本次会话中尝试 10 次、共 14 个 prompt 全部失败（ToolCallError: N image(s) failed to generate），故按任务要求改用程序化兜底。",
+      "promptSummary": "时代 3「混沌时代」：风暴红天、三颗太阳过近、闪电与龟裂大地、避难所剪影，戏剧化但克制的硬科幻构图。 统一风格：hard science fiction, deep-space observatory, cinematic matte painting, dark navy/charcoal, cyan #3FD0FF + amber #FFC857 accents, volumetric light, no text, no watermark, no logo, composition leaves negative space for HUD panels",
+      "usage": "左侧面板「文明阶段」插图、新游戏时代预览、读档缩略图、时代晋升弹窗。",
+      "tags": [
+        "era",
+        "era-3",
+        "16:9"
+      ]
+    },
+    {
+      "id": "era-4",
+      "path": "images/era-4.jpg",
+      "url": "/images/era-4.jpg",
+      "type": "jpeg",
+      "category": "era",
+      "width": 2048,
+      "height": 1152,
+      "bytes": 332445,
+      "aspect": 1.7778,
+      "blendMode": "normal",
+      "source": "程序化渲染（numpy + Pillow，本地生成；无外部素材/无版权风险）。generate_image（Agnes）在本次会话中尝试 10 次、共 14 个 prompt 全部失败（ToolCallError: N image(s) failed to generate），故按任务要求改用程序化兜底。",
+      "promptSummary": "时代 4「预测未来」：深色控制中心内的大型全息轨道投影（三体轨道曲线、网格、投影锥），控制台剪影与琥珀指示灯。 统一风格：hard science fiction, deep-space observatory, cinematic matte painting, dark navy/charcoal, cyan #3FD0FF + amber #FFC857 accents, volumetric light, no text, no watermark, no logo, composition leaves negative space for HUD panels",
+      "usage": "左侧面板「文明阶段」插图、新游戏时代预览、读档缩略图、时代晋升弹窗。",
+      "tags": [
+        "era",
+        "era-4",
+        "16:9"
+      ]
+    },
+    {
+      "id": "era-5",
+      "path": "images/era-5.jpg",
+      "url": "/images/era-5.jpg",
+      "type": "jpeg",
+      "category": "era",
+      "width": 2048,
+      "height": 1152,
+      "bytes": 259985,
+      "aspect": 1.7778,
+      "blendMode": "normal",
+      "source": "程序化渲染（numpy + Pillow，本地生成；无外部素材/无版权风险）。generate_image（Agnes）在本次会话中尝试 10 次、共 14 个 prompt 全部失败（ToolCallError: N image(s) failed to generate），故按任务要求改用程序化兜底。",
+      "promptSummary": "时代 5「文明的选择」：轨道视角，母星弧、轨道环、太空电梯缆绳与上升殖民船队，三颗太阳与星云，青蓝+琥珀希望感。 统一风格：hard science fiction, deep-space observatory, cinematic matte painting, dark navy/charcoal, cyan #3FD0FF + amber #FFC857 accents, volumetric light, no text, no watermark, no logo, composition leaves negative space for HUD panels",
+      "usage": "左侧面板「文明阶段」插图、新游戏时代预览、读档缩略图、时代晋升弹窗。",
+      "tags": [
+        "era",
+        "era-5",
+        "16:9"
+      ]
+    },
+    {
+      "id": "disaster-heat",
+      "path": "images/disaster-heat.jpg",
+      "url": "/images/disaster-heat.jpg",
+      "type": "jpeg",
+      "category": "hazard",
+      "width": 2048,
+      "height": 1152,
+      "bytes": 316832,
+      "aspect": 1.7778,
+      "blendMode": "normal",
+      "source": "程序化渲染（numpy + Pillow，本地生成；无外部素材/无版权风险）。generate_image（Agnes）在本次会话中尝试 10 次、共 14 个 prompt 全部失败（ToolCallError: N image(s) failed to generate），故按任务要求改用程序化兜底。",
+      "promptSummary": "高温灾害：赤红天空、三颗太阳、行星地平线上等温线/热流科学可视化叠加，橙红辐射色。 风格：戏剧化但科学可视化（等值线/轨迹/场线），hard science fiction, deep-space observatory, cinematic matte painting, dark navy/charcoal, cyan #3FD0FF + amber #FFC857 accents, volumetric light, no text, no watermark, no logo, composition leaves negative space for HUD panels",
+      "usage": "灾害面板顶部插图、预警弹窗、事件日志条目缩略图；对应 HazardKind：heat/cold/closeEncounter/radiationSurge。",
+      "tags": [
+        "hazard",
+        "16:9"
+      ]
+    },
+    {
+      "id": "disaster-cold",
+      "path": "images/disaster-cold.jpg",
+      "url": "/images/disaster-cold.jpg",
+      "type": "jpeg",
+      "category": "hazard",
+      "width": 2048,
+      "height": 1152,
+      "bytes": 304644,
+      "aspect": 1.7778,
+      "blendMode": "normal",
+      "source": "程序化渲染（numpy + Pillow，本地生成；无外部素材/无版权风险）。generate_image（Agnes）在本次会话中尝试 10 次、共 14 个 prompt 全部失败（ToolCallError: N image(s) failed to generate），故按任务要求改用程序化兜底。",
+      "promptSummary": "严寒灾害：极光带、冰封地表与冰裂纹、冷色等温线叠加、苍白恒星，蓝青色调。 风格：戏剧化但科学可视化（等值线/轨迹/场线），hard science fiction, deep-space observatory, cinematic matte painting, dark navy/charcoal, cyan #3FD0FF + amber #FFC857 accents, volumetric light, no text, no watermark, no logo, composition leaves negative space for HUD panels",
+      "usage": "灾害面板顶部插图、预警弹窗、事件日志条目缩略图；对应 HazardKind：heat/cold/closeEncounter/radiationSurge。",
+      "tags": [
+        "hazard",
+        "16:9"
+      ]
+    },
+    {
+      "id": "disaster-close-encounter",
+      "path": "images/disaster-close-encounter.jpg",
+      "url": "/images/disaster-close-encounter.jpg",
+      "type": "jpeg",
+      "category": "hazard",
+      "width": 2048,
+      "height": 1152,
+      "bytes": 292035,
+      "aspect": 1.7778,
+      "blendMode": "normal",
+      "source": "程序化渲染（numpy + Pillow，本地生成；无外部素材/无版权风险）。generate_image（Agnes）在本次会话中尝试 10 次、共 14 个 prompt 全部失败（ToolCallError: N image(s) failed to generate），故按任务要求改用程序化兜底。",
+      "promptSummary": "近距离恒星遭遇：巨型入侵恒星球体占据左侧、右侧母星与引力井环、虚线预测轨迹与潮汐力箭头。 风格：戏剧化但科学可视化（等值线/轨迹/场线），hard science fiction, deep-space observatory, cinematic matte painting, dark navy/charcoal, cyan #3FD0FF + amber #FFC857 accents, volumetric light, no text, no watermark, no logo, composition leaves negative space for HUD panels",
+      "usage": "灾害面板顶部插图、预警弹窗、事件日志条目缩略图；对应 HazardKind：heat/cold/closeEncounter/radiationSurge。",
+      "tags": [
+        "hazard",
+        "16:9"
+      ]
+    },
+    {
+      "id": "disaster-radiation",
+      "path": "images/disaster-radiation.jpg",
+      "url": "/images/disaster-radiation.jpg",
+      "type": "jpeg",
+      "category": "hazard",
+      "width": 2048,
+      "height": 1152,
+      "bytes": 275754,
+      "aspect": 1.7778,
+      "blendMode": "normal",
+      "source": "程序化渲染（numpy + Pillow，本地生成；无外部素材/无版权风险）。generate_image（Agnes）在本次会话中尝试 10 次、共 14 个 prompt 全部失败（ToolCallError: N image(s) failed to generate），故按任务要求改用程序化兜底。",
+      "promptSummary": "辐射暴：蓝紫高能恒星向母星喷射粒子流、磁层辐射带、极区极光、粒子数据可视化。 风格：戏剧化但科学可视化（等值线/轨迹/场线），hard science fiction, deep-space observatory, cinematic matte painting, dark navy/charcoal, cyan #3FD0FF + amber #FFC857 accents, volumetric light, no text, no watermark, no logo, composition leaves negative space for HUD panels",
+      "usage": "灾害面板顶部插图、预警弹窗、事件日志条目缩略图；对应 HazardKind：heat/cold/closeEncounter/radiationSurge。",
+      "tags": [
+        "hazard",
+        "16:9"
+      ]
+    },
+    {
+      "id": "observatory-1",
+      "path": "images/observatory-1.jpg",
+      "url": "/images/observatory-1.jpg",
+      "type": "jpeg",
+      "category": "observatory",
+      "width": 2048,
+      "height": 1152,
+      "bytes": 237420,
+      "aspect": 1.7778,
+      "blendMode": "normal",
+      "source": "程序化渲染（numpy + Pillow，本地生成；无外部素材/无版权风险）。generate_image（Agnes）在本次会话中尝试 10 次、共 14 个 prompt 全部失败（ToolCallError: N image(s) failed to generate），故按任务要求改用程序化兜底。",
+      "promptSummary": "天文台等级 1-2（基础观测站/专业天文台）：山脊上的小型观测穹顶与控制小屋，夜空三恒星与母星。 风格：hard science fiction, deep-space observatory, cinematic matte painting, dark navy/charcoal, cyan #3FD0FF + amber #FFC857 accents, volumetric light, no text, no watermark, no logo, composition leaves negative space for HUD panels",
+      "usage": "天文台升级面板插图（按等级映射：1-2 -> observatory-1，3-5 -> observatory-3，6 -> observatory-6）。",
+      "tags": [
+        "observatory",
+        "16:9"
+      ]
+    },
+    {
+      "id": "observatory-3",
+      "path": "images/observatory-3.jpg",
+      "url": "/images/observatory-3.jpg",
+      "type": "jpeg",
+      "category": "observatory",
+      "width": 2048,
+      "height": 1152,
+      "bytes": 233807,
+      "aspect": 1.7778,
+      "blendMode": "normal",
+      "source": "程序化渲染（numpy + Pillow，本地生成；无外部素材/无版权风险）。generate_image（Agnes）在本次会话中尝试 10 次、共 14 个 prompt 全部失败（ToolCallError: N image(s) failed to generate），故按任务要求改用程序化兜底。",
+      "promptSummary": "天文台等级 3-5（高级观测中心/轨道动力学研究所）：高原大型穹顶群、分段镜面射电阵列、激光导星束。 风格：hard science fiction, deep-space observatory, cinematic matte painting, dark navy/charcoal, cyan #3FD0FF + amber #FFC857 accents, volumetric light, no text, no watermark, no logo, composition leaves negative space for HUD panels",
+      "usage": "天文台升级面板插图（按等级映射：1-2 -> observatory-1，3-5 -> observatory-3，6 -> observatory-6）。",
+      "tags": [
+        "observatory",
+        "16:9"
+      ]
+    },
+    {
+      "id": "observatory-6",
+      "path": "images/observatory-6.jpg",
+      "url": "/images/observatory-6.jpg",
+      "type": "jpeg",
+      "category": "observatory",
+      "width": 2048,
+      "height": 1152,
+      "bytes": 276249,
+      "aspect": 1.7778,
+      "blendMode": "normal",
+      "source": "程序化渲染（numpy + Pillow，本地生成；无外部素材/无版权风险）。generate_image（Agnes）在本次会话中尝试 10 次、共 14 个 prompt 全部失败（ToolCallError: N image(s) failed to generate），故按任务要求改用程序化兜底。",
+      "promptSummary": "天文台等级 6（超级观测网络）：行星尺度天线阵列、轨道环与卫星星座、干涉测量激光链路、网络化全息连线。 风格：hard science fiction, deep-space observatory, cinematic matte painting, dark navy/charcoal, cyan #3FD0FF + amber #FFC857 accents, volumetric light, no text, no watermark, no logo, composition leaves negative space for HUD panels",
+      "usage": "天文台升级面板插图（按等级映射：1-2 -> observatory-1，3-5 -> observatory-3，6 -> observatory-6）。",
+      "tags": [
+        "observatory",
+        "16:9"
+      ]
+    },
+    {
+      "id": "ending-victory",
+      "path": "images/ending-victory.jpg",
+      "url": "/images/ending-victory.jpg",
+      "type": "jpeg",
+      "category": "ending",
+      "width": 2048,
+      "height": 1152,
+      "bytes": 259977,
+      "aspect": 1.7778,
+      "blendMode": "normal",
+      "source": "程序化渲染（numpy + Pillow，本地生成；无外部素材/无版权风险）。generate_image（Agnes）在本次会话中尝试 10 次、共 14 个 prompt 全部失败（ToolCallError: N image(s) failed to generate），故按任务要求改用程序化兜底。",
+      "promptSummary": "胜利结局：黎明时分母星弧与轨道环，殖民舰队拖曳青蓝尾焰驶向三星，暖金晨光放射，史诗希望感。 风格：hard science fiction, deep-space observatory, cinematic matte painting, dark navy/charcoal, cyan #3FD0FF + amber #FFC857 accents, volumetric light, no text, no watermark, no logo, composition leaves negative space for HUD panels",
+      "usage": "结局全屏插画（victory / defeat），可叠加半透明结局面板与统计数据。",
+      "tags": [
+        "ending",
+        "16:9"
+      ]
+    },
+    {
+      "id": "ending-defeat",
+      "path": "images/ending-defeat.jpg",
+      "url": "/images/ending-defeat.jpg",
+      "type": "jpeg",
+      "category": "ending",
+      "width": 2048,
+      "height": 1152,
+      "bytes": 259078,
+      "aspect": 1.7778,
+      "blendMode": "normal",
+      "source": "程序化渲染（numpy + Pillow，本地生成；无外部素材/无版权风险）。generate_image（Agnes）在本次会话中尝试 10 次、共 14 个 prompt 全部失败（ToolCallError: N image(s) failed to generate），故按任务要求改用程序化兜底。",
+      "promptSummary": "失败结局：死寂母星地表，残破观测穹顶与折断天线、城市废墟剪影、昏暗红日与尘霾，冷峻萧瑟。 风格：hard science fiction, deep-space observatory, cinematic matte painting, dark navy/charcoal, cyan #3FD0FF + amber #FFC857 accents, volumetric light, no text, no watermark, no logo, composition leaves negative space for HUD panels",
+      "usage": "结局全屏插画（victory / defeat），可叠加半透明结局面板与统计数据。",
+      "tags": [
+        "ending",
+        "16:9"
+      ]
+    }
+  ],
+  "icons": {
+    "manifest": "icons/manifest.json",
+    "url": "/icons/manifest.json",
+    "count": 41,
+    "groups": {
+      "buildings": {
+        "label": "建筑",
+        "count": 24,
+        "items": [
+          "farm",
+          "hydroponics",
+          "water-plant",
+          "housing",
+          "clinic",
+          "storage",
+          "mine",
+          "metalworks",
+          "reactor",
+          "solar-array",
+          "fusion-reactor",
+          "factory",
+          "observatory",
+          "radio-telescope",
+          "research-lab",
+          "university",
+          "supercomputer",
+          "accelerator",
+          "spaceport",
+          "shipyard",
+          "planetary-shield",
+          "weather-control",
+          "planet-engine",
+          "colony-hub"
+        ]
+      },
+      "resources": {
+        "label": "资源",
+        "count": 6,
+        "items": [
+          "food",
+          "water",
+          "energy",
+          "minerals",
+          "metals",
+          "science"
+        ]
+      },
+      "tech": {
+        "label": "科技分支",
+        "count": 5,
+        "items": [
+          "tech-astronomy",
+          "tech-energy",
+          "tech-industry",
+          "tech-biology",
+          "tech-space"
+        ]
+      },
+      "hazards": {
+        "label": "灾害",
+        "count": 5,
+        "items": [
+          "hazard-heat",
+          "hazard-cold",
+          "hazard-radiation",
+          "hazard-encounter",
+          "hazard-orbit"
+        ]
+      }
+    },
+    "fallback": {
+      "id": "unknown",
+      "file": "/icons/unknown.svg",
+      "label": "未知"
+    },
+    "items": [
+      {
+        "id": "accelerator",
+        "path": "icons/accelerator.svg",
+        "url": "/icons/accelerator.svg",
+        "type": "svg",
+        "viewBox": "0 0 24 24",
+        "size": "24x24",
+        "bytes": 502,
+        "source": "手绘 SVG path（程序化生成，viewBox 24x24，stroke=currentColor，stroke-width=1.5）",
+        "usage": "UI 图标备用集；内联使用可继承 currentColor，img 引用需 CSS mask 或 filter。"
+      },
+      {
+        "id": "clinic",
+        "path": "icons/clinic.svg",
+        "url": "/icons/clinic.svg",
+        "type": "svg",
+        "viewBox": "0 0 24 24",
+        "size": "24x24",
+        "bytes": 353,
+        "source": "手绘 SVG path（程序化生成，viewBox 24x24，stroke=currentColor，stroke-width=1.5）",
+        "usage": "UI 图标备用集；内联使用可继承 currentColor，img 引用需 CSS mask 或 filter。"
+      },
+      {
+        "id": "colony-hub",
+        "path": "icons/colony-hub.svg",
+        "url": "/icons/colony-hub.svg",
+        "type": "svg",
+        "viewBox": "0 0 24 24",
+        "size": "24x24",
+        "bytes": 418,
+        "source": "手绘 SVG path（程序化生成，viewBox 24x24，stroke=currentColor，stroke-width=1.5）",
+        "usage": "UI 图标备用集；内联使用可继承 currentColor，img 引用需 CSS mask 或 filter。"
+      },
+      {
+        "id": "energy",
+        "path": "icons/energy.svg",
+        "url": "/icons/energy.svg",
+        "type": "svg",
+        "viewBox": "0 0 24 24",
+        "size": "24x24",
+        "bytes": 297,
+        "source": "手绘 SVG path（程序化生成，viewBox 24x24，stroke=currentColor，stroke-width=1.5）",
+        "usage": "UI 图标备用集；内联使用可继承 currentColor，img 引用需 CSS mask 或 filter。"
+      },
+      {
+        "id": "factory",
+        "path": "icons/factory.svg",
+        "url": "/icons/factory.svg",
+        "type": "svg",
+        "viewBox": "0 0 24 24",
+        "size": "24x24",
+        "bytes": 377,
+        "source": "手绘 SVG path（程序化生成，viewBox 24x24，stroke=currentColor，stroke-width=1.5）",
+        "usage": "UI 图标备用集；内联使用可继承 currentColor，img 引用需 CSS mask 或 filter。"
+      },
+      {
+        "id": "farm",
+        "path": "icons/farm.svg",
+        "url": "/icons/farm.svg",
+        "type": "svg",
+        "viewBox": "0 0 24 24",
+        "size": "24x24",
+        "bytes": 374,
+        "source": "手绘 SVG path（程序化生成，viewBox 24x24，stroke=currentColor，stroke-width=1.5）",
+        "usage": "UI 图标备用集；内联使用可继承 currentColor，img 引用需 CSS mask 或 filter。"
+      },
+      {
+        "id": "food",
+        "path": "icons/food.svg",
+        "url": "/icons/food.svg",
+        "type": "svg",
+        "viewBox": "0 0 24 24",
+        "size": "24x24",
+        "bytes": 652,
+        "source": "手绘 SVG path（程序化生成，viewBox 24x24，stroke=currentColor，stroke-width=1.5）",
+        "usage": "UI 图标备用集；内联使用可继承 currentColor，img 引用需 CSS mask 或 filter。"
+      },
+      {
+        "id": "fusion-reactor",
+        "path": "icons/fusion-reactor.svg",
+        "url": "/icons/fusion-reactor.svg",
+        "type": "svg",
+        "viewBox": "0 0 24 24",
+        "size": "24x24",
+        "bytes": 399,
+        "source": "手绘 SVG path（程序化生成，viewBox 24x24，stroke=currentColor，stroke-width=1.5）",
+        "usage": "UI 图标备用集；内联使用可继承 currentColor，img 引用需 CSS mask 或 filter。"
+      },
+      {
+        "id": "hazard-cold",
+        "path": "icons/hazard-cold.svg",
+        "url": "/icons/hazard-cold.svg",
+        "type": "svg",
+        "viewBox": "0 0 24 24",
+        "size": "24x24",
+        "bytes": 497,
+        "source": "手绘 SVG path（程序化生成，viewBox 24x24，stroke=currentColor，stroke-width=1.5）",
+        "usage": "UI 图标备用集；内联使用可继承 currentColor，img 引用需 CSS mask 或 filter。"
+      },
+      {
+        "id": "hazard-encounter",
+        "path": "icons/hazard-encounter.svg",
+        "url": "/icons/hazard-encounter.svg",
+        "type": "svg",
+        "viewBox": "0 0 24 24",
+        "size": "24x24",
+        "bytes": 410,
+        "source": "手绘 SVG path（程序化生成，viewBox 24x24，stroke=currentColor，stroke-width=1.5）",
+        "usage": "UI 图标备用集；内联使用可继承 currentColor，img 引用需 CSS mask 或 filter。"
+      },
+      {
+        "id": "hazard-heat",
+        "path": "icons/hazard-heat.svg",
+        "url": "/icons/hazard-heat.svg",
+        "type": "svg",
+        "viewBox": "0 0 24 24",
+        "size": "24x24",
+        "bytes": 483,
+        "source": "手绘 SVG path（程序化生成，viewBox 24x24，stroke=currentColor，stroke-width=1.5）",
+        "usage": "UI 图标备用集；内联使用可继承 currentColor，img 引用需 CSS mask 或 filter。"
+      },
+      {
+        "id": "hazard-orbit",
+        "path": "icons/hazard-orbit.svg",
+        "url": "/icons/hazard-orbit.svg",
+        "type": "svg",
+        "viewBox": "0 0 24 24",
+        "size": "24x24",
+        "bytes": 433,
+        "source": "手绘 SVG path（程序化生成，viewBox 24x24，stroke=currentColor，stroke-width=1.5）",
+        "usage": "UI 图标备用集；内联使用可继承 currentColor，img 引用需 CSS mask 或 filter。"
+      },
+      {
+        "id": "hazard-radiation",
+        "path": "icons/hazard-radiation.svg",
+        "url": "/icons/hazard-radiation.svg",
+        "type": "svg",
+        "viewBox": "0 0 24 24",
+        "size": "24x24",
+        "bytes": 448,
+        "source": "手绘 SVG path（程序化生成，viewBox 24x24，stroke=currentColor，stroke-width=1.5）",
+        "usage": "UI 图标备用集；内联使用可继承 currentColor，img 引用需 CSS mask 或 filter。"
+      },
+      {
+        "id": "housing",
+        "path": "icons/housing.svg",
+        "url": "/icons/housing.svg",
+        "type": "svg",
+        "viewBox": "0 0 24 24",
+        "size": "24x24",
+        "bytes": 447,
+        "source": "手绘 SVG path（程序化生成，viewBox 24x24，stroke=currentColor，stroke-width=1.5）",
+        "usage": "UI 图标备用集；内联使用可继承 currentColor，img 引用需 CSS mask 或 filter。"
+      },
+      {
+        "id": "hydroponics",
+        "path": "icons/hydroponics.svg",
+        "url": "/icons/hydroponics.svg",
+        "type": "svg",
+        "viewBox": "0 0 24 24",
+        "size": "24x24",
+        "bytes": 454,
+        "source": "手绘 SVG path（程序化生成，viewBox 24x24，stroke=currentColor，stroke-width=1.5）",
+        "usage": "UI 图标备用集；内联使用可继承 currentColor，img 引用需 CSS mask 或 filter。"
+      },
+      {
+        "id": "metals",
+        "path": "icons/metals.svg",
+        "url": "/icons/metals.svg",
+        "type": "svg",
+        "viewBox": "0 0 24 24",
+        "size": "24x24",
+        "bytes": 342,
+        "source": "手绘 SVG path（程序化生成，viewBox 24x24，stroke=currentColor，stroke-width=1.5）",
+        "usage": "UI 图标备用集；内联使用可继承 currentColor，img 引用需 CSS mask 或 filter。"
+      },
+      {
+        "id": "metalworks",
+        "path": "icons/metalworks.svg",
+        "url": "/icons/metalworks.svg",
+        "type": "svg",
+        "viewBox": "0 0 24 24",
+        "size": "24x24",
+        "bytes": 401,
+        "source": "手绘 SVG path（程序化生成，viewBox 24x24，stroke=currentColor，stroke-width=1.5）",
+        "usage": "UI 图标备用集；内联使用可继承 currentColor，img 引用需 CSS mask 或 filter。"
+      },
+      {
+        "id": "mine",
+        "path": "icons/mine.svg",
+        "url": "/icons/mine.svg",
+        "type": "svg",
+        "viewBox": "0 0 24 24",
+        "size": "24x24",
+        "bytes": 385,
+        "source": "手绘 SVG path（程序化生成，viewBox 24x24，stroke=currentColor，stroke-width=1.5）",
+        "usage": "UI 图标备用集；内联使用可继承 currentColor，img 引用需 CSS mask 或 filter。"
+      },
+      {
+        "id": "minerals",
+        "path": "icons/minerals.svg",
+        "url": "/icons/minerals.svg",
+        "type": "svg",
+        "viewBox": "0 0 24 24",
+        "size": "24x24",
+        "bytes": 399,
+        "source": "手绘 SVG path（程序化生成，viewBox 24x24，stroke=currentColor，stroke-width=1.5）",
+        "usage": "UI 图标备用集；内联使用可继承 currentColor，img 引用需 CSS mask 或 filter。"
+      },
+      {
+        "id": "observatory",
+        "path": "icons/observatory.svg",
+        "url": "/icons/observatory.svg",
+        "type": "svg",
+        "viewBox": "0 0 24 24",
+        "size": "24x24",
+        "bytes": 391,
+        "source": "手绘 SVG path（程序化生成，viewBox 24x24，stroke=currentColor，stroke-width=1.5）",
+        "usage": "UI 图标备用集；内联使用可继承 currentColor，img 引用需 CSS mask 或 filter。"
+      },
+      {
+        "id": "planet-engine",
+        "path": "icons/planet-engine.svg",
+        "url": "/icons/planet-engine.svg",
+        "type": "svg",
+        "viewBox": "0 0 24 24",
+        "size": "24x24",
+        "bytes": 395,
+        "source": "手绘 SVG path（程序化生成，viewBox 24x24，stroke=currentColor，stroke-width=1.5）",
+        "usage": "UI 图标备用集；内联使用可继承 currentColor，img 引用需 CSS mask 或 filter。"
+      },
+      {
+        "id": "planetary-shield",
+        "path": "icons/planetary-shield.svg",
+        "url": "/icons/planetary-shield.svg",
+        "type": "svg",
+        "viewBox": "0 0 24 24",
+        "size": "24x24",
+        "bytes": 364,
+        "source": "手绘 SVG path（程序化生成，viewBox 24x24，stroke=currentColor，stroke-width=1.5）",
+        "usage": "UI 图标备用集；内联使用可继承 currentColor，img 引用需 CSS mask 或 filter。"
+      },
+      {
+        "id": "radio-telescope",
+        "path": "icons/radio-telescope.svg",
+        "url": "/icons/radio-telescope.svg",
+        "type": "svg",
+        "viewBox": "0 0 24 24",
+        "size": "24x24",
+        "bytes": 399,
+        "source": "手绘 SVG path（程序化生成，viewBox 24x24，stroke=currentColor，stroke-width=1.5）",
+        "usage": "UI 图标备用集；内联使用可继承 currentColor，img 引用需 CSS mask 或 filter。"
+      },
+      {
+        "id": "reactor",
+        "path": "icons/reactor.svg",
+        "url": "/icons/reactor.svg",
+        "type": "svg",
+        "viewBox": "0 0 24 24",
+        "size": "24x24",
+        "bytes": 397,
+        "source": "手绘 SVG path（程序化生成，viewBox 24x24，stroke=currentColor，stroke-width=1.5）",
+        "usage": "UI 图标备用集；内联使用可继承 currentColor，img 引用需 CSS mask 或 filter。"
+      },
+      {
+        "id": "research-lab",
+        "path": "icons/research-lab.svg",
+        "url": "/icons/research-lab.svg",
+        "type": "svg",
+        "viewBox": "0 0 24 24",
+        "size": "24x24",
+        "bytes": 442,
+        "source": "手绘 SVG path（程序化生成，viewBox 24x24，stroke=currentColor，stroke-width=1.5）",
+        "usage": "UI 图标备用集；内联使用可继承 currentColor，img 引用需 CSS mask 或 filter。"
+      },
+      {
+        "id": "science",
+        "path": "icons/science.svg",
+        "url": "/icons/science.svg",
+        "type": "svg",
+        "viewBox": "0 0 24 24",
+        "size": "24x24",
+        "bytes": 460,
+        "source": "手绘 SVG path（程序化生成，viewBox 24x24，stroke=currentColor，stroke-width=1.5）",
+        "usage": "UI 图标备用集；内联使用可继承 currentColor，img 引用需 CSS mask 或 filter。"
+      },
+      {
+        "id": "shipyard",
+        "path": "icons/shipyard.svg",
+        "url": "/icons/shipyard.svg",
+        "type": "svg",
+        "viewBox": "0 0 24 24",
+        "size": "24x24",
+        "bytes": 411,
+        "source": "手绘 SVG path（程序化生成，viewBox 24x24，stroke=currentColor，stroke-width=1.5）",
+        "usage": "UI 图标备用集；内联使用可继承 currentColor，img 引用需 CSS mask 或 filter。"
+      },
+      {
+        "id": "solar-array",
+        "path": "icons/solar-array.svg",
+        "url": "/icons/solar-array.svg",
+        "type": "svg",
+        "viewBox": "0 0 24 24",
+        "size": "24x24",
+        "bytes": 472,
+        "source": "手绘 SVG path（程序化生成，viewBox 24x24，stroke=currentColor，stroke-width=1.5）",
+        "usage": "UI 图标备用集；内联使用可继承 currentColor，img 引用需 CSS mask 或 filter。"
+      },
+      {
+        "id": "spaceport",
+        "path": "icons/spaceport.svg",
+        "url": "/icons/spaceport.svg",
+        "type": "svg",
+        "viewBox": "0 0 24 24",
+        "size": "24x24",
+        "bytes": 441,
+        "source": "手绘 SVG path（程序化生成，viewBox 24x24，stroke=currentColor，stroke-width=1.5）",
+        "usage": "UI 图标备用集；内联使用可继承 currentColor，img 引用需 CSS mask 或 filter。"
+      },
+      {
+        "id": "storage",
+        "path": "icons/storage.svg",
+        "url": "/icons/storage.svg",
+        "type": "svg",
+        "viewBox": "0 0 24 24",
+        "size": "24x24",
+        "bytes": 377,
+        "source": "手绘 SVG path（程序化生成，viewBox 24x24，stroke=currentColor，stroke-width=1.5）",
+        "usage": "UI 图标备用集；内联使用可继承 currentColor，img 引用需 CSS mask 或 filter。"
+      },
+      {
+        "id": "supercomputer",
+        "path": "icons/supercomputer.svg",
+        "url": "/icons/supercomputer.svg",
+        "type": "svg",
+        "viewBox": "0 0 24 24",
+        "size": "24x24",
+        "bytes": 463,
+        "source": "手绘 SVG path（程序化生成，viewBox 24x24，stroke=currentColor，stroke-width=1.5）",
+        "usage": "UI 图标备用集；内联使用可继承 currentColor，img 引用需 CSS mask 或 filter。"
+      },
+      {
+        "id": "tech-astronomy",
+        "path": "icons/tech-astronomy.svg",
+        "url": "/icons/tech-astronomy.svg",
+        "type": "svg",
+        "viewBox": "0 0 24 24",
+        "size": "24x24",
+        "bytes": 461,
+        "source": "手绘 SVG path（程序化生成，viewBox 24x24，stroke=currentColor，stroke-width=1.5）",
+        "usage": "UI 图标备用集；内联使用可继承 currentColor，img 引用需 CSS mask 或 filter。"
+      },
+      {
+        "id": "tech-biology",
+        "path": "icons/tech-biology.svg",
+        "url": "/icons/tech-biology.svg",
+        "type": "svg",
+        "viewBox": "0 0 24 24",
+        "size": "24x24",
+        "bytes": 368,
+        "source": "手绘 SVG path（程序化生成，viewBox 24x24，stroke=currentColor，stroke-width=1.5）",
+        "usage": "UI 图标备用集；内联使用可继承 currentColor，img 引用需 CSS mask 或 filter。"
+      },
+      {
+        "id": "tech-energy",
+        "path": "icons/tech-energy.svg",
+        "url": "/icons/tech-energy.svg",
+        "type": "svg",
+        "viewBox": "0 0 24 24",
+        "size": "24x24",
+        "bytes": 358,
+        "source": "手绘 SVG path（程序化生成，viewBox 24x24，stroke=currentColor，stroke-width=1.5）",
+        "usage": "UI 图标备用集；内联使用可继承 currentColor，img 引用需 CSS mask 或 filter。"
+      },
+      {
+        "id": "tech-industry",
+        "path": "icons/tech-industry.svg",
+        "url": "/icons/tech-industry.svg",
+        "type": "svg",
+        "viewBox": "0 0 24 24",
+        "size": "24x24",
+        "bytes": 434,
+        "source": "手绘 SVG path（程序化生成，viewBox 24x24，stroke=currentColor，stroke-width=1.5）",
+        "usage": "UI 图标备用集；内联使用可继承 currentColor，img 引用需 CSS mask 或 filter。"
+      },
+      {
+        "id": "tech-space",
+        "path": "icons/tech-space.svg",
+        "url": "/icons/tech-space.svg",
+        "type": "svg",
+        "viewBox": "0 0 24 24",
+        "size": "24x24",
+        "bytes": 391,
+        "source": "手绘 SVG path（程序化生成，viewBox 24x24，stroke=currentColor，stroke-width=1.5）",
+        "usage": "UI 图标备用集；内联使用可继承 currentColor，img 引用需 CSS mask 或 filter。"
+      },
+      {
+        "id": "university",
+        "path": "icons/university.svg",
+        "url": "/icons/university.svg",
+        "type": "svg",
+        "viewBox": "0 0 24 24",
+        "size": "24x24",
+        "bytes": 423,
+        "source": "手绘 SVG path（程序化生成，viewBox 24x24，stroke=currentColor，stroke-width=1.5）",
+        "usage": "UI 图标备用集；内联使用可继承 currentColor，img 引用需 CSS mask 或 filter。"
+      },
+      {
+        "id": "unknown",
+        "path": "icons/unknown.svg",
+        "url": "/icons/unknown.svg",
+        "type": "svg",
+        "viewBox": "0 0 24 24",
+        "size": "24x24",
+        "bytes": 374,
+        "source": "手绘 SVG path（程序化生成，viewBox 24x24，stroke=currentColor，stroke-width=1.5）",
+        "usage": "UI 图标备用集；内联使用可继承 currentColor，img 引用需 CSS mask 或 filter。"
+      },
+      {
+        "id": "water-plant",
+        "path": "icons/water-plant.svg",
+        "url": "/icons/water-plant.svg",
+        "type": "svg",
+        "viewBox": "0 0 24 24",
+        "size": "24x24",
+        "bytes": 403,
+        "source": "手绘 SVG path（程序化生成，viewBox 24x24，stroke=currentColor，stroke-width=1.5）",
+        "usage": "UI 图标备用集；内联使用可继承 currentColor，img 引用需 CSS mask 或 filter。"
+      },
+      {
+        "id": "water",
+        "path": "icons/water.svg",
+        "url": "/icons/water.svg",
+        "type": "svg",
+        "viewBox": "0 0 24 24",
+        "size": "24x24",
+        "bytes": 365,
+        "source": "手绘 SVG path（程序化生成，viewBox 24x24，stroke=currentColor，stroke-width=1.5）",
+        "usage": "UI 图标备用集；内联使用可继承 currentColor，img 引用需 CSS mask 或 filter。"
+      },
+      {
+        "id": "weather-control",
+        "path": "icons/weather-control.svg",
+        "url": "/icons/weather-control.svg",
+        "type": "svg",
+        "viewBox": "0 0 24 24",
+        "size": "24x24",
+        "bytes": 390,
+        "source": "手绘 SVG path（程序化生成，viewBox 24x24，stroke=currentColor，stroke-width=1.5）",
+        "usage": "UI 图标备用集；内联使用可继承 currentColor，img 引用需 CSS mask 或 filter。"
+      }
+    ]
+  },
+  "missing": [
+    "generate_image AI 位图未获取（API 在本次会话不可用）；当前全部位图由程序化渲染兜底，视觉精细度低于 AI 概念图。",
+    "未提供 observatory-2/4/5 独立插图（UI 以 1/3/6 三级映射，覆盖全部 0-6 等级）。",
+    "PhysicalHazardKind.orbitDestabilization 暂无位图，仅有 SVG 图标 hazard-orbit.svg；可复用 disaster-close-encounter.jpg。",
+    "CrisisKind（famine/waterShortage/energyCrisis/unrest/ecologicalCollapse/planetaryWinter）暂无专属插图，建议复用灾害图 + 图标。"
+  ]
+}

@@ -1,0 +1,1013 @@
+/**
+ * 建筑定义表（38 座，五时代 · 原始部落 → 星际文明）。
+ *
+ * 时代规则（与 docs/ERA_SYSTEM_SPEC.md 一致）：
+ *  - E1（仰望星空 / 原始）：仅使用 food / water / minerals / science；禁止 metals / energy。
+ *  - E2（文明曙光 / 城邦）：解锁 metals；仍然禁止 energy（电力）。
+ *  - E3（混沌时代 / 蒸汽与电气）：解锁 energy，此后全部资源可用。
+ *  - 每座建筑只能使用「其所属时代已解锁」的资源作为 cost / maintenance。
+ *  - 每时代至少 5 座「本时代可新建」建筑；旧时代建筑需逐级升级（upgradeTo），
+ *    否则产出按 outdatedMultiplier 折减（见 civilization/eras.ts 与 buildings/system.ts）。
+ *
+ * 升级链（upgradeGroup / tier / upgradeTo）：
+ *  1. housing  聚落营地 → 城邦住宅 → 住宅区 → 高级住区 → 生态穹顶城市（tier 1..5）
+ *  2. food     原始农田 → 灌溉农田 → 机械化农场 → 垂直农场 → 人造生物圈农场
+ *  3. water    水井 → 水渠 → 水处理厂 → 循环水厂 → 大气水循环阵列
+ *  4. industry 采石场 → 矿场 → 钢铁厂 → 自动化矿山 → 纳米制造厂（矿物/金属链）
+ *  5. research 长者议事棚 → 学园 → 科学院 → 超算中心 → 量子实验室
+ *  6. energy   燃煤电站(E3) → 核电站(E4) → 聚变反应堆(E5)
+ *  7. defense  地下避难所(E3) → 气候调节设施(E4)
+ *  8. storage  集市(E2) → 仓库(E3)
+ *  9. space    卫星站(E4) → 深空雷达阵列(E5)；太空港 / 星际殖民基地 / 行星发动机为独立高级建筑
+ * 10. observatory 观星台（唯一，E1 可建，提供观测 Lv.1；Lv.2~6 走观测系统升级）
+ *
+ * 数值口径（1 回合 = 0.5 年）：
+ *  - cost：一次性建造消耗；maintenance：每回合维护消耗；
+ *  - workers：满负荷所需工人（不足时全文明建筑产出按 staffing 比例打折）；
+ *  - upgradeCost / upgradeTurns 定义在「升级目标建筑」上（从上一级升级到它时的花费与工期）；
+ *  - outdatedMultiplier：旧时代折减基准（高 1 个时代 → 0.8，高 2 个及以上 → 该值，默认 0.6）。
+ */
+import type { BuildingCategory, BuildingDef, ResourceId } from "../core/types";
+
+export interface BuildingDefEx extends BuildingDef {
+  /** true 表示全文明唯一（等价 maxCount=1，供 UI 标记）。 */
+  unique?: boolean;
+}
+
+export const BUILDING_CATEGORY_ORDER: readonly BuildingCategory[] = [
+  "basic",
+  "industry",
+  "science",
+  "advanced",
+] as const;
+
+export const BUILDING_CATEGORY_NAMES: Record<BuildingCategory, string> = {
+  basic: "基础",
+  industry: "工业",
+  science: "科研",
+  advanced: "高级",
+};
+
+/** 全部建筑定义（顺序即 UI 展示顺序：按时代、分类、升级层级排列）。 */
+export const BUILDING_DEFS: BuildingDefEx[] = [
+  /* ================================================================== *
+   *  E1 · 仰望星空（原始部落）—— 仅 food / water / minerals / science
+   * ================================================================== */
+
+  /* ------------------------------ 基础 ------------------------------ */
+  {
+    id: "camp",
+    name: "聚落营地",
+    category: "basic",
+    description: "依山傍水的原始聚落：篝火、兽皮帐与土木窝棚。住房是一切人口增长与稳定的前提。",
+    icon: "home",
+    cost: { minerals: 70 },
+    buildTurns: 2,
+    maintenance: { minerals: 1 },
+    workers: 0,
+    requiresTech: [],
+    requiresEra: 1,
+    era: 1,
+    tier: 1,
+    upgradeGroup: "housing",
+    upgradeTo: "townHouse",
+    upgradeCost: {},
+    upgradeTurns: 0,
+    outdatedMultiplier: 0.6,
+    effects: { housing: 220, stability: 1 },
+    maxCount: 20,
+  },
+  {
+    id: "farm1",
+    name: "原始农田",
+    category: "basic",
+    description: "刀耕火种的坡地与河滩田，靠天吃饭。产出的每一捧谷物都直接决定部落能否熬过下一个乱纪元。",
+    icon: "wheat",
+    cost: { minerals: 80, food: 40 },
+    buildTurns: 2,
+    maintenance: { water: 8 },
+    workers: 24,
+    requiresTech: [],
+    requiresEra: 1,
+    era: 1,
+    tier: 1,
+    upgradeGroup: "food",
+    upgradeTo: "irrigatedFarm",
+    upgradeCost: {},
+    upgradeTurns: 0,
+    outdatedMultiplier: 0.6,
+    effects: { production: { food: 110 } },
+    maxCount: 20,
+  },
+  {
+    id: "well1",
+    name: "水井",
+    category: "basic",
+    description: "掘至地下水位的手工水井与蓄水陶罐。水是比食物更早成为瓶颈的生存资源。",
+    icon: "water",
+    cost: { minerals: 60 },
+    buildTurns: 2,
+    maintenance: { minerals: 1 },
+    workers: 16,
+    requiresTech: [],
+    requiresEra: 1,
+    era: 1,
+    tier: 1,
+    upgradeGroup: "water",
+    upgradeTo: "aqueduct",
+    upgradeCost: {},
+    upgradeTurns: 0,
+    outdatedMultiplier: 0.6,
+    effects: { production: { water: 120 } },
+    maxCount: 12,
+  },
+  {
+    id: "quarry1",
+    name: "采石场",
+    category: "basic",
+    description: "用木撬与石器开采露头石料。矿物是所有建造活动的起点，也是文明最早可积累的工业原料。",
+    icon: "mineral",
+    cost: { minerals: 70, food: 40 },
+    buildTurns: 3,
+    maintenance: { food: 8 },
+    workers: 22,
+    requiresTech: [],
+    requiresEra: 1,
+    era: 1,
+    tier: 1,
+    upgradeGroup: "industry",
+    upgradeTo: "mine",
+    upgradeCost: {},
+    upgradeTurns: 0,
+    outdatedMultiplier: 0.6,
+    effects: { production: { minerals: 40 } },
+    maxCount: 10,
+  },
+
+  /* ------------------------------ 科研 ------------------------------ */
+  {
+    id: "elderHall",
+    name: "长者议事棚",
+    category: "science",
+    description: "部落长者围火而坐，口耳相传星象、季节与狩猎经验。文明最早的知识积累与决策机构。",
+    icon: "book",
+    cost: { minerals: 90, food: 60 },
+    buildTurns: 3,
+    maintenance: { food: 6 },
+    workers: 20,
+    requiresTech: [],
+    requiresEra: 1,
+    era: 1,
+    tier: 1,
+    upgradeGroup: "research",
+    upgradeTo: "academy",
+    upgradeCost: {},
+    upgradeTurns: 0,
+    outdatedMultiplier: 0.6,
+    effects: { research: 6, stability: 1 },
+    maxCount: 3,
+  },
+  {
+    id: "observatory",
+    name: "观星台",
+    category: "science",
+    description: "垒石为台的露天观星场：记录三颗太阳的方位、颜色与升落周期。文明唯一的天文观测设施，提供观测 Lv.1。",
+    icon: "telescope",
+    cost: { minerals: 120, food: 80 },
+    buildTurns: 4,
+    maintenance: { minerals: 2 },
+    workers: 15,
+    requiresTech: [],
+    requiresEra: 1,
+    era: 1,
+    tier: 1,
+    upgradeGroup: "observatory",
+    upgradeTo: null,
+    upgradeCost: {},
+    upgradeTurns: 0,
+    outdatedMultiplier: 0.6,
+    effects: { research: 8, observationBonus: 0.08 },
+    maxCount: 1,
+    unique: true,
+    observationLevel: 1,
+  },
+
+  /* ================================================================== *
+   *  E2 · 文明曙光（农业城邦）—— 解锁 metals，仍无 energy
+   * ================================================================== */
+
+  /* ------------------------------ 基础 ------------------------------ */
+  {
+    id: "townHouse",
+    name: "城邦住宅",
+    category: "basic",
+    description: "夯土与木构的成排住宅，配合水井与粮仓形成真正的城邦街区。",
+    icon: "home",
+    cost: { minerals: 320, food: 140 },
+    buildTurns: 3,
+    maintenance: { minerals: 3 },
+    workers: 0,
+    requiresTech: [],
+    requiresEra: 2,
+    era: 2,
+    tier: 2,
+    upgradeGroup: "housing",
+    upgradeTo: "housingDistrict",
+    upgradeCost: { minerals: 200, food: 90 },
+    upgradeTurns: 3,
+    outdatedMultiplier: 0.6,
+    effects: { housing: 620, stability: 2 },
+    maxCount: 20,
+  },
+  {
+    id: "irrigatedFarm",
+    name: "灌溉农田",
+    category: "basic",
+    description: "沟渠、水车与轮作制带来的稳定收成，第一次让粮食出现真正的剩余。",
+    icon: "wheat",
+    cost: { minerals: 300, water: 80 },
+    buildTurns: 3,
+    maintenance: { water: 20 },
+    workers: 60,
+    requiresTech: ["bio_basic"],
+    requiresEra: 2,
+    era: 2,
+    tier: 2,
+    upgradeGroup: "food",
+    upgradeTo: "mechanizedFarm",
+    upgradeCost: { minerals: 190, water: 50 },
+    upgradeTurns: 3,
+    outdatedMultiplier: 0.6,
+    effects: { production: { food: 320 } },
+    maxCount: 20,
+  },
+  {
+    id: "aqueduct",
+    name: "水渠",
+    category: "basic",
+    description: "石砌引水渠、蓄水池与城内供水管网，把河流搬进了城邦。",
+    icon: "water",
+    cost: { minerals: 260, metals: 60 },
+    buildTurns: 3,
+    maintenance: { minerals: 3 },
+    workers: 50,
+    requiresTech: [],
+    requiresEra: 2,
+    era: 2,
+    tier: 2,
+    upgradeGroup: "water",
+    upgradeTo: "waterPlant",
+    upgradeCost: { minerals: 160, metals: 40 },
+    upgradeTurns: 3,
+    outdatedMultiplier: 0.6,
+    effects: { production: { water: 320 } },
+    maxCount: 12,
+  },
+  {
+    id: "mine",
+    name: "矿场",
+    category: "industry",
+    description: "矿井、初级冶炉与矿石分选场：既开采矿物，也完成最早的金属冶炼。",
+    icon: "mineral",
+    cost: { minerals: 260, metals: 70 },
+    buildTurns: 4,
+    maintenance: { food: 12 },
+    workers: 70,
+    requiresTech: ["industry_basic"],
+    requiresEra: 2,
+    era: 2,
+    tier: 2,
+    upgradeGroup: "industry",
+    upgradeTo: "steelMill",
+    upgradeCost: { minerals: 160, metals: 45 },
+    upgradeTurns: 4,
+    outdatedMultiplier: 0.6,
+    effects: { production: { minerals: 220, metals: 60 } },
+    maxCount: 10,
+  },
+
+  /* ------------------------------ 科研 ------------------------------ */
+  {
+    id: "academy",
+    name: "学园",
+    category: "science",
+    description: "文字、算学与天象记录在此制度化。学者第一次可以把知识留给下一代。",
+    icon: "book",
+    cost: { minerals: 300, metals: 80 },
+    buildTurns: 4,
+    maintenance: { food: 12 },
+    workers: 60,
+    requiresTech: [],
+    requiresEra: 2,
+    era: 2,
+    tier: 2,
+    upgradeGroup: "research",
+    upgradeTo: "scienceAcademy",
+    upgradeCost: { minerals: 180, metals: 50 },
+    upgradeTurns: 4,
+    outdatedMultiplier: 0.6,
+    effects: { research: 16, stability: 2 },
+    maxCount: 4,
+  },
+
+  /* ------------------------------ 仓储 ------------------------------ */
+  {
+    id: "market",
+    name: "集市",
+    category: "basic",
+    description: "城邦中心的露天市场与公共粮仓，让余粮、陶器与矿石开始流动。",
+    icon: "folder",
+    cost: { minerals: 200, metals: 40 },
+    buildTurns: 3,
+    maintenance: { minerals: 2 },
+    workers: 24,
+    requiresTech: [],
+    requiresEra: 2,
+    era: 2,
+    tier: 1,
+    upgradeGroup: "storage",
+    upgradeTo: "warehouse",
+    upgradeCost: {},
+    upgradeTurns: 0,
+    outdatedMultiplier: 0.6,
+    effects: {
+      capacity: { food: 4000, water: 3000, minerals: 3000, metals: 2000, energy: 2000, science: 20000 },
+      stability: 1,
+    },
+    maxCount: 6,
+  },
+
+  /* ================================================================== *
+   *  E3 · 混沌时代（蒸汽与电气）—— 解锁 energy
+   * ================================================================== */
+
+  /* ------------------------------ 基础 ------------------------------ */
+  {
+    id: "housingDistrict",
+    name: "住宅区",
+    category: "basic",
+    description: "砖石与钢梁的多层住宅区，配排水、照明与公共澡堂。人口第一次向城市集中。",
+    icon: "home",
+    cost: { minerals: 800, metals: 300, energy: 250 },
+    buildTurns: 4,
+    maintenance: { energy: 40 },
+    workers: 0,
+    requiresTech: [],
+    requiresEra: 3,
+    era: 3,
+    tier: 3,
+    upgradeGroup: "housing",
+    upgradeTo: "highRise",
+    upgradeCost: { minerals: 480, metals: 180, energy: 150 },
+    upgradeTurns: 4,
+    outdatedMultiplier: 0.6,
+    effects: { housing: 1600, stability: 3 },
+    maxCount: 20,
+  },
+  {
+    id: "mechanizedFarm",
+    name: "机械化农场",
+    category: "basic",
+    description: "蒸汽拖拉机、化肥与谷物联合收割机，农业第一次不再依赖多数人的体力。",
+    icon: "wheat",
+    cost: { minerals: 720, metals: 260, energy: 300 },
+    buildTurns: 4,
+    maintenance: { energy: 90, water: 20 },
+    workers: 120,
+    requiresTech: ["industry_automation"],
+    requiresEra: 3,
+    era: 3,
+    tier: 3,
+    upgradeGroup: "food",
+    upgradeTo: "verticalFarm",
+    upgradeCost: { minerals: 430, metals: 160, energy: 180 },
+    upgradeTurns: 4,
+    outdatedMultiplier: 0.6,
+    effects: { production: { food: 750 } },
+    maxCount: 20,
+  },
+  {
+    id: "waterPlant",
+    name: "水处理厂",
+    category: "basic",
+    description: "泵站、沉淀池与加氯消毒，把不可靠的河流与地下水变成稳定自来水。",
+    icon: "water",
+    cost: { minerals: 680, metals: 240, energy: 280 },
+    buildTurns: 4,
+    maintenance: { energy: 80 },
+    workers: 110,
+    requiresTech: ["energy_grid"],
+    requiresEra: 3,
+    era: 3,
+    tier: 3,
+    upgradeGroup: "water",
+    upgradeTo: "recyclingPlant",
+    upgradeCost: { minerals: 400, metals: 140, energy: 170 },
+    upgradeTurns: 4,
+    outdatedMultiplier: 0.6,
+    effects: { production: { water: 720 } },
+    maxCount: 12,
+  },
+  {
+    id: "warehouse",
+    name: "仓库",
+    category: "basic",
+    description: "钢结构仓储区与冷链设施，大幅提高全部资源的库存上限。",
+    icon: "folder",
+    cost: { minerals: 540, metals: 220, energy: 180 },
+    buildTurns: 4,
+    maintenance: { energy: 15 },
+    workers: 30,
+    requiresTech: [],
+    requiresEra: 3,
+    era: 3,
+    tier: 2,
+    upgradeGroup: "storage",
+    upgradeTo: null,
+    upgradeCost: { minerals: 320, metals: 130, energy: 100 },
+    upgradeTurns: 4,
+    outdatedMultiplier: 0.6,
+    effects: {
+      capacity: { food: 7000, water: 5000, minerals: 5000, metals: 3500, energy: 3500, science: 40000 },
+    },
+    maxCount: 6,
+  },
+
+  /* ------------------------------ 工业 ------------------------------ */
+  {
+    id: "steelMill",
+    name: "钢铁厂",
+    category: "industry",
+    description: "高炉、轧机与机械制造车间：把矿石变成钢轨、蒸汽机与一座座工厂的骨架。",
+    icon: "factory",
+    cost: { minerals: 760, metals: 320, energy: 360 },
+    buildTurns: 5,
+    maintenance: { energy: 110, minerals: 24 },
+    workers: 150,
+    requiresTech: ["industry_automation"],
+    requiresEra: 3,
+    era: 3,
+    tier: 3,
+    upgradeGroup: "industry",
+    upgradeTo: "automatedMine",
+    upgradeCost: { minerals: 450, metals: 190, energy: 220 },
+    upgradeTurns: 5,
+    outdatedMultiplier: 0.6,
+    effects: { production: { minerals: 480, metals: 260 }, industry: 30 },
+    maxCount: 8,
+  },
+  {
+    id: "coalPlant",
+    name: "燃煤电站",
+    category: "industry",
+    description: "锅炉、汽轮机与最初的高压电网。电力第一次成为可调度、可积累的文明资源。",
+    icon: "bolt",
+    cost: { minerals: 700, metals: 280 },
+    buildTurns: 4,
+    maintenance: { minerals: 30 },
+    workers: 120,
+    requiresTech: ["energy_basic"],
+    requiresEra: 3,
+    era: 3,
+    tier: 1,
+    upgradeGroup: "energy",
+    upgradeTo: "nuclearPlant",
+    upgradeCost: {},
+    upgradeTurns: 0,
+    outdatedMultiplier: 0.6,
+    effects: { production: { energy: 560 } },
+    maxCount: 10,
+  },
+
+  /* ------------------------------ 科研 ------------------------------ */
+  {
+    id: "scienceAcademy",
+    name: "科学院",
+    category: "science",
+    description: "国家资助的实验室与计算室，用望远镜、温度计与机械计算机把天空变成数据。",
+    icon: "book",
+    cost: { minerals: 820, metals: 300, energy: 320 },
+    buildTurns: 5,
+    maintenance: { energy: 90 },
+    workers: 130,
+    requiresTech: [],
+    requiresEra: 3,
+    era: 3,
+    tier: 3,
+    upgradeGroup: "research",
+    upgradeTo: "supercomputer",
+    upgradeCost: { minerals: 490, metals: 180, energy: 190 },
+    upgradeTurns: 5,
+    outdatedMultiplier: 0.6,
+    effects: { research: 34, stability: 2, observationBonus: 0.02 },
+    maxCount: 4,
+  },
+
+  /* ------------------------------ 高级 ------------------------------ */
+  {
+    id: "bunker",
+    name: "地下避难所",
+    category: "advanced",
+    description: "掘进山体的地下城与防辐射层，在极端气候与恒星辐射下为文明保留火种。",
+    icon: "shield",
+    cost: { minerals: 760, metals: 340, energy: 420 },
+    buildTurns: 5,
+    maintenance: { energy: 30 },
+    workers: 40,
+    requiresTech: ["industry_basic"],
+    requiresEra: 3,
+    era: 3,
+    tier: 1,
+    upgradeGroup: "defense",
+    upgradeTo: "climateControl",
+    upgradeCost: {},
+    upgradeTurns: 0,
+    outdatedMultiplier: 0.6,
+    effects: { housing: 500, thermalShielding: 5, disasterResistance: 0.2, stability: 2 },
+    maxCount: 6,
+  },
+
+  /* ================================================================== *
+   *  E4 · 预测未来（信息与航天）
+   * ================================================================== */
+
+  /* ------------------------------ 基础 ------------------------------ */
+  {
+    id: "highRise",
+    name: "高级住区",
+    category: "basic",
+    description: "高强度合金骨架、垂直交通与环境控制系统支撑的巨型居住塔群。",
+    icon: "home",
+    cost: { minerals: 1900, metals: 800, energy: 750 },
+    buildTurns: 6,
+    maintenance: { energy: 110 },
+    workers: 0,
+    requiresTech: [],
+    requiresEra: 4,
+    era: 4,
+    tier: 4,
+    upgradeGroup: "housing",
+    upgradeTo: "ecodomeCity",
+    upgradeCost: { minerals: 1150, metals: 480, energy: 450 },
+    upgradeTurns: 6,
+    outdatedMultiplier: 0.6,
+    effects: { housing: 3800, stability: 4 },
+    maxCount: 20,
+  },
+  {
+    id: "verticalFarm",
+    name: "垂直农场",
+    category: "basic",
+    description: "全人工光源的立体栽培塔，不受地表温度与天气影响地生产粮食。",
+    icon: "wheat",
+    cost: { minerals: 1700, metals: 700, energy: 900 },
+    buildTurns: 6,
+    maintenance: { energy: 220 },
+    workers: 180,
+    requiresTech: ["bio_ecology"],
+    requiresEra: 4,
+    era: 4,
+    tier: 4,
+    upgradeGroup: "food",
+    upgradeTo: "biosphereFarm",
+    upgradeCost: { minerals: 1000, metals: 420, energy: 540 },
+    upgradeTurns: 6,
+    outdatedMultiplier: 0.6,
+    effects: { production: { food: 1500 } },
+    maxCount: 20,
+  },
+  {
+    id: "recyclingPlant",
+    name: "循环水厂",
+    category: "basic",
+    description: "闭路水循环与膜分离技术，让每一滴水在文明内部被反复利用。",
+    icon: "water",
+    cost: { minerals: 1650, metals: 650, energy: 850 },
+    buildTurns: 6,
+    maintenance: { energy: 200 },
+    workers: 160,
+    requiresTech: ["energy_solar"],
+    requiresEra: 4,
+    era: 4,
+    tier: 4,
+    upgradeGroup: "water",
+    upgradeTo: "atmosphericWater",
+    upgradeCost: { minerals: 990, metals: 390, energy: 510 },
+    upgradeTurns: 6,
+    outdatedMultiplier: 0.6,
+    effects: { production: { water: 1500 } },
+    maxCount: 12,
+  },
+
+  /* ------------------------------ 工业 ------------------------------ */
+  {
+    id: "automatedMine",
+    name: "自动化矿山",
+    category: "industry",
+    description: "无人钻进、自动驾驶运输与在线选矿，把深部矿脉变成稳定的工业血液。",
+    icon: "mineral",
+    cost: { minerals: 1800, metals: 780, energy: 1000 },
+    buildTurns: 7,
+    maintenance: { energy: 260 },
+    workers: 160,
+    requiresTech: ["industry_alloys"],
+    requiresEra: 4,
+    era: 4,
+    tier: 4,
+    upgradeGroup: "industry",
+    upgradeTo: "nanoFactory",
+    upgradeCost: { minerals: 1080, metals: 470, energy: 600 },
+    upgradeTurns: 7,
+    outdatedMultiplier: 0.6,
+    effects: { production: { minerals: 1100, metals: 600 }, industry: 60 },
+    maxCount: 8,
+  },
+  {
+    id: "nuclearPlant",
+    name: "核电站",
+    category: "industry",
+    description: "压水堆与快中子增殖堆，能量密度远超化石燃料，是信息时代的电力基座。",
+    icon: "bolt",
+    cost: { minerals: 2000, metals: 900, energy: 300 },
+    buildTurns: 7,
+    maintenance: { minerals: 60 },
+    workers: 170,
+    requiresTech: ["energy_solar"],
+    requiresEra: 4,
+    era: 4,
+    tier: 2,
+    upgradeGroup: "energy",
+    upgradeTo: "fusionReactor",
+    upgradeCost: { minerals: 1200, metals: 540, energy: 180 },
+    upgradeTurns: 7,
+    outdatedMultiplier: 0.6,
+    effects: { production: { energy: 1700 } },
+    maxCount: 8,
+  },
+
+  /* ------------------------------ 科研 ------------------------------ */
+  {
+    id: "supercomputer",
+    name: "超算中心",
+    category: "science",
+    description: "大规模并行计算集群，用于三体轨道模拟、气候建模与混沌集合预报。",
+    icon: "cpu",
+    cost: { minerals: 1900, metals: 820, energy: 1100 },
+    buildTurns: 7,
+    maintenance: { energy: 240 },
+    workers: 150,
+    requiresTech: ["industry_automation", "energy_solar"],
+    requiresEra: 4,
+    era: 4,
+    tier: 4,
+    upgradeGroup: "research",
+    upgradeTo: "quantumLab",
+    upgradeCost: { minerals: 1140, metals: 490, energy: 660 },
+    upgradeTurns: 7,
+    outdatedMultiplier: 0.6,
+    effects: { research: 85, observationBonus: 0.05 },
+    maxCount: 3,
+  },
+
+  /* ------------------------------ 高级 ------------------------------ */
+  {
+    id: "climateControl",
+    name: "气候调节设施",
+    category: "advanced",
+    description: "大规模温室气体调控、地表反照率工程与轨道遮阳板，平抑乱纪元的极端温度。",
+    icon: "thermometer",
+    cost: { minerals: 1750, metals: 760, energy: 1300 },
+    buildTurns: 7,
+    maintenance: { energy: 300, minerals: 20 },
+    workers: 120,
+    requiresTech: ["energy_solar"],
+    requiresEra: 4,
+    era: 4,
+    tier: 2,
+    upgradeGroup: "defense",
+    upgradeTo: null,
+    upgradeCost: { minerals: 1050, metals: 460, energy: 780 },
+    upgradeTurns: 7,
+    outdatedMultiplier: 0.6,
+    effects: { thermalShielding: 12, stability: 6, disasterResistance: 0.08 },
+    maxCount: 4,
+  },
+  {
+    id: "satelliteStation",
+    name: "卫星站",
+    category: "advanced",
+    description: "地面测控网与轨道观测卫星群，第一次把传感器送出了大气层的遮挡。",
+    icon: "target",
+    cost: { minerals: 1600, metals: 700, energy: 900 },
+    buildTurns: 6,
+    maintenance: { energy: 120 },
+    workers: 90,
+    requiresTech: ["space_deep"],
+    requiresEra: 4,
+    era: 4,
+    tier: 1,
+    upgradeGroup: "space",
+    upgradeTo: "deepSpaceArray",
+    upgradeCost: {},
+    upgradeTurns: 0,
+    outdatedMultiplier: 0.6,
+    effects: { observationBonus: 0.2, research: 25, warningBonus: 1 },
+    maxCount: 4,
+  },
+
+  /* ================================================================== *
+   *  E5 · 文明的选择（星际文明）
+   * ================================================================== */
+
+  /* ------------------------------ 基础 ------------------------------ */
+  {
+    id: "ecodomeCity",
+    name: "生态穹顶城市",
+    category: "basic",
+    description: "封闭生态圈与自维持城市系统，即使在母星环境崩溃后也能让数百万人继续生活。",
+    icon: "home",
+    cost: { minerals: 4200, metals: 1800, energy: 1700 },
+    buildTurns: 8,
+    maintenance: { energy: 220, minerals: 20 },
+    workers: 0,
+    requiresTech: ["bio_genetic"],
+    requiresEra: 5,
+    era: 5,
+    tier: 5,
+    upgradeGroup: "housing",
+    upgradeTo: null,
+    upgradeCost: { minerals: 2500, metals: 1080, energy: 1020 },
+    upgradeTurns: 8,
+    effects: { housing: 9000, stability: 5 },
+    maxCount: 20,
+  },
+  {
+    id: "biosphereFarm",
+    name: "人造生物圈农场",
+    category: "basic",
+    description: "多层闭合生态农业：作物、菌类与合成蛋白循环互补，粮食第一次彻底摆脱气候。",
+    icon: "seedling",
+    cost: { minerals: 3900, metals: 1600, energy: 2000 },
+    buildTurns: 8,
+    maintenance: { energy: 380 },
+    workers: 240,
+    requiresTech: ["bio_genetic"],
+    requiresEra: 5,
+    era: 5,
+    tier: 5,
+    upgradeGroup: "food",
+    upgradeTo: null,
+    upgradeCost: { minerals: 2300, metals: 960, energy: 1200 },
+    upgradeTurns: 8,
+    effects: { production: { food: 3200 } },
+    maxCount: 20,
+  },
+  {
+    id: "atmosphericWater",
+    name: "大气水循环阵列",
+    category: "basic",
+    description: "从大气与深层岩层中提取并循环水资源的巨型阵列，是星际文明的水之基石。",
+    icon: "water",
+    cost: { minerals: 3800, metals: 1550, energy: 1900 },
+    buildTurns: 8,
+    maintenance: { energy: 360 },
+    workers: 220,
+    requiresTech: ["energy_fusion"],
+    requiresEra: 5,
+    era: 5,
+    tier: 5,
+    upgradeGroup: "water",
+    upgradeTo: null,
+    upgradeCost: { minerals: 2250, metals: 930, energy: 1140 },
+    upgradeTurns: 8,
+    effects: { production: { water: 3200 } },
+    maxCount: 12,
+  },
+
+  /* ------------------------------ 工业 ------------------------------ */
+  {
+    id: "nanoFactory",
+    name: "纳米制造厂",
+    category: "industry",
+    description: "原子级组装与自复制纳米机械，把矿物直接制造成成品，工业的极限再次被推开。",
+    icon: "factory",
+    cost: { minerals: 4500, metals: 2000, energy: 2600 },
+    buildTurns: 9,
+    maintenance: { energy: 420, minerals: 40 },
+    workers: 260,
+    requiresTech: ["industry_megastructure"],
+    requiresEra: 5,
+    era: 5,
+    tier: 5,
+    upgradeGroup: "industry",
+    upgradeTo: null,
+    upgradeCost: { minerals: 2700, metals: 1200, energy: 1560 },
+    upgradeTurns: 9,
+    effects: { production: { minerals: 2200, metals: 1500 }, industry: 120 },
+    maxCount: 6,
+  },
+  {
+    id: "fusionReactor",
+    name: "聚变反应堆",
+    category: "industry",
+    description: "托卡马克与惯性约束受控聚变，文明终于获得了接近无限的能源。",
+    icon: "sun",
+    cost: { minerals: 4600, metals: 2200, energy: 1200 },
+    buildTurns: 9,
+    maintenance: { minerals: 90 },
+    workers: 220,
+    requiresTech: ["energy_fusion"],
+    requiresEra: 5,
+    era: 5,
+    tier: 3,
+    upgradeGroup: "energy",
+    upgradeTo: null,
+    upgradeCost: { minerals: 2760, metals: 1320, energy: 720 },
+    upgradeTurns: 9,
+    effects: { production: { energy: 4800 } },
+    maxCount: 8,
+  },
+
+  /* ------------------------------ 科研 ------------------------------ */
+  {
+    id: "quantumLab",
+    name: "量子实验室",
+    category: "science",
+    description: "量子模拟与密码学设施，用于求解混沌轨道、材料设计与恒星演化。",
+    icon: "flask",
+    cost: { minerals: 4800, metals: 2100, energy: 2800 },
+    buildTurns: 9,
+    maintenance: { energy: 460, minerals: 30 },
+    workers: 240,
+    requiresTech: ["industry_quantum"],
+    requiresEra: 5,
+    era: 5,
+    tier: 5,
+    upgradeGroup: "research",
+    upgradeTo: null,
+    upgradeCost: { minerals: 2880, metals: 1260, energy: 1680 },
+    upgradeTurns: 9,
+    effects: { research: 260, observationBonus: 0.08 },
+    maxCount: 3,
+  },
+
+  /* ------------------------------ 高级 ------------------------------ */
+  {
+    id: "deepSpaceArray",
+    name: "深空雷达阵列",
+    category: "advanced",
+    description: "跨行星尺度的雷达与光学干涉阵列，逼近混沌系统的可见极限，为文明争取预警时间。",
+    icon: "target",
+    cost: { minerals: 3200, metals: 1500, energy: 2100 },
+    buildTurns: 8,
+    maintenance: { energy: 280 },
+    workers: 160,
+    requiresTech: ["astro_chaos"],
+    requiresEra: 5,
+    era: 5,
+    tier: 2,
+    upgradeGroup: "space",
+    upgradeTo: null,
+    upgradeCost: { minerals: 1700, metals: 800, energy: 1300 },
+    upgradeTurns: 8,
+    effects: { observationBonus: 0.35, research: 40, warningBonus: 2 },
+    maxCount: 3,
+  },
+  {
+    id: "spaceport",
+    name: "太空港",
+    category: "advanced",
+    description: "轨道电梯、发射场与在轨装配坞，是星际殖民与深空工程的地面枢纽。",
+    icon: "spaceship",
+    cost: { minerals: 3600, metals: 1800, energy: 2200 },
+    buildTurns: 9,
+    maintenance: { energy: 300, metals: 15 },
+    workers: 200,
+    requiresTech: ["space_deep"],
+    requiresEra: 5,
+    era: 5,
+    tier: 1,
+    upgradeGroup: "space",
+    upgradeTo: null,
+    upgradeCost: {},
+    upgradeTurns: 0,
+    effects: { industry: 90, colonyProgress: 30, stability: 1 },
+    maxCount: 2,
+  },
+  {
+    id: "colonyBase",
+    name: "星际殖民基地",
+    category: "advanced",
+    description: "殖民船总装、长期生命维持与深空导航的地面基地，直接推进星际殖民计划。",
+    icon: "planet",
+    cost: { minerals: 4200, metals: 2400, energy: 2800 },
+    buildTurns: 10,
+    maintenance: { energy: 260, metals: 20 },
+    workers: 240,
+    requiresTech: ["space_colony"],
+    requiresEra: 5,
+    era: 5,
+    tier: 1,
+    upgradeGroup: "space",
+    upgradeTo: null,
+    upgradeCost: {},
+    upgradeTurns: 0,
+    effects: { colonyProgress: 45 },
+    maxCount: 1,
+    unique: true,
+  },
+  {
+    id: "planetEngine",
+    name: "行星发动机",
+    category: "advanced",
+    description: "改变母星轨道的巨型推进阵列。它的存在本身就会让民众恐惧，但这是把命运握在自己手中的唯一方式。",
+    icon: "planet",
+    cost: { minerals: 9000, metals: 6000, energy: 8000 },
+    buildTurns: 14,
+    maintenance: { energy: 800, metals: 80 },
+    workers: 500,
+    requiresTech: ["space_engine"],
+    requiresEra: 5,
+    era: 5,
+    tier: 1,
+    upgradeGroup: "space",
+    upgradeTo: null,
+    upgradeCost: {},
+    upgradeTurns: 0,
+    effects: { industry: 150, colonyProgress: 60, stability: -10, disasterResistance: 0.1 },
+    maxCount: 1,
+    unique: true,
+  },
+];
+
+/** 索引：id -> 定义。 */
+export const BUILDING_DEF_MAP: Record<string, BuildingDefEx> = Object.fromEntries(
+  BUILDING_DEFS.map((d) => [d.id, d]),
+);
+
+/** 开局自带的建筑：原始聚落（营地 ×1、原始农田 ×2、水井 ×1、采石场 ×1）。 */
+export const STARTING_BUILDINGS: Readonly<Record<string, number>> = {
+  camp: 1,
+  farm1: 2,
+  well1: 1,
+  quarry1: 1,
+};
+
+/** 按 id 取建筑定义；未知 id 返回 undefined。 */
+export function getBuildingDef(id: string): BuildingDefEx | undefined {
+  return BUILDING_DEF_MAP[id];
+}
+
+/** 按分类取建筑定义（保持定义顺序）。 */
+export function buildingDefsByCategory(category: BuildingCategory): BuildingDefEx[] {
+  return BUILDING_DEFS.filter((d) => d.category === category);
+}
+
+/** 建筑中文名；未知 id 原样返回。 */
+export function buildingName(id: string): string {
+  return BUILDING_DEF_MAP[id]?.name ?? id;
+}
+
+/** 是否唯一建筑（maxCount=1 或 unique=true）。 */
+export function isUniqueBuilding(id: string): boolean {
+  const def = BUILDING_DEF_MAP[id];
+  if (!def) return false;
+  return def.unique === true || def.maxCount === 1;
+}
+
+/** 建筑允许的最大数量；无限制返回 null。 */
+export function buildingMaxCount(id: string): number | null {
+  const def = BUILDING_DEF_MAP[id];
+  if (!def) return 0;
+  if (def.maxCount !== undefined) return def.maxCount;
+  return def.unique ? 1 : null;
+}
+
+/** 按升级分组列出整条升级链（按 tier 排序）。 */
+export function buildingUpgradeChain(group: string): BuildingDefEx[] {
+  return BUILDING_DEFS.filter((d) => d.upgradeGroup === group).sort((a, b) => (a.tier ?? 0) - (b.tier ?? 0));
+}
+
+/** 时代可新建建筑 id 列表（era 即时代，含更早时代，按定义顺序）。 */
+export function buildingIdsAvailableInEra(era: number, includeEarlier = true): string[] {
+  return BUILDING_DEFS.filter((d) => (includeEarlier ? (d.era ?? 1) <= era : d.era === era)).map((d) => d.id);
+}
+
+/** 某时代可新建的建筑定义（era 即时代）。 */
+export function buildingDefsForEra(era: number, includeEarlier = true): BuildingDefEx[] {
+  return BUILDING_DEFS.filter((d) => (includeEarlier ? (d.era ?? 1) <= era : d.era === era));
+}
+
+/** 检查成本/维护是否只使用该时代已解锁的资源（内容自检/测试用）。 */
+export function costUsesOnlyEraResources(
+  def: BuildingDef,
+  unlocked: (resource: ResourceId) => boolean,
+): boolean {
+  for (const map of [def.cost, def.maintenance, def.upgradeCost ?? {}]) {
+    for (const id of Object.keys(map) as ResourceId[]) {
+      const amount = map[id] ?? 0;
+      if (amount > 0 && !unlocked(id)) return false;
+    }
+  }
+  return true;
+}

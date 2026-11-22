@@ -1,0 +1,243 @@
+{
+  "name": "TRISOLARIS 线性图标集",
+  "nameEn": "TRISOLARIS line icon set",
+  "version": "1.0.0",
+  "generatedBy": "手绘 SVG path（Python 脚本生成，无外部依赖 / no external assets）",
+  "viewBox": "0 0 24 24",
+  "size": "24x24",
+  "style": {
+    "fill": "none",
+    "stroke": "currentColor",
+    "strokeWidth": 1.5,
+    "strokeLinecap": "round",
+    "strokeLinejoin": "round"
+  },
+  "usage": "以 <img src=\"/icons/<id>.svg\"> 引用时 currentColor 不生效（img 内联不了 CSS 变量）；需要随文字/主题变色时请内联 SVG 或使用 CSS mask。",
+  "groups": {
+    "buildings": {
+      "label": "建筑",
+      "items": [
+        {
+          "id": "farm",
+          "file": "/icons/farm.svg",
+          "label": "农田"
+        },
+        {
+          "id": "hydroponics",
+          "file": "/icons/hydroponics.svg",
+          "label": "水培农场"
+        },
+        {
+          "id": "water-plant",
+          "file": "/icons/water-plant.svg",
+          "label": "水处理厂"
+        },
+        {
+          "id": "housing",
+          "file": "/icons/housing.svg",
+          "label": "居住区"
+        },
+        {
+          "id": "clinic",
+          "file": "/icons/clinic.svg",
+          "label": "医疗站"
+        },
+        {
+          "id": "storage",
+          "file": "/icons/storage.svg",
+          "label": "仓储中心"
+        },
+        {
+          "id": "mine",
+          "file": "/icons/mine.svg",
+          "label": "采矿场"
+        },
+        {
+          "id": "metalworks",
+          "file": "/icons/metalworks.svg",
+          "label": "金属冶炼厂"
+        },
+        {
+          "id": "reactor",
+          "file": "/icons/reactor.svg",
+          "label": "裂变反应堆"
+        },
+        {
+          "id": "solar-array",
+          "file": "/icons/solar-array.svg",
+          "label": "太阳能阵列"
+        },
+        {
+          "id": "fusion-reactor",
+          "file": "/icons/fusion-reactor.svg",
+          "label": "聚变反应堆"
+        },
+        {
+          "id": "factory",
+          "file": "/icons/factory.svg",
+          "label": "工业工厂"
+        },
+        {
+          "id": "observatory",
+          "file": "/icons/observatory.svg",
+          "label": "基础观测站"
+        },
+        {
+          "id": "radio-telescope",
+          "file": "/icons/radio-telescope.svg",
+          "label": "射电望远镜"
+        },
+        {
+          "id": "research-lab",
+          "file": "/icons/research-lab.svg",
+          "label": "研究实验室"
+        },
+        {
+          "id": "university",
+          "file": "/icons/university.svg",
+          "label": "高等学院"
+        },
+        {
+          "id": "supercomputer",
+          "file": "/icons/supercomputer.svg",
+          "label": "超级计算机"
+        },
+        {
+          "id": "accelerator",
+          "file": "/icons/accelerator.svg",
+          "label": "粒子加速器"
+        },
+        {
+          "id": "spaceport",
+          "file": "/icons/spaceport.svg",
+          "label": "太空港"
+        },
+        {
+          "id": "shipyard",
+          "file": "/icons/shipyard.svg",
+          "label": "星际船坞"
+        },
+        {
+          "id": "planetary-shield",
+          "file": "/icons/planetary-shield.svg",
+          "label": "行星防御罩"
+        },
+        {
+          "id": "weather-control",
+          "file": "/icons/weather-control.svg",
+          "label": "气候控制站"
+        },
+        {
+          "id": "planet-engine",
+          "file": "/icons/planet-engine.svg",
+          "label": "行星发动机"
+        },
+        {
+          "id": "colony-hub",
+          "file": "/icons/colony-hub.svg",
+          "label": "殖民中枢"
+        }
+      ]
+    },
+    "resources": {
+      "label": "资源",
+      "items": [
+        {
+          "id": "food",
+          "file": "/icons/food.svg",
+          "label": "粮食"
+        },
+        {
+          "id": "water",
+          "file": "/icons/water.svg",
+          "label": "水"
+        },
+        {
+          "id": "energy",
+          "file": "/icons/energy.svg",
+          "label": "能源"
+        },
+        {
+          "id": "minerals",
+          "file": "/icons/minerals.svg",
+          "label": "矿物"
+        },
+        {
+          "id": "metals",
+          "file": "/icons/metals.svg",
+          "label": "金属"
+        },
+        {
+          "id": "science",
+          "file": "/icons/science.svg",
+          "label": "科研"
+        }
+      ]
+    },
+    "tech": {
+      "label": "科技分支",
+      "items": [
+        {
+          "id": "tech-astronomy",
+          "file": "/icons/tech-astronomy.svg",
+          "label": "天文学"
+        },
+        {
+          "id": "tech-energy",
+          "file": "/icons/tech-energy.svg",
+          "label": "能源学"
+        },
+        {
+          "id": "tech-industry",
+          "file": "/icons/tech-industry.svg",
+          "label": "工业学"
+        },
+        {
+          "id": "tech-biology",
+          "file": "/icons/tech-biology.svg",
+          "label": "生物学"
+        },
+        {
+          "id": "tech-space",
+          "file": "/icons/tech-space.svg",
+          "label": "宇航学"
+        }
+      ]
+    },
+    "hazards": {
+      "label": "灾害",
+      "items": [
+        {
+          "id": "hazard-heat",
+          "file": "/icons/hazard-heat.svg",
+          "label": "高温灾害"
+        },
+        {
+          "id": "hazard-cold",
+          "file": "/icons/hazard-cold.svg",
+          "label": "严寒灾害"
+        },
+        {
+          "id": "hazard-radiation",
+          "file": "/icons/hazard-radiation.svg",
+          "label": "辐射暴"
+        },
+        {
+          "id": "hazard-encounter",
+          "file": "/icons/hazard-encounter.svg",
+          "label": "近距离遭遇"
+        },
+        {
+          "id": "hazard-orbit",
+          "file": "/icons/hazard-orbit.svg",
+          "label": "轨道失稳"
+        }
+      ]
+    }
+  },
+  "fallback": {
+    "id": "unknown",
+    "file": "/icons/unknown.svg",
+    "label": "未知"
+  }
+}

@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="320" height="28" viewBox="0 0 320 28" role="img" aria-label="印刷套准色条 CMYK" shape-rendering="geometricPrecision">
+  <title>印刷套准色条（CMYK 小块 + 套准标）</title>
+  <g fill="none" stroke="#111111" stroke-width="1">
+      <circle cx="20" cy="14" r="6.5" stroke-opacity="0.62"/>
+      <circle cx="20" cy="14" r="2.73" stroke-opacity="0.9"/>
+      <path d="M8.5 14 H31.5 M20 2.5 V25.5" stroke-opacity="0.4"/>
+      <path d="M11.5 5.5 l4.55 4.55 M28.5 5.5 l-4.55 4.55" stroke-opacity="0.28"/>
+    </g>
+  <rect x="72" y="9" width="10" height="10" fill="#00A1D7" fill-opacity="0.88"/><rect x="85" y="9" width="10" height="10" fill="#E4007F" fill-opacity="0.88"/><rect x="98" y="9" width="10" height="10" fill="#FFF200" fill-opacity="0.95"/><rect x="111" y="9" width="10" height="10" fill="#111111" fill-opacity="0.88"/>
+  <g fill="none" stroke="#111111" stroke-width="1" stroke-opacity="0.34" stroke-linecap="square">
+    <path d="M130 22.5 H300"/>
+    M130 24 V18 M140 24 V21 M150 24 V21 M160 24 V21 M170 24 V21 M180 24 V18 M190 24 V21 M200 24 V21 M210 24 V21 M220 24 V21 M230 24 V18 M240 24 V21 M250 24 V21 M260 24 V21 M270 24 V21 M280 24 V18 M290 24 V21 M300 24 V21
+  </g>
+  <g fill="none" stroke="#111111" stroke-opacity="0.5">
+    <path d="M46 4 V24 M57 4 V24 M68 4 V24 M80 4 V24 M92 4 V24 M104 4 V24 M116 4 V24" stroke-width="0.75"/>
+  </g>
+  <path d="M300 2 h18 M318 2 v24 M300 26 h18" fill="none" stroke="#FDFD1F" stroke-width="3" stroke-opacity="0.55" stroke-linecap="square"/>
+  <g fill="none" stroke="#111111" stroke-width="1">
+      <circle cx="300" cy="6.5" r="3.2" stroke-opacity="0.62"/>
+      <circle cx="300" cy="6.5" r="1.344" stroke-opacity="0.9"/>
+      <path d="M291.8 6.5 H308.2 M300 -1.7000000000000002 V14.7" stroke-opacity="0.4"/>
+      <path d="M294.8 1.2999999999999998 l2.2399999999999998 2.2399999999999998 M305.2 1.2999999999999998 l-2.2399999999999998 2.2399999999999998" stroke-opacity="0.28"/>
+    </g>
+</svg>

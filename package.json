@@ -1,0 +1,33 @@
+{
+  "name": "trisolaris-civilization",
+  "private": true,
+  "version": "1.4.0",
+  "type": "module",
+  "description": "TRISOLARIS: CIVILIZATION — a hard sci-fi 3D three-body civilization strategy game",
+  "scripts": {
+    "dev": "vite --host 127.0.0.1 --port 5173",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview --host 127.0.0.1 --port 4173",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:e2e": "node tests/e2e/run-acceptance.mjs --url http://127.0.0.1:5173/",
+    "serve": "vite preview --host 127.0.0.1 --port 4173",
+    "test:e2e:subset": "node tests/e2e/run-subset.mjs --url http://127.0.0.1:5173/",
+    "test:e2e:extra": "node tests/e2e/run-subset-extra.mjs --url http://127.0.0.1:5173/",
+    "bench": "vite-node tests/e2e/node-bench.ts",
+    "play": "node scripts/play.mjs"
+  },
+  "devDependencies": {
+    "@types/jsdom": "^30.0.0",
+    "@types/node": "^22.10.5",
+    "@types/three": "^0.170.0",
+    "jsdom": "^25.0.1",
+    "typescript": "^5.7.2",
+    "vite": "^6.0.7",
+    "vitest": "^2.1.8"
+  },
+  "dependencies": {
+    "three": "^0.170.0"
+  }
+}

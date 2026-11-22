@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="320" height="24" viewBox="0 0 320 24" fill="none" role="img" aria-label="Slash divider" shape-rendering="geometricPrecision">
+  <title>Slash divider</title>
+  <defs>
+    <linearGradient id="divLine" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#37E5FF" stop-opacity=".55"/>
+      <stop offset=".34" stop-color="#37E5FF" stop-opacity=".16"/>
+      <stop offset=".72" stop-color="#37E5FF" stop-opacity=".08"/>
+      <stop offset="1" stop-color="#37E5FF" stop-opacity=".45"/>
+    </linearGradient>
+  </defs>
+  <path d="M0 12H320" stroke="url(#divLine)" stroke-width="1"/>
+  <path d="M0 22 L10 2 H24 L14 22 Z" fill="#37E5FF" fill-opacity=".72"/>
+  <path d="M28 22 L38 2 H44 L34 22 Z" fill="#FFC857" fill-opacity=".88"/>
+  <path d="M48 22 L56 6 H59 L51 22 Z" fill="#37E5FF" fill-opacity=".4"/>
+  <path d="M320 22 L310 2 H296 L306 22 Z" fill="#37E5FF" fill-opacity=".72"/>
+  <path d="M292 22 L282 2 H276 L286 22 Z" fill="#FFC857" fill-opacity=".88"/>
+  <path d="M272 22 L264 6 H261 L269 22 Z" fill="#37E5FF" fill-opacity=".4"/>
+  <path d="M142 18 L150 6 M158 18 L166 6 M174 18 L182 6" stroke="#37E5FF" stroke-opacity=".34" stroke-width="1"/>
+  <path d="M160 9.5 L163 12 L160 14.5 L157 12 Z" fill="#8FE9FF" fill-opacity=".9"/>
+</svg>

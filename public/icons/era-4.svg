@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128" fill="none" role="img" aria-label="Era 4 emblem: supercomputer and aerospace" shape-rendering="geometricPrecision">
+  <title>Era 4 emblem</title>
+  <defs>
+    <radialGradient id="iconBg" cx="50%" cy="50%" r="50%">
+      <stop offset="0" stop-color="#0B1118" stop-opacity=".85"/>
+      <stop offset=".72" stop-color="#080D13" stop-opacity=".7"/>
+      <stop offset="1" stop-color="#05080C" stop-opacity=".55"/>
+    </radialGradient>
+  </defs>
+  <circle cx="64" cy="64" r="58" fill="url(#iconBg)"/>
+  <circle cx="64" cy="64" r="56" stroke="#37E5FF" stroke-opacity=".36" stroke-width="1"/>
+  <circle cx="64" cy="64" r="50" stroke="#8FE9FF" stroke-opacity=".55" stroke-width="4" stroke-dasharray="1.1 7.63"/>
+  <circle cx="64" cy="64" r="44" stroke="#37E5FF" stroke-opacity=".15" stroke-width="1"/>
+  <path d="M53.42 35.52 A56 56 0 0 1 84.88 45.12" stroke="#FFC857" stroke-opacity=".85" stroke-width="2.2" stroke-linecap="round"/>
+  <path d="M100.28 84.62 A56 56 0 0 1 95.84 92.44" stroke="#37E5FF" stroke-opacity=".9" stroke-width="2" stroke-linecap="round"/>
+  <g stroke="#37E5FF" fill="none">
+    <path d="M64 32 L89 45 V75 L64 88 L39 75 V45 Z" stroke-opacity=".7" stroke-width="1.5" fill="#E8F2F7" fill-opacity=".05"/>
+    <path d="M64 40 L82 49.5 V70.5 L64 80 L46 70.5 V49.5 Z" stroke-opacity=".25" stroke-width="1"/>
+    <path d="M56 32 V25 M64 32 V25 M72 32 V25 M56 88 V95 M64 88 V95 M72 88 V95 M39 57 H32 M39 63 H32 M89 57 H96 M89 63 H96" stroke-opacity=".45" stroke-width="1.1"/>
+    <path d="M64 48 V72 M52 60 H76" stroke-opacity=".5" stroke-width="1.2"/>
+  </g>
+  <g fill="#37E5FF">
+    <circle cx="64" cy="48" r="2.2" fill-opacity=".9"/>
+    <circle cx="64" cy="72" r="2.2" fill-opacity=".9"/>
+    <circle cx="52" cy="60" r="2.2" fill-opacity=".9"/>
+    <circle cx="76" cy="60" r="2.2" fill-opacity=".9"/>
+  </g>
+  <ellipse cx="64" cy="60" rx="35" ry="11.5" transform="rotate(-20 64 60)" stroke="#B48CFF" stroke-opacity=".35" stroke-width="1"/>
+  <circle cx="93" cy="47" r="2.6" fill="#FFC857" fill-opacity=".95"/>
+  <path d="M33 96 H95" stroke="#37E5FF" stroke-opacity=".2" stroke-width="1" stroke-dasharray="3 4"/>
+</svg>

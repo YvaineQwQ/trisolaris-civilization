@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024" fill="none" role="img" aria-label="纪元存续理事会徽章：三颗银白天体悬于月牙轨道弧之上，轨道末端箭头指向右上" shape-rendering="geometricPrecision">
+  <title>纪元存续理事会 / EPOCH CONTINUITY COUNCIL</title>
+  <desc>纯黑底色上的银白几何徽记：三颗大小递变的天体呈不等边三角形，下方粗月牙形轨道弧如托盘托举，右端箭头沿切线指向右上，象征观测三体、守护文明轨迹、向存续前进。</desc>
+  <defs>
+    <radialGradient id="ce-sphere-A" gradientUnits="userSpaceOnUse" cx="319.74" cy="341.86" r="183">
+      <stop offset="0" stop-color="#FFFFFF"/>
+      <stop offset="0.08" stop-color="#FAFDFF"/>
+      <stop offset="0.2" stop-color="#EAF0F7"/>
+      <stop offset="0.36" stop-color="#CFD9E4"/>
+      <stop offset="0.52" stop-color="#ADB8C6"/>
+      <stop offset="0.68" stop-color="#8892A0"/>
+      <stop offset="0.84" stop-color="#646D79"/>
+      <stop offset="0.94" stop-color="#4A515A"/>
+      <stop offset="1" stop-color="#3A4149"/>
+    </radialGradient>
+    <radialGradient id="ce-glow-A" gradientUnits="userSpaceOnUse" cx="360" cy="387" r="274.5">
+      <stop offset="0" stop-color="#C9D6E6" stop-opacity="0.508"/>
+      <stop offset="0.3" stop-color="#C9D6E6" stop-opacity="0.23"/>
+      <stop offset="0.42" stop-color="#C9D6E6" stop-opacity="0.279"/>
+      <stop offset="0.48" stop-color="#C9D6E6" stop-opacity="0.262"/>
+      <stop offset="0.56" stop-color="#C9D6E6" stop-opacity="0.156"/>
+      <stop offset="0.7" stop-color="#C9D6E6" stop-opacity="0.066"/>
+      <stop offset="0.84" stop-color="#C9D6E6" stop-opacity="0.025"/>
+      <stop offset="1" stop-color="#C9D6E6" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="ce-sphere-B" gradientUnits="userSpaceOnUse" cx="654.28" cy="385.92" r="126">
+      <stop offset="0" stop-color="#FFFFFF"/>
+      <stop offset="0.08" stop-color="#FAFDFF"/>
+      <stop offset="0.2" stop-color="#EAF0F7"/>
+      <stop offset="0.36" stop-color="#CFD9E4"/>
+      <stop offset="0.52" stop-color="#ADB8C6"/>
+      <stop offset="0.68" stop-color="#8892A0"/>
+      <stop offset="0.84" stop-color="#646D79"/>
+      <stop offset="0.94" stop-color="#4A515A"/>
+      <stop offset="1" stop-color="#3A4149"/>
+    </radialGradient>
+    <radialGradient id="ce-glow-B" gradientUnits="userSpaceOnUse" cx="682" cy="417" r="189">
+      <stop offset="0" stop-color="#C9D6E6" stop-opacity="0.508"/>
+      <stop offset="0.3" stop-color="#C9D6E6" stop-opacity="0.23"/>
+      <stop offset="0.42" stop-color="#C9D6E6" stop-opacity="0.279"/>
+      <stop offset="0.48" stop-color="#C9D6E6" stop-opacity="0.262"/>
+      <stop offset="0.56" stop-color="#C9D6E6" stop-opacity="0.156"/>
+      <stop offset="0.7" stop-color="#C9D6E6" stop-opacity="0.066"/>
+      <stop offset="0.84" stop-color="#C9D6E6" stop-opacity="0.025"/>
+      <stop offset="1" stop-color="#C9D6E6" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="ce-sphere-C" gradientUnits="userSpaceOnUse" cx="542.2" cy="562.8" r="90">
+      <stop offset="0" stop-color="#FFFFFF"/>
+      <stop offset="0.08" stop-color="#FAFDFF"/>
+      <stop offset="0.2" stop-color="#EAF0F7"/>
+      <stop offset="0.36" stop-color="#CFD9E4"/>
+      <stop offset="0.52" stop-color="#ADB8C6"/>
+      <stop offset="0.68" stop-color="#8892A0"/>
+      <stop offset="0.84" stop-color="#646D79"/>
+      <stop offset="0.94" stop-color="#4A515A"/>
+      <stop offset="1" stop-color="#3A4149"/>
+    </radialGradient>
+    <radialGradient id="ce-glow-C" gradientUnits="userSpaceOnUse" cx="562" cy="585" r="135">
+      <stop offset="0" stop-color="#C9D6E6" stop-opacity="0.508"/>
+      <stop offset="0.3" stop-color="#C9D6E6" stop-opacity="0.23"/>
+      <stop offset="0.42" stop-color="#C9D6E6" stop-opacity="0.279"/>
+      <stop offset="0.48" stop-color="#C9D6E6" stop-opacity="0.262"/>
+      <stop offset="0.56" stop-color="#C9D6E6" stop-opacity="0.156"/>
+      <stop offset="0.7" stop-color="#C9D6E6" stop-opacity="0.066"/>
+      <stop offset="0.84" stop-color="#C9D6E6" stop-opacity="0.025"/>
+      <stop offset="1" stop-color="#C9D6E6" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="ce-arc-glow" gradientUnits="userSpaceOnUse" cx="534.667" cy="463" r="450">
+      <stop offset="0.524" stop-color="#AEBCCD" stop-opacity="0"/>
+      <stop offset="0.6" stop-color="#AEBCCD" stop-opacity="0.05"/>
+      <stop offset="0.664" stop-color="#AEBCCD" stop-opacity="0.12"/>
+      <stop offset="0.729" stop-color="#AEBCCD" stop-opacity="0.18"/>
+      <stop offset="0.793" stop-color="#AEBCCD" stop-opacity="0.1"/>
+      <stop offset="0.858" stop-color="#AEBCCD" stop-opacity="0.035"/>
+      <stop offset="1" stop-color="#AEBCCD" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="ce-arc-metal" gradientUnits="userSpaceOnUse" x1="247.791" y1="622.018" x2="872.932" y2="529.308">
+      <stop offset="0" stop-color="#8E99A8"/>
+      <stop offset="0.3" stop-color="#A8B3C1"/>
+      <stop offset="0.58" stop-color="#CBD6E3"/>
+      <stop offset="0.82" stop-color="#E8EEF6"/>
+      <stop offset="1" stop-color="#F5F9FD"/>
+    </linearGradient>
+    <linearGradient id="ce-arrow-metal" gradientUnits="userSpaceOnUse" x1="820.088" y1="624.641" x2="872.932" y2="529.308">
+      <stop offset="0" stop-color="#EDF3FA"/>
+      <stop offset="0.55" stop-color="#F9FCFF"/>
+      <stop offset="1" stop-color="#FFFFFF"/>
+    </linearGradient>
+  </defs>
+  <g id="council-emblem">
+    <path id="orbit-arc-glow" d="M 141.088 681.164 A 450 450 0 0 0 928.246 681.164 L 714.838 562.871 A 206 206 0 0 1 354.495 562.871 Z" fill="url(#ce-arc-glow)"/>
+    <path id="orbit-arc" d="M 216.305 639.471 A 364 364 0 0 0 853.028 639.471 L 790.056 604.564 A 292 292 0 0 1 279.278 604.564 Z" fill="url(#ce-arc-metal)"/>
+    <path d="M 277.354 605.631 A 294.2 294.2 0 0 0 791.98 605.631" stroke="#FFFFFF" stroke-opacity="0.28" stroke-width="2" fill="none"/>
+    <polygon id="orbit-arrow" points="872.932 529.308 869.941 652.276 770.234 597.007" fill="url(#ce-arrow-metal)"/>
+    <circle id="body-glow-A" cx="360" cy="387" r="274.5" fill="url(#ce-glow-A)"/>
+    <circle id="body-glow-B" cx="682" cy="417" r="189" fill="url(#ce-glow-B)"/>
+    <circle id="body-glow-C" cx="562" cy="585" r="135" fill="url(#ce-glow-C)"/>
+    <g id="body-group-A" opacity="1">
+      <circle id="body-A" cx="360" cy="387" r="122" fill="url(#ce-sphere-A)"/>
+    <circle cx="360" cy="387" r="122" fill="none" stroke="#CBD6E3" stroke-opacity="0.22" stroke-width="1.4"/>
+      <path d="M 476.824 416.127 A 120.4 120.4 0 0 1 385.033 504.769" stroke="#F4F8FD" stroke-opacity="0.4" stroke-width="2.4" stroke-linecap="round" fill="none"/>
+    </g>
+    <g id="body-group-B" opacity="0.96">
+      <circle id="body-B" cx="682" cy="417" r="84" fill="url(#ce-sphere-B)"/>
+    <circle cx="682" cy="417" r="84" fill="none" stroke="#CBD6E3" stroke-opacity="0.22" stroke-width="1.4"/>
+      <path d="M 761.952 436.934 A 82.4 82.4 0 0 1 699.132 497.599" stroke="#F4F8FD" stroke-opacity="0.4" stroke-width="2.4" stroke-linecap="round" fill="none"/>
+    </g>
+    <g id="body-group-C" opacity="0.91">
+      <circle id="body-C" cx="562" cy="585" r="60" fill="url(#ce-sphere-C)"/>
+    <circle cx="562" cy="585" r="60" fill="none" stroke="#CBD6E3" stroke-opacity="0.22" stroke-width="1.4"/>
+      <path d="M 618.665 599.128 A 58.4 58.4 0 0 1 574.142 642.124" stroke="#F4F8FD" stroke-opacity="0.4" stroke-width="2.4" stroke-linecap="round" fill="none"/>
+    </g>
+  </g>
+</svg>

@@ -1,0 +1,126 @@
+{
+  "count": 12,
+  "note": "由即梦AI（用户账号，Edge 已登录）通过 Win32 窗口自动化生成，1920x1080 原始 PNG 缩放为 1600x900 JPG；平台合规水印保留。",
+  "heroes": [
+    {
+      "file": "hero-01-observatory-ruins.jpg",
+      "prompt": "工业画册风格插画，米白纸张底色，墨黑版画线稿，极少量信号黄点缀，硬科幻，三体星系观测站废墟，巨大抛物面天线残骸倾斜在荒原上，远方三颗太阳低垂于地平线，细密排线阴影，无文字，无水印",
+      "usage": "事件：观测异常 / 废墟（hero 大图）",
+      "source": "jimeng",
+      "tool": "即梦AI Seedream 5.5（网页版）",
+      "watermark": true,
+      "watermarkNote": "含平台合规的「AI生成」标识与即梦品牌水印，随包保留不做去除",
+      "generatedAt": "2026-11-21"
+    },
+    {
+      "file": "hero-02-ringed-planet-impact.jpg",
+      "prompt": "工业画册风格插画，米白纸张底色，墨黑版画线稿，极少量信号黄点缀，硬科幻，巨行星环下的陨石坠落荒原，彗星尾迹划破天空，岩石撞击形成冲击坑，远处山脊上的信号塔，细密排线阴影，无文字，无水印",
+      "usage": "事件：陨石/撞击链（hero 大图）",
+      "source": "jimeng",
+      "tool": "即梦AI Seedream 5.5（网页版）",
+      "watermark": true,
+      "watermarkNote": "含平台合规的「AI生成」标识与即梦品牌水印，随包保留不做去除",
+      "generatedAt": "2026-11-21"
+    },
+    {
+      "file": "hero-03-council-hall.jpg",
+      "prompt": "工业画册风格插画，米白纸张底色，墨黑版画线稿，极少量信号黄点缀，硬科幻，议会大厅，长桌与代表剪影，巨大穹顶悬挂星图，日光从高窗斜射，纸张与卷宗散落桌面，细密排线阴影，无文字，无水印",
+      "usage": "事件：政治/议会链（hero 大图）",
+      "source": "jimeng",
+      "tool": "即梦AI Seedream 5.5（网页版）",
+      "watermark": true,
+      "watermarkNote": "含平台合规的「AI生成」标识与即梦品牌水印，随包保留不做去除",
+      "generatedAt": "2026-11-21"
+    },
+    {
+      "file": "hero-04-heavy-industry.jpg",
+      "prompt": "工业画册风格插画，米白纸张底色，墨黑版画线稿，极少量信号黄点缀，硬科幻，重工业工厂内部，巨型齿轮与熔炉，天车吊运钢坯，烟囱排出的蒸汽被逆光照亮，细密排线阴影，无文字，无水印",
+      "usage": "事件：工业/工厂链（hero 大图）",
+      "source": "jimeng",
+      "tool": "即梦AI Seedream 5.5（网页版）",
+      "watermark": true,
+      "watermarkNote": "含平台合规的「AI生成」标识与即梦品牌水印，随包保留不做去除",
+      "generatedAt": "2026-11-21"
+    },
+    {
+      "file": "hero-05-famine-fields.jpg",
+      "prompt": "工业画册风格插画，米白纸张底色，墨黑版画线稿，极少量信号黄点缀，硬科幻，龟裂农田与干枯作物，断流的水渠，远处水塔与风车，农夫站在田埂上的剪影，细密排线阴影，无文字，无水印",
+      "usage": "事件：饥荒/农业链（hero 大图）",
+      "source": "jimeng",
+      "tool": "即梦AI Seedream 5.5（网页版）",
+      "watermark": true,
+      "watermarkNote": "含平台合规的「AI生成」标识与即梦品牌水印，随包保留不做去除",
+      "generatedAt": "2026-11-21"
+    },
+    {
+      "file": "hero-06-underground-lab.jpg",
+      "prompt": "工业画册风格插画，米白纸张底色，墨黑版画线稿，极少量信号黄点缀，硬科幻，地下实验室，超导环与仪器阵列，示波器光带，研究员在玻璃隔断后记录数据，细密排线阴影，无文字，无水印",
+      "usage": "事件：科研/实验室链（hero 大图）",
+      "source": "jimeng",
+      "tool": "即梦AI Seedream 5.5（网页版）",
+      "watermark": true,
+      "watermarkNote": "含平台合规的「AI生成」标识与即梦品牌水印，随包保留不做去除",
+      "generatedAt": "2026-11-21"
+    },
+    {
+      "file": "hero-07-orbital-shipyard.jpg",
+      "prompt": "工业画册风格插画，米白纸张底色，墨黑版画线稿，极少量信号黄点缀，硬科幻，轨道船坞，巨型飞船龙骨正在焊接，吊臂与脚手架，行星环从舷窗外横跨，细密排线阴影，无文字，无水印",
+      "usage": "事件：航天/世代飞船链（hero 大图）",
+      "source": "jimeng",
+      "tool": "即梦AI Seedream 5.5（网页版）",
+      "watermark": true,
+      "watermarkNote": "含平台合规的「AI生成」标识与即梦品牌水印，随包保留不做去除",
+      "generatedAt": "2026-11-21"
+    },
+    {
+      "file": "hero-08-archives-vault.jpg",
+      "prompt": "工业画册风格插画，米白纸张底色，墨黑版画线稿，极少量信号黄点缀，硬科幻，档案馆内部，高耸的文件墙与卡片目录，木梯，尘埃光柱，一名档案员在梯上，细密排线阴影，无文字，无水印",
+      "usage": "事件：档案/失传知识链（hero 大图）",
+      "source": "jimeng",
+      "tool": "即梦AI Seedream 5.5（网页版）",
+      "watermark": true,
+      "watermarkNote": "含平台合规的「AI生成」标识与即梦品牌水印，随包保留不做去除",
+      "generatedAt": "2026-11-21"
+    },
+    {
+      "file": "hero-09-migration-column.jpg",
+      "prompt": "工业画册风格插画，米白纸张底色，墨黑版画线稿，极少量信号黄点缀，硬科幻，迁徙人群的长队穿越风雪荒原，探照灯与行李箱，远处临时营地的灯光，细密排线阴影，无文字，无水印",
+      "usage": "事件：人口迁徙/严寒链（hero 大图）",
+      "source": "jimeng",
+      "tool": "即梦AI Seedream 5.5（网页版）",
+      "watermark": true,
+      "watermarkNote": "含平台合规的「AI生成」标识与即梦品牌水印，随包保留不做去除",
+      "generatedAt": "2026-11-21"
+    },
+    {
+      "file": "hero-10-second-sun.jpg",
+      "prompt": "工业画册风格插画，米白纸张底色，墨黑版画线稿，极少量信号黄点缀，硬科幻，天象异常，天空出现第二个太阳，地平线扭曲，城镇剪影与仰头的人群，细密排线阴影，无文字，无水印",
+      "usage": "事件：天象异常/三体梦（hero 大图）",
+      "source": "jimeng",
+      "tool": "即梦AI Seedream 5.5（网页版）",
+      "watermark": true,
+      "watermarkNote": "含平台合规的「AI生成」标识与即梦品牌水印，随包保留不做去除",
+      "generatedAt": "2026-11-21"
+    },
+    {
+      "file": "hero-11-antenna-array.jpg",
+      "prompt": "工业画册风格插画，米白纸张底色，墨黑版画线稿，极少量信号黄点缀，硬科幻，沙漠中的巨型天线阵列，接收来自深空的信号，黄昏，沙丘与电缆，细密排线阴影，无文字，无水印",
+      "usage": "事件：信号监听/深空链（hero 大图）",
+      "source": "jimeng",
+      "tool": "即梦AI Seedream 5.5（网页版）",
+      "watermark": true,
+      "watermarkNote": "含平台合规的「AI生成」标识与即梦品牌水印，随包保留不做去除",
+      "generatedAt": "2026-11-21"
+    },
+    {
+      "file": "hero-12-frozen-city.jpg",
+      "prompt": "工业画册风格插画，米白纸张底色，墨黑版画线稿，极少量信号黄点缀，硬科幻，冰封城市，霜冻覆盖的冷却塔与穹顶建筑，极光与探照灯，细密排线阴影，无文字，无水印",
+      "usage": "事件：寒潮/冰封城市链（hero 大图）",
+      "source": "jimeng",
+      "tool": "即梦AI Seedream 5.5（网页版）",
+      "watermark": true,
+      "watermarkNote": "含平台合规的「AI生成」标识与即梦品牌水印，随包保留不做去除",
+      "generatedAt": "2026-11-21"
+    }
+  ]
+}
