@@ -1,0 +1,227 @@
+/* v1.6 科研终端：SVG 树状科技图 + 发展纲领 / 资源倾斜 / 加速研究。
+   仅作用于 tri-v6 命名空间，不改动全局 styles.css / theme-print.css。 */
+.tri-techbook.tri-v6 {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  height: min(76vh, 880px);
+  min-height: 420px;
+  color: #1c1c1c;
+  font-size: 12px;
+}
+
+.tri-v6-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 10px 14px;
+  border: 1px solid rgba(20, 20, 20, 0.16);
+  border-left: 4px solid #c6ff2e;
+  background: rgba(255, 255, 255, 0.86);
+}
+.tri-v6-headmain { display: flex; flex-direction: column; gap: 5px; min-width: 0; }
+.tri-v6-headstats { display: flex; flex-direction: column; gap: 4px; text-align: right; max-width: 42%; }
+.tri-v6-kicker { font: 600 10px/1.3 "JetBrains Mono", Consolas, monospace; letter-spacing: 0.08em; text-transform: uppercase; opacity: 0.72; }
+.tri-v6-active { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.tri-v6-activename { font-size: 15px; font-weight: 700; }
+.tri-v6-activemeta { font: 11px/1.3 Consolas, monospace; opacity: 0.72; }
+.tri-v6-headmeta { font-size: 11px; opacity: 0.8; }
+.tri-v6-track { display: block; height: 4px; width: min(420px, 100%); background: rgba(20, 20, 20, 0.12); overflow: hidden; }
+.tri-v6-trackfill { display: block; height: 100%; background: #1c1c1c; }
+
+.tri-v6-controls,
+.tri-v6-devbar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  padding: 6px 10px;
+  border: 1px solid rgba(20, 20, 20, 0.12);
+  background: rgba(250, 250, 246, 0.9);
+}
+.tri-v6-devbar { border-top: 0; }
+.tri-v6-ctrl-label { font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; opacity: 0.6; }
+.tri-v6-ctrl-sep { width: 1px; height: 16px; background: rgba(20, 20, 20, 0.16); margin: 0 4px; }
+.tri-v6-select {
+  border: 1px solid rgba(20, 20, 20, 0.28);
+  background: #fff;
+  color: inherit;
+  font-size: 11px;
+  padding: 3px 6px;
+  border-radius: 2px;
+}
+.tri-v6-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  border: 1px solid rgba(20, 20, 20, 0.32);
+  background: #fff;
+  color: inherit;
+  font-size: 11px;
+  padding: 4px 9px;
+  border-radius: 2px;
+  cursor: pointer;
+  line-height: 1.2;
+}
+.tri-v6-btn:hover:not(:disabled) { background: #f2f2e9; }
+.tri-v6-btn:disabled { opacity: 0.42; cursor: not-allowed; }
+.tri-v6-btn-primary { background: #1c1c1c; color: #f8f8f2; border-color: #1c1c1c; }
+.tri-v6-btn-primary:hover:not(:disabled) { background: #333; }
+.tri-v6-btn-ghost { background: transparent; }
+.tri-v6-btn-xs { padding: 2px 6px; font-size: 10px; }
+.tri-v6-btn-icon { padding: 4px; border-color: transparent; background: transparent; }
+.tri-v6-btn.is-armed { border-color: #9bc21a; background: #eaffb0; }
+.tri-v6-range { width: 128px; accent-color: #1c1c1c; }
+.tri-v6-funding-value { font: 600 12px/1 Consolas, monospace; min-width: 36px; }
+.tri-v6-funding-meta { font-size: 10px; opacity: 0.66; }
+.tri-v6-devchips { display: flex; gap: 6px; }
+.tri-v6-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid rgba(20, 20, 20, 0.28);
+  background: #fff;
+  color: inherit;
+  padding: 4px 9px;
+  border-radius: 2px;
+  font-size: 11px;
+  cursor: pointer;
+}
+.tri-v6-chip.is-selected { background: #1c1c1c; color: #f8f8f2; border-color: #1c1c1c; }
+.tri-v6-chip-count { font: 10px/1 Consolas, monospace; opacity: 0.68; }
+.tri-v6-devhint { font-size: 10px; opacity: 0.66; }
+
+.tri-v6-body {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+  gap: 10px;
+}
+.tri-v6-side {
+  width: 236px;
+  flex: 0 0 236px;
+  overflow-y: auto;
+  padding: 8px;
+  border: 1px solid rgba(20, 20, 20, 0.12);
+  background: rgba(250, 250, 246, 0.92);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.tri-v6-scroll {
+  flex: 1;
+  min-width: 0;
+  overflow: auto;
+  border: 1px solid rgba(20, 20, 20, 0.16);
+  background:
+    linear-gradient(rgba(20, 20, 20, 0.035) 1px, transparent 1px) 0 0 / 100% 26px,
+    #fdfdf9;
+}
+.tri-v6-svghost { min-width: 100%; min-height: 100%; }
+.tri-v6-svg { display: block; }
+
+.tri-v6-svg .tri-v6-band { fill: rgba(255, 255, 255, 0.5); stroke: rgba(20, 20, 20, 0.06); }
+.tri-v6-svg .tri-v6-band.is-alt { fill: rgba(240, 240, 232, 0.55); }
+.tri-v6-svg .tri-v6-band.is-dim { opacity: 0.25; }
+.tri-v6-erahead { font: 600 12px/1 "Noto Sans SC", sans-serif; fill: #4b4b44; letter-spacing: 0.04em; }
+.tri-v6-erahead.is-current { fill: #1c1c1c; font-weight: 800; }
+.tri-v6-branchlabel { font: 700 12px/1 "Noto Sans SC", sans-serif; fill: #1c1c1c; }
+.tri-v6-branchcount { font: 10px/1 Consolas, monospace; fill: #6a6a60; }
+.tri-v6-edge { fill: none; stroke: rgba(20, 20, 20, 0.22); stroke-width: 1.1; }
+.tri-v6-edge.is-done { stroke: #6f8f00; }
+.tri-v6-edge.is-open { stroke: #b7cf3a; }
+.tri-v6-edge.is-dim { opacity: 0.18; }
+
+.tri-v6-node { cursor: pointer; outline: none; }
+.tri-v6-node.is-dim { opacity: 0.18; }
+.tri-v6-noderect { fill: #fff; stroke: rgba(20, 20, 20, 0.35); stroke-width: 1; }
+.tri-v6-nodename { font: 600 10.5px/1 "Noto Sans SC", sans-serif; fill: #1c1c1c; pointer-events: none; }
+.tri-v6-nodemeta { font: 9px/1 Consolas, monospace; fill: #6a6a60; pointer-events: none; }
+.tri-v6-node.is-researched .tri-v6-noderect { fill: #eef7d6; stroke: #6f8f00; }
+.tri-v6-node.is-active .tri-v6-noderect { fill: #1c1c1c; stroke: #1c1c1c; }
+.tri-v6-node.is-active .tri-v6-nodename,
+.tri-v6-node.is-active .tri-v6-nodemeta { fill: #f5ffe0; }
+.tri-v6-node.is-available .tri-v6-noderect { fill: #fffdf0; stroke: #9bc21a; stroke-width: 1.4; }
+.tri-v6-node.is-locked .tri-v6-noderect { fill: rgba(235, 235, 228, 0.7); stroke: rgba(20, 20, 20, 0.2); }
+.tri-v6-node.is-locked .tri-v6-nodename { fill: #8a8a80; }
+.tri-v6-node.is-doctrine-blocked .tri-v6-noderect { stroke-dasharray: 3 3; stroke: #b26a6a; }
+.tri-v6-node.is-selected .tri-v6-noderect { stroke: #1c1c1c; stroke-width: 2.4; }
+.tri-v6-node:hover .tri-v6-noderect { stroke: #1c1c1c; stroke-width: 1.8; }
+
+.tri-v6-drawer {
+  width: 320px;
+  flex: 0 0 320px;
+  overflow-y: auto;
+  padding: 12px 14px;
+  border: 1px solid rgba(20, 20, 20, 0.18);
+  background: #fff;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.tri-v6-drawerclose { position: absolute; top: 6px; right: 6px; }
+.tri-v6-drawertitle { font-size: 18px; margin: 2px 0 0; }
+.tri-v6-drawermeta { display: flex; flex-wrap: wrap; gap: 6px; }
+.tri-v6-tag { border: 1px solid rgba(20, 20, 20, 0.24); padding: 1px 6px; font: 10px/1.6 Consolas, monospace; border-radius: 2px; }
+.tri-v6-flavor { margin: 4px 0; padding: 6px 10px; border-left: 3px solid #c6ff2e; font-style: italic; font-size: 11px; opacity: 0.82; }
+.tri-v6-desc { margin: 0; font-size: 12px; line-height: 1.6; }
+.tri-v6-long { margin: 0; font-size: 11px; line-height: 1.55; opacity: 0.72; max-height: 170px; overflow-y: auto; }
+.tri-v6-effectlist { margin: 4px 0 0; padding-left: 16px; display: flex; flex-direction: column; gap: 3px; font-size: 11px; }
+.tri-v6-req { font-size: 11px; opacity: 0.74; margin: 0; }
+.tri-v6-drawerfoot { margin-top: auto; display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding-top: 8px; border-top: 1px solid rgba(20, 20, 20, 0.1); }
+.tri-v6-done { font-size: 11px; color: #5c7a00; }
+.tri-v6-active { font-size: 11px; }
+.tri-v6-blocked { font-size: 10px; color: #a14b4b; }
+
+.tri-v6-sidehead { display: flex; justify-content: space-between; gap: 6px; }
+.tri-v6-hint { font-size: 11px; opacity: 0.66; margin: 0; }
+.tri-v6-school {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 2px 8px;
+  padding: 6px;
+  border: 1px solid rgba(20, 20, 20, 0.1);
+  background: #fff;
+}
+.tri-v6-school.is-focused { border-color: #9bc21a; background: #f7ffe4; }
+.tri-v6-schoolmain { display: flex; align-items: center; gap: 6px; grid-column: 1 / -1; }
+.tri-v6-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+.tri-v6-schoolname { font-size: 11px; font-weight: 600; }
+.tri-v6-schoolcount { margin-left: auto; font: 10px/1 Consolas, monospace; opacity: 0.7; }
+.tri-v6-schoolsub { font-size: 10px; opacity: 0.66; padding-left: 14px; }
+.tri-v6-doctrine { border: 1px solid rgba(20, 20, 20, 0.12); background: #fff; padding: 7px; display: flex; flex-direction: column; gap: 4px; }
+.tri-v6-doctrine-head { display: flex; justify-content: space-between; gap: 6px; }
+.tri-v6-doctrine-title { font-size: 11px; font-weight: 700; }
+.tri-v6-doctrine-state { font-size: 10px; opacity: 0.7; }
+.tri-v6-doctrine-state.is-chosen { color: #5c7a00; opacity: 1; }
+.tri-v6-doctrine-desc { margin: 0; font-size: 10px; opacity: 0.72; line-height: 1.45; }
+.tri-v6-doctrine-options { display: flex; flex-wrap: wrap; gap: 4px; }
+.tri-v6-doctrine-opt {
+  display: inline-flex;
+  flex-direction: column;
+  gap: 1px;
+  border: 1px solid rgba(20, 20, 20, 0.24);
+  background: #fff;
+  color: inherit;
+  padding: 3px 6px;
+  font-size: 10px;
+  cursor: pointer;
+  border-radius: 2px;
+}
+.tri-v6-doctrine-opt.is-chosen { background: #1c1c1c; color: #f6ffe0; border-color: #1c1c1c; }
+.tri-v6-doctrine-opt.is-locked { opacity: 0.45; cursor: not-allowed; }
+.tri-v6-doctrine-optname { font-weight: 600; }
+.tri-v6-doctrine-opttag { font: 9px/1 Consolas, monospace; opacity: 0.7; }
+
+@media (max-width: 1100px) {
+  .tri-techbook.tri-v6 { height: min(82vh, 940px); }
+  .tri-v6-side { display: none; }
+  .tri-v6-drawer { width: 260px; flex-basis: 260px; }
+  .tri-v6-headstats { display: none; }
+}
+@media (max-width: 760px) {
+  .tri-v6-drawer { display: none; }
+  .tri-v6-body { flex-direction: column; }
+  .tri-v6-range { width: 90px; }
+}

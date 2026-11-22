@@ -9,7 +9,7 @@ import { dateTime, num } from "./format";
 
 const GAME_TITLE = "三体纪元";
 const GAME_SUBTITLE = "TRISOLARIS: CIVILIZATION";
-const VERSION = "1.5.0";
+const VERSION = "1.6.0";
 
 export function createMenuScreen(ctx: UiContext): ScreenHandle {
   const root = el("div", { cls: "tri-screen tri-menu" });

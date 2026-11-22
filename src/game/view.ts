@@ -20,11 +20,13 @@ import {
   totalWorkers, describeEffects,
 } from "../buildings/system";
 import {
-  TECH_BRANCHES, TECH_BRANCH_ORDER, TECH_SCHOOLS, TECH_SCHOOL_ORDER, techsByBranch,
+  TECH_BRANCHES, TECH_BRANCH_ORDER, TECH_CATEGORIES, TECH_CATEGORY_OF_BRANCH, TECH_CATEGORY_ORDER,
+  TECH_SCHOOLS, TECH_SCHOOL_ORDER, techsByBranch, techsByCategory,
 } from "../technology/tree";
 import {
-  activeResearchInfo, aggregateTechEffects, canResearch, derivedSchoolPoints, doctrineGroups,
-  getTechMultipliers, schoolMastery, techDisplayName,
+  activeResearchInfo, aggregateTechEffects, canResearch, derivedSchoolPoints, developmentProgramInfo,
+  doctrineGroups, fundingModifiers, getTechMultipliers, normalizeTechState, researchBoostQuote,
+  researchSpeedBreakdown, schoolMastery, techDisplayName,
 } from "../technology/system";
 import { buildTaskOptions, levelInfo, maxLevel } from "../observation/observatory";
 import {
@@ -41,7 +43,7 @@ import type {
   FlowCostView, HazardView, HazardsView, ObjectiveView, ObservationView,
   ObservationTaskOptionView, ObservatoryView, ObservedPlanetView, ObservedStarView, QueueView,
   ResourceView, StabilityFactorView, TechBranchView, TechTreeView, TechView, ViewModel, WarningView,
-  CrisisView, DoctrineGroupView, TechSchoolView,
+  CrisisView, DoctrineGroupView, TechSchoolView, DevelopmentCategoryView,
 } from "./viewTypes";
 
 const MODE_NAMES: Record<string, string> = {
@@ -222,10 +224,15 @@ function buildingViews(state: GameState): BuildingsView {
     const targetEra = targetDef ? buildingEra(targetDef) : era;
     const upgradeCosts = targetDef ? flowCosts(targetDef.upgradeCost ?? {}, state.civ) : [];
     let upgradeBlockedReason: string | null = null;
+    const missingUpgradeTech = targetDef
+      ? targetDef.requiresTech.filter((techId) => !state.tech.researched.includes(techId))
+      : [];
     if ((state.buildings.counts[def.id] ?? 0) <= 0) upgradeBlockedReason = "尚未建造";
     else if (!targetDef) upgradeBlockedReason = "已是本升级链末端";
     else if (state.civ.era < targetEra) upgradeBlockedReason = "需要第 " + targetEra + " 时代";
-    else if (upgradeCosts.some((c) => !c.affordable)) upgradeBlockedReason = "升级资源不足";
+    else if (missingUpgradeTech.length > 0) {
+      upgradeBlockedReason = "需要科技：" + missingUpgradeTech.map((techId) => techDisplayName(techId)).join("、");
+    } else if (upgradeCosts.some((c) => !c.affordable)) upgradeBlockedReason = "升级资源不足";
     const canUpgrade = upgradeBlockedReason === null;
     if (canUpgrade) upgradableCount += 1;
     return {
@@ -361,6 +368,39 @@ function techTreeView(state: GameState): TechTreeView {
       researched: option.researched,
     })),
   }));
+  /* ---- v1.6 科研政策 ---- */
+  const developmentInfo = developmentProgramInfo(state.tech, state.civ.era);
+  const categoryViews: DevelopmentCategoryView[] = TECH_CATEGORY_ORDER.map((category) => {
+    const meta = TECH_CATEGORIES[category];
+    const list = techsByCategory(category);
+    const researchedCount = list.filter((tech) => state.tech.researched.includes(tech.id)).length;
+    return {
+      id: category,
+      name: meta.name,
+      short: meta.short,
+      description: meta.description,
+      color: meta.color,
+      selected: developmentInfo.categories.includes(category),
+      researchedCount,
+      total: list.length,
+    };
+  });
+  const funding = fundingModifiers(state.tech);
+  const boostQuote = researchBoostQuote(state.tech, state.civ.era, state.civ.turn);
+  const activeInfo = activeResearchInfo(state.tech);
+  const activeBuildingFactor = 1 + (aggregateBuildingEffects(state.buildings, BUILDING_DEFS, state.civ.era).researchSpeed ?? 0);
+  const breakdownInfo = activeInfo ? researchSpeedBreakdown(state.tech, activeInfo.techId) : null;
+  const boostView = {
+    available: boostQuote.ok,
+    reason: boostQuote.reason,
+    techId: boostQuote.techId,
+    techName: boostQuote.techName,
+    gain: boostQuote.gain,
+    percent: boostQuote.progressRatio,
+    cost: flowCosts(boostQuote.cost, state.civ),
+    uses: boostQuote.uses,
+    usedThisTurn: boostQuote.usedThisTurn,
+  };
   return {
     branches,
     schools,
@@ -369,6 +409,30 @@ function techTreeView(state: GameState): TechTreeView {
     researchedTotal: allTechs.filter((t) => t.researched).length,
     totalTechs: allTechs.length,
     activeTechId: state.tech.activeTech,
+    development: {
+      unlocked: developmentInfo.unlocked,
+      chosen: developmentInfo.chosen,
+      categories: developmentInfo.categories,
+      options: categoryViews,
+      focusBonus: developmentInfo.focusBonus,
+      neglectPenalty: developmentInfo.neglectPenalty,
+    },
+    funding: {
+      percent: funding.percent,
+      researchSpeed: funding.researchSpeed,
+      scienceProduction: funding.scienceProduction,
+      otherProduction: funding.otherProduction,
+    },
+    boost: state.tech.activeTech ? boostView : null,
+    activeSpeed: breakdownInfo
+      ? {
+          total: breakdownInfo.total * activeBuildingFactor,
+          schoolFactor: breakdownInfo.schoolFactor,
+          developmentFactor: breakdownInfo.developmentFactor,
+          fundingFactor: breakdownInfo.fundingFactor,
+          academyFactor: activeBuildingFactor,
+        }
+      : null,
   };
 }
 
@@ -634,11 +698,11 @@ function objectives(state: GameState): ObjectiveView[] {
   } else {
     push("obs-2", "升级专业天文台", "将天文台升级至 Lv.2", state.observation.level, 2);
     push("obs-4", "轨道动力学研究所", "将天文台升级至 Lv.4", state.observation.level, 4);
-    push("era-3", "进入混沌时代", "时代推进至第 3 时代", state.civ.era, 3);
+    push("era-3", "进入蒸汽纪元", "时代推进至第 3 时代", state.civ.era, 3);
     push("pop-2000", "人口达到 2000", "让文明拥有足够的人口基础", Math.round(population), 2000);
     push("colony", "建立星际殖民地", "在另一颗星球点亮文明的灯火", hasColony ? 1 : 0, 1);
     if (state.meta.mode === "story") {
-      push("era-5", "抵达文明的选择", "时代推进至第 5 时代", state.civ.era, 5);
+      push("era-6", "抵达星际文明", "时代推进至第 6 时代", state.civ.era, 6);
     }
   }
   return out;

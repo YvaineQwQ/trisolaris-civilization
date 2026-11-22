@@ -1,0 +1,266 @@
+/* ================================================================== *
+ *  TRISOLARIS v1.6 — DESIGN SYSTEM / 字体四角色 + 四类形状
+ *  依据：font-roles.svg / shape-semantics.svg 与用户 2026-11 规范。
+ *  1. 四种字体角色：sans / display / latin / tech（+ mono）
+ *  2. 四类形状：直角 / 切角 / 圆与弧 / 胶囊
+ *  3. 零偏移环境阴影；不用 8/12/16px 中等圆角；发丝线不围整圈
+ *  本文件必须在 styles.css 与 theme-print.css 之后加载。
+ * ================================================================== */
+
+:root {
+  /* ---- 字体角色 -------------------------------------------------- */
+  --font-sans: "HarmonyOS Sans SC", "Noto Sans SC", "Noto Sans", "Microsoft YaHei", "PingFang SC", system-ui, sans-serif;
+  --font-display: "Archivo", "Novecento Sans Wide", "Arial Black", "Segoe UI Black", "Microsoft YaHei", sans-serif;
+  --font-latin: "Outfit", "Urbanist", "Century Gothic", "Segoe UI", "Microsoft YaHei", sans-serif;
+  --font-tech: "Space Grotesk", "JetBrains Mono", "Cascadia Mono", Consolas, ui-monospace, monospace;
+  --font-mono: "JetBrains Mono", "Cascadia Mono", "Cascadia Code", Consolas, ui-monospace, monospace;
+
+  --sans: var(--font-sans);
+  --display: var(--font-display);
+  --mono: var(--font-mono);
+
+  /* ---- 形状与圆角 ------------------------------------------------ */
+  --shape-none: 0px;          /* 信息、默认、面板、表格、弹窗 */
+  --shape-xs: 2px;            /* 小标签、角标 */
+  --shape-sm: 4px;            /* 按钮一族（唯一按钮圆角档） */
+  --shape-md: 6px;            /* 新闻图片，不用于一般卡片 */
+  --shape-pill: 999px;        /* 胶囊：筛选、资源、短状态 */
+  --shape-full: 50%;          /* 正圆：头像、仪表、翻页钮 */
+
+  --cut-sm: 6px;              /* 标签/角标 ≤28px */
+  --cut-md: 10px;             /* 按钮/输入 32–48px */
+  --cut-lg: 16px;             /* 面板/大按钮 ≥56px */
+
+  --radius: var(--shape-none); /* 原文大量使用 var(--radius)，统一收成直角 */
+  --radius-xs: var(--shape-xs);
+  --radius-sm: var(--shape-sm);
+  --radius-md: var(--shape-md);
+  --radius-pill: var(--shape-pill);
+
+  /* ---- 零偏移环境阴影（不是投影） -------------------------------- */
+  --shadow-xs: 0 0 4px rgba(0, 0, 0, 0.25);
+  --shadow-sm: 0 0 8px rgba(0, 0, 0, 0.25);
+  --shadow-md: 0 0 12px rgba(0, 0, 0, 0.30);
+  --shadow-lg: 0 0 24px rgba(0, 0, 0, 0.30);
+  --shadow-rail: 0 0 12px rgba(0, 0, 0, 0.10);
+  --shadow-paper: var(--shadow-xs);
+  --shadow-card: none;
+}
+
+html, body, #app, #ui-root, .tri-root {
+  font-family: var(--font-sans);
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum" 1, "lnum" 1;
+}
+
+/* ---- 字体角色：靠字号与字重拉层级，不靠颜色 -------------------- */
+/* 巨型英文 / 分页数字：宽体，全大写，负字距。 */
+.tri-kicker,
+.tri-deck-kicker,
+.tri-techbook-kicker,
+.tri-panel-kicker,
+.tri-menu-kicker,
+.tri-modal-title-text .tri-kicker,
+.su-doc-overline,
+.su-step-eyebrow {
+  font-family: var(--font-display);
+  font-stretch: 125%;
+  font-weight: 800;
+  letter-spacing: 0.015em;
+  text-transform: uppercase;
+}
+.tri-display,
+.tri-menu-title,
+.tri-hud-era,
+.tri-pager-label {
+  font-family: var(--font-display);
+  font-stretch: 125%;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  text-transform: uppercase;
+}
+
+/* 英文标题、分节名、代号：几何英文，Light / Medium 两档。 */
+.tri-latin,
+.tri-section-title,
+.tri-panel-title,
+.tri-drawer-title-text,
+.tri-tab,
+.tri-dock-label,
+.tri-techbook-schooldot + span,
+.tri-eventdoc-cat {
+  font-family: var(--font-latin);
+  font-weight: 500;
+}
+.tri-section-title { font-weight: 500; letter-spacing: 0.06em; }
+
+/* 数字 / 百分比 / 坐标 / 微标：技术字，严格等宽数字。 */
+.tri-num, .tri-stat-value, .tri-kv-value, .tri-meter-value, .tri-hud-value,
+.tri-hud-calendar, .tri-hud-res-value, .tri-cost-amount, .tri-coord-value,
+.tri-obs-temp, .tri-ring-value, .tri-tech-status, .tri-selection-value,
+.tri-queue-turns, .tri-req-value, .tri-hud-year, .tri-hud-pop-value,
+.tri-dock-turn, .tri-pager-label, .tri-pager-meta, .tri-boot-pct,
+.tri-eventdoc-impact, .tri-techbook-countvalue, .tri-resource-amount,
+.tri-hud-speed, .tri-era-index, .tri-level-num {
+  font-family: var(--font-tech);
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum" 1, "lnum" 1;
+  letter-spacing: 0.01em;
+}
+
+/* 中文阅读层：正文、按钮、标签统一黑体，三档字重。 */
+.tri-root { font-family: var(--font-sans); }
+.tri-root b, .tri-root strong { font-weight: 700; }
+.tri-root .tri-muted, .tri-root small { font-weight: 400; }
+
+/* ---- 形状一：直角信息面 ---------------------------------------- */
+.tri-panel,
+.tri-panel *,
+.tri-modal,
+.tri-modal *,
+.tri-drawer,
+.tri-drawer *,
+.tri-card,
+.tri-build-card,
+.tri-techbook,
+.tri-eventdoc,
+.tri-table,
+.tri-kv,
+.tri-tabs,
+.tri-tabpanel {
+  border-radius: 0;
+}
+.tri-panel, .tri-modal, .tri-drawer, .tri-card, .tri-build-card,
+.tri-techbook, .tri-eventdoc {
+  background-clip: padding-box;
+  box-shadow: var(--shadow-rail);
+}
+
+input, select, textarea, .tri-input, .tri-select {
+  border-radius: 0;
+  font-family: var(--font-sans);
+}
+input[type="number"], .tri-input-number { font-family: var(--font-tech); font-variant-numeric: tabular-nums; }
+
+/* ---- 形状二：切角用于行动 / 机械 / 权限 ------------------------ */
+/* 一个元素只切一个角（右上）；主行动与页签保持同一外形。 */
+.tri-root .tri-btn-primary,
+.tri-root .tri-menu-cta,
+.tri-root .tri-preview-cta .tri-btn,
+.tri-root .tri-deck-openbar .tri-btn-primary,
+.tri-root .tri-eventdoc-choice:hover,
+.tri-root .tri-btn[data-action="upgrade-building"] {
+  clip-path: polygon(0 0, calc(100% - var(--cut-md)) 0, 100% var(--cut-md), 100% 100%, 0 100%) !important;
+  border-radius: 0 !important;
+}
+.tri-root .tri-btn { border-radius: var(--shape-sm) !important; box-shadow: var(--shadow-xs); }
+.tri-root .tri-btn-primary { border-radius: 0 !important; }
+.tri-root .tri-btn-icon { border-radius: var(--shape-sm) !important; box-shadow: none; }
+.tri-root .tri-btn:hover:not(:disabled) { box-shadow: var(--shadow-xs); }
+.tri-root .tri-btn-primary::after {
+  content: "";
+  position: absolute;
+  right: 0;
+  top: var(--cut-md);
+  width: 1px;
+  height: calc(100% - var(--cut-md));
+  background: currentColor;
+  opacity: 0.28;
+  pointer-events: none;
+}
+
+/* 等级带 / 选区块：斜楔为行动与权限让路。 */
+.tri-root .tri-level-band,
+.tri-root .tri-era-band,
+.tri-root .tri-tech-tier-head {
+  clip-path: polygon(0 0, 100% 0, 100% 100%, var(--cut-md) 100%, 0 calc(100% - var(--cut-md)));
+}
+
+/* ---- 形状三：圆与弧用于人 / 技能 / 仪表 / 范围 ---------------- */
+.tri-root .tri-avatar,
+.tri-root .tri-ring,
+.tri-root .tri-gauge,
+.tri-root .tri-orb,
+.tri-root .tri-arc,
+.tri-root .tri-pager-btn,
+.tri-root .tri-round-btn,
+.tri-root .tri-switch-knob {
+  border-radius: var(--shape-full) !important;
+}
+.tri-root .tri-hud-pause,
+.tri-root .tri-hud-icon-btn,
+.tri-root .tri-dock-collapse {
+  border-radius: var(--shape-sm) !important;
+}
+
+/* ---- 形状四：胶囊用于筛选 / 资源 / 短状态 ---------------------- */
+.tri-root .tri-chip,
+.tri-root .tri-chip-btn,
+.tri-root .tri-filter,
+.tri-root .tri-filter-chip,
+.tri-root .tri-resource-pill,
+.tri-root .tri-resource-chip,
+.tri-root .tri-status-pill,
+.tri-root .tri-tag-pill,
+.tri-root .tri-eventdoc-cat,
+.tri-root .tri-dock-badge,
+.tri-root .tri-badge-pill {
+  border-radius: var(--shape-pill) !important;
+}
+.tri-root .tri-chip,
+.tri-root .tri-filter,
+.tri-root .tri-resource-chip {
+  padding-inline: 10px;
+}
+.tri-root .tri-badge { border-radius: var(--shape-xs) !important; }
+
+/* ---- 线：发丝线不围整圈；强调用左缘 3px 竖条 ------------------ */
+.tri-root .tri-panel,
+.tri-root .tri-modal,
+.tri-root .tri-drawer {
+  border-width: 1px;
+  border-color: var(--line);
+}
+.tri-root .tri-section-title::before,
+.tri-root .tri-panel-section-title::before {
+  width: 3px;
+  height: 0.9em;
+  background: var(--signal);
+}
+.tri-root .tri-kv,
+.tri-root .tri-table-row { border-radius: 0; }
+
+/* ---- 阴影：零偏移环境光；悬停不加大、不上浮 -------------------- */
+.tri-root .tri-panel,
+.tri-root .tri-modal,
+.tri-root .tri-drawer { box-shadow: var(--shadow-lg); }
+.tri-root .tri-panel-right,
+.tri-root .tri-panel-left { box-shadow: var(--shadow-rail); }
+.tri-root .tri-modal { box-shadow: 0 0 24px rgba(0, 0, 0, 0.30); }
+.tri-root .tri-panel:hover,
+.tri-root .tri-btn:hover { transform: none; }
+
+/* ---- 选中：填充反转 / 边条 / 角钩 / 位移，不发光 ---------------- */
+.tri-root .tri-tab.is-active { box-shadow: inset 0 -3px 0 var(--signal) !important; }
+.tri-root .tri-chip-btn.is-active { border-radius: var(--shape-pill) !important; }
+
+/* ---- 微文字：真实分节名 / 版本号 / 坐标；等宽，避免抖动 -------- */
+.tri-root .tri-micro,
+.tri-root .tri-note,
+.tri-root .tri-kicker-en {
+  font-family: var(--font-tech);
+  font-size: 9px;
+  letter-spacing: 0.08em;
+  font-variant-numeric: tabular-nums;
+}
+
+/* 移动端：按钮圆角仍只有 4px；面板不出现中等圆角。 */
+@media (max-width: 720px) {
+  :root { --cut-md: 8px; --cut-lg: 12px; }
+  .tri-root .tri-btn { min-height: 40px; }
+  .tri-root .tri-panel, .tri-root .tri-modal { border-radius: 0; }
+}
+@media (max-height: 480px) and (orientation: landscape) {
+  :root { --cut-md: 8px; }
+}
+.tri-root .tri-evdraw-band, .tri-root .tri-chronicle-filter, .tri-root .tri-techbook-count, .tri-root .tri-ticker-item, .tri-root .tri-evdraw-risk { border-radius: 999px !important; }

@@ -1,55 +1,155 @@
 /**
- * v1.3 科技树大画册 —— 8 分支 × 5 时代矩阵，支持横向/纵向滚动；
- * 学说筛选、研究重心、互斥教义、流派进度与长文本详情抽屉。
+ * v1.6 科研终端 —— 真正的树状科技图（SVG 连线 + 节点、分支/时代筛选、缩放与滚动）
+ * 同时保留：开始/中止研究、互斥教义、学派重心、发展纲领、科研资源倾斜、注入资源加速。
+ * 视觉样式在 research-v6.css（不改动全局 styles.css / theme-print.css）。
  */
-import type { DoctrineGroupView, TechSchoolView, TechView, ViewModel } from "../game/viewTypes";
-import type { TechSchool } from "../core/types";
+import "./research-v6.css";
+import type {
+  DevelopmentCategoryView, DoctrineGroupView, TechBranchView, TechSchoolView, TechView, ViewModel,
+} from "../game/viewTypes";
+import type { ResearchCategory, TechSchool } from "../core/types";
 import type { GameShell, ModalInstance } from "./types";
 import { append, clear, delegate, el, setClass, setText } from "./dom";
 import { icon } from "./icons";
 import { num, pct, signed } from "./format";
 import { ERA_INFOS } from "./era-ui";
 
-const NO_SCHOOL = "all";
-const SELECTED_NONE = "";
+const SVG_NS = "http://www.w3.org/2000/svg";
+const NODE_W = 132;
+const NODE_H = 32;
+const COL_GAP = 52;
+const ROW_PAD = 18;
+const ROW_GAP = 22;
+const LEFT_PAD = 128;
+const TOP_PAD = 34;
+
+interface NodePos {
+  x: number;
+  y: number;
+  tech: TechView;
+  branchId: string;
+}
 
 export function buildResearchModal(shell: GameShell, _close: () => void): ModalInstance {
-  const root = el("div", { cls: "tri-techbook" });
   let current: ViewModel | null = shell.view();
+  let filterBranch = "";
+  let filterEra = 0;
   let filterSchool: TechSchool | null = null;
   let selectedTechId: string | null = null;
+  let scale = 0.72;
   let signature = "";
+  let pendingDev: ResearchCategory[] | null = null;
+  let fundingDraft: number | null = null;
 
-  const statusBar = el("div", { cls: "tri-techbook-head" });
-  const body = el("div", { cls: "tri-techbook-body" });
-  const side = el("aside", { cls: "tri-techbook-side" });
-  const scroll = el("div", { cls: "tri-techbook-scroll" });
-  const matrix = el("div", { cls: "tri-techbook-grid" });
-  scroll.appendChild(matrix);
-  const drawer = el("aside", { cls: "tri-techbook-drawer tri-hidden" });
+  const root = el("div", { cls: "tri-techbook tri-v6" });
+  const head = el("div", { cls: "tri-v6-head" });
+  const controls = el("div", { cls: "tri-v6-controls" });
+  const body = el("div", { cls: "tri-v6-body" });
+  const side = el("aside", { cls: "tri-v6-side" });
+  const scroll = el("div", { cls: "tri-v6-scroll" });
+  const svgHost = el("div", { cls: "tri-v6-svghost" });
+  const drawer = el("aside", { cls: "tri-v6-drawer tri-hidden" });
+  scroll.appendChild(svgHost);
   append(body, side, scroll, drawer);
-  append(root, statusBar, body);
+  append(root, head, controls);
 
-  const offAction = delegate(root, "[data-tb-action]", "click", (_ev, target) => {
-    const action = target.dataset.tbAction;
+  const branchSelect = el("select", { cls: "tri-v6-select", attrs: { "data-v6-control": "branch", title: "按分支筛选" } });
+  branchSelect.appendChild(el("option", { text: "全部分支", attrs: { value: "" } }));
+  const eraSelect = el("select", { cls: "tri-v6-select", attrs: { "data-v6-control": "era", title: "按时代筛选" } });
+  eraSelect.appendChild(el("option", { text: "全部时代", attrs: { value: "0" } }));
+  for (const era of ERA_INFOS) eraSelect.appendChild(el("option", { text: "E" + era.era + " " + era.name, attrs: { value: String(era.era) } }));
+  const schoolSelect = el("select", { cls: "tri-v6-select", attrs: { "data-v6-control": "school", title: "按学说筛选" } });
+  schoolSelect.appendChild(el("option", { text: "全部学说", attrs: { value: "" } }));
+  const zoomOut = el("button", { cls: "tri-v6-btn", attrs: { type: "button", title: "缩小" } });
+  zoomOut.appendChild(icon("zoomOut", 14));
+  const zoomReset = el("button", { cls: "tri-v6-btn", attrs: { type: "button", title: "重置缩放" }, text: "1:1" });
+  const zoomIn = el("button", { cls: "tri-v6-btn", attrs: { type: "button", title: "放大" } });
+  zoomIn.appendChild(icon("zoomIn", 14));
+  const fundingValue = el("span", { cls: "tri-v6-funding-value", text: "50%" });
+  const fundingSlider = el("input", { cls: "tri-v6-range", attrs: { type: "range", min: "0", max: "100", step: "5", value: "50", title: "科研资源倾斜 0~100%" } });
+  const fundingMeta = el("span", { cls: "tri-v6-funding-meta", text: "研究 ×1.00 · 其他产出 ×1.00" });
+  const boostBtn = el("button", { cls: "tri-v6-btn tri-v6-btn-ghost", attrs: { type: "button" } });
+  const devChips = el("div", { cls: "tri-v6-devchips" });
+  const devConfirm = el("button", { cls: "tri-v6-btn tri-v6-btn-primary", attrs: { type: "button" }, text: "确认纲领" });
+  const devHint = el("span", { cls: "tri-v6-devhint", text: "" });
+
+  append(
+    controls,
+    el("span", { cls: "tri-v6-ctrl-label", text: "筛选" }),
+    branchSelect, eraSelect, schoolSelect,
+    el("span", { cls: "tri-v6-ctrl-sep" }),
+    zoomOut, zoomReset, zoomIn,
+    el("span", { cls: "tri-v6-ctrl-sep" }),
+    el("span", { cls: "tri-v6-ctrl-label", text: "资源倾斜" }), fundingSlider, fundingValue,
+    el("span", { cls: "tri-v6-ctrl-sep" }),
+    boostBtn,
+  );
+  const devBar = el("div", { cls: "tri-v6-devbar" });
+  append(
+    devBar,
+    el("span", { cls: "tri-v6-ctrl-label", text: "发展纲领" }),
+    devChips, devConfirm, devHint,
+  );
+  append(root, devBar, body);
+
+  branchSelect.addEventListener("change", () => { filterBranch = branchSelect.value; render(true); });
+  eraSelect.addEventListener("change", () => { filterEra = Number(eraSelect.value) || 0; render(true); });
+  schoolSelect.addEventListener("change", () => { filterSchool = (schoolSelect.value as TechSchool) || null; render(true); });
+  zoomOut.addEventListener("click", () => { scale = Math.max(0.36, Math.round((scale - 0.08) * 100) / 100); applyScale(); });
+  zoomIn.addEventListener("click", () => { scale = Math.min(1.3, Math.round((scale + 0.08) * 100) / 100); applyScale(); });
+  zoomReset.addEventListener("click", () => { scale = 0.72; applyScale(); });
+  fundingSlider.addEventListener("input", () => {
+    fundingDraft = Number(fundingSlider.value);
+    updateFundingText();
+  });
+  fundingSlider.addEventListener("change", () => {
     const api = shell.api();
     if (!api) return;
+    api.actions.setResearchFunding(Number(fundingSlider.value));
+    shell.requestRefresh();
+  });
+  boostBtn.addEventListener("click", () => {
+    shell.api()?.actions.boostResearch();
+    shell.requestRefresh();
+  });
+  devConfirm.addEventListener("click", () => {
+    const api = shell.api();
+    if (!api || !pendingDev || pendingDev.length === 0) return;
+    api.actions.chooseDevelopmentCategories([...pendingDev]);
+    shell.requestRefresh();
+  });
+  devChips.addEventListener("click", (ev) => {
+    const target = (ev.target as Element | null)?.closest("[data-dev-category]") as HTMLElement | null;
+    if (!target) return;
+    const category = target.dataset.devCategory as ResearchCategory | undefined;
+    if (!category) return;
+    const list = pendingDev ? [...pendingDev] : [];
+    const index = list.indexOf(category);
+    if (index >= 0) list.splice(index, 1);
+    else if (list.length < 2) list.push(category);
+    pendingDev = list;
+    renderDev();
+  });
+
+  const offAction = delegate(root, "[data-v6-action]", "click", (_ev, target) => {
+    const action = target.dataset.v6Action;
+    const api = shell.api();
+    if (!api || !action) return;
     if (action === "tech") {
-      const id = target.dataset.techId ?? "";
-      selectedTechId = id || null;
-      render(true);
+      selectedTechId = target.dataset.techId ?? null;
+      renderDrawer();
       return;
     }
     if (action === "close-drawer") {
       selectedTechId = null;
-      render(true);
+      renderDrawer();
       return;
     }
     if (action === "research") {
       const techId = target.dataset.techId;
-      if (!techId) return;
-      api.actions.startResearch(techId);
+      if (techId) api.actions.startResearch(techId);
       shell.requestRefresh();
+      renderDrawer();
       return;
     }
     if (action === "cancel") {
@@ -59,9 +159,7 @@ export function buildResearchModal(shell: GameShell, _close: () => void): ModalI
     }
     if (action === "doctrine") {
       const techId = target.dataset.techId;
-      if (!techId) return;
-      api.actions.chooseDoctrine(techId);
-      shell.notify("教义已裁定 · 同组其他技术永久封闭", "ok");
+      if (techId) api.actions.chooseDoctrine(techId);
       shell.requestRefresh();
       return;
     }
@@ -71,179 +169,352 @@ export function buildResearchModal(shell: GameShell, _close: () => void): ModalI
       shell.requestRefresh();
       return;
     }
-    if (action === "filter") {
-      const school = target.dataset.school;
-      filterSchool = school && school !== NO_SCHOOL ? (school as TechSchool) : null;
-      render(true);
-    }
   });
 
   function treeSignature(view: ViewModel): string {
     const tech = view.tech;
     if (!tech) return "";
-    const doctrines = tech.doctrines.map((group) => group.id + ":" + (group.chosenTechId ?? "-")).join("|");
     return [
-      tech.researchedTotal,
-      tech.totalTechs,
-      tech.activeTechId ?? "-",
+      tech.researchedTotal, tech.totalTechs, tech.activeTechId ?? "-",
       tech.schoolFocus ?? "-",
-      doctrines,
-      filterSchool ?? "-",
-      selectedTechId ?? "-",
-      tech.schools.map((school) => school.researchedCount + ":" + school.points + ":" + Math.round(school.mastery)).join(","),
-      Math.round((view.civ.science.percent ?? 0) * 100),
+      tech.doctrines.map((group) => group.id + ":" + (group.chosenTechId ?? "-")).join("|"),
+      (tech.development?.categories ?? []).join(","),
+      filterBranch, filterEra, filterSchool ?? "-", selectedTechId ?? "-",
     ].join("#");
   }
 
-  function render(force = false): void {
-    const view = current;
-    if (!view || !view.tech) {
-      setText(statusBar, "");
-      clear(statusBar);
-      statusBar.appendChild(el("p", { cls: "tri-pol-hint", text: "科技档案尚未解封。" }));
-      clear(body);
-      body.appendChild(el("p", { cls: "tri-pol-hint", text: "科技树数据接入后，此处将展示 8 大分支 × 5 个时代的完整画册。" }));
-      return;
-    }
-    if (!body.contains(side)) append(body, side, scroll, drawer);
-    const nextSignature = treeSignature(view);
-    if (!force && nextSignature === signature) return;
-    signature = nextSignature;
-    renderStatus(view);
-    renderSidebar(view);
-    renderMatrix(view);
-    renderDrawer(view);
+  function applyScale(): void {
+    const svg = svgHost.querySelector("svg");
+    if (!svg) return;
+    const baseW = Number(svg.dataset.basew ?? 0);
+    const baseH = Number(svg.dataset.baseh ?? 0);
+    if (baseW <= 0 || baseH <= 0) return;
+    svg.setAttribute("width", String(Math.round(baseW * scale)));
+    svg.setAttribute("height", String(Math.round(baseH * scale)));
   }
 
-  /* ------------------------------ status --------------------------- */
-  function renderStatus(view: ViewModel): void {
-    const tech = view.tech;
-    const science = view.civ.science;
-    clear(statusBar);
-    const left = el("div", { cls: "tri-techbook-status" });
-    left.appendChild(el("span", { cls: "tri-techbook-kicker", text: "// RESEARCH ATLAS · 科技树大画册" }));
-    const row = el("div", { cls: "tri-techbook-statusrow" });
-    const activeTitle = el("span", { cls: "tri-techbook-activename", text: science.activeTechName ?? "无在研项目" });
-    row.appendChild(activeTitle);
-    if (science.activeTechName) {
-      row.appendChild(el("span", { cls: "tri-techbook-activemeta", text: "进度 " + pct(science.percent, 0) + " · " + num(science.progress) + " / " + num(science.cost) + " · 预计 " + (science.etaTurns == null ? "—" : science.etaTurns + " 回合") }));
-      const cancelBtn = el("button", { cls: "tri-btn tri-btn-sm tri-btn-ghost", attrs: { type: "button", "data-tb-action": "cancel" } });
-      cancelBtn.appendChild(icon("close", 12));
-      cancelBtn.appendChild(el("span", { cls: "tri-btn-label", text: "中止研究" }));
-      row.appendChild(cancelBtn);
+  /* ------------------------------ header --------------------------- */
+  function renderHead(): void {
+    clear(head);
+    const view = current;
+    const tech = view?.tech;
+    if (!view || !tech) {
+      head.appendChild(el("p", { cls: "tri-pol-hint", text: "科技档案尚未解封。" }));
+      return;
     }
-    left.appendChild(row);
-    const track = el("span", { cls: "tri-techbook-progress" });
-    const fill = el("span", { cls: "tri-techbook-progressfill" });
+    const science = view.civ.science;
+    const left = el("div", { cls: "tri-v6-headmain" });
+    left.appendChild(el("span", { cls: "tri-v6-kicker", text: "// RESEARCH TREE v1.6 · 9 分支 × 6 时代 × " + tech.totalTechs + " 项" }));
+    const active = el("div", { cls: "tri-v6-active" });
+    active.appendChild(el("span", { cls: "tri-v6-activename", text: science.activeTechName ?? "无在研项目" }));
+    if (science.activeTechName) {
+      active.appendChild(el("span", { cls: "tri-v6-activemeta", text: "进度 " + pct(science.percent, 0) + " · " + num(science.progress) + " / " + num(science.cost) + " · 预计 " + (science.etaTurns == null ? "—" : science.etaTurns + " 回合") }));
+      const cancel = el("button", { cls: "tri-v6-btn tri-v6-btn-ghost", attrs: { type: "button", "data-v6-action": "cancel" } });
+      cancel.appendChild(icon("close", 12));
+      cancel.appendChild(el("span", { text: "中止" }));
+      active.appendChild(cancel);
+    }
+    left.appendChild(active);
+    const track = el("span", { cls: "tri-v6-track" });
+    const fill = el("span", { cls: "tri-v6-trackfill" });
     fill.style.width = Math.max(0, Math.min(100, science.percent * 100)) + "%";
     track.appendChild(fill);
     left.appendChild(track);
-    left.appendChild(el("span", { cls: "tri-techbook-statusmeta", text: "科研速率 " + signed(science.rate, 1) + " / 回合 · 已研究 " + tech.researchedTotal + " / " + tech.totalTechs }));
-    statusBar.appendChild(left);
+    const speed = tech.activeSpeed;
+    const speedText = speed
+      ? "研究速度 ×" + speed.total.toFixed(2) + "（学派 ×" + speed.schoolFactor.toFixed(2) + " · 纲领 ×" + speed.developmentFactor.toFixed(2) + " · 倾斜 ×" + speed.fundingFactor.toFixed(2) + " · 科学院 ×" + speed.academyFactor.toFixed(2) + "）"
+      : "已研究 " + tech.researchedTotal + " / " + tech.totalTechs + " 项科技";
+    left.appendChild(el("span", { cls: "tri-v6-headmeta", text: "科研速率 " + signed(science.rate, 1) + " / 回合 · " + speedText }));
+    head.appendChild(left);
 
-    const right = el("div", { cls: "tri-techbook-stats" });
-    const focus = tech.schools.find((school) => school.focused) ?? null;
-    const focusBox = el("div", { cls: "tri-techbook-focus" });
-    focusBox.appendChild(el("span", { cls: "tri-techbook-kicker", text: "// RESEARCH FOCUS" }));
-    focusBox.appendChild(el("span", { cls: "tri-techbook-focusname", text: focus ? focus.name + " · " + focus.short : "未指定研究重心" }));
-    focusBox.appendChild(el("span", { cls: "tri-techbook-focusmeta", text: focus ? "精通 " + pct(focus.mastery, 0) + " · 学派点数 " + num(focus.points) : "指定重心后同派研究 +15%" }));
-    right.appendChild(focusBox);
-    const counts = el("div", { cls: "tri-techbook-counts" });
-    for (const school of tech.schools) {
-      const item = el("button", {
-        cls: "tri-techbook-count" + (filterSchool === school.id ? " is-active" : "") + (school.focused ? " is-focused" : ""),
-        attrs: { type: "button", "data-tb-action": "filter", "data-school": school.id, title: school.description },
-      });
-      const dot = el("span", { cls: "tri-techbook-schooldot" });
-      dot.style.background = school.color;
-      item.appendChild(dot);
-      item.appendChild(el("span", { cls: "tri-techbook-countname", text: school.short }));
-      item.appendChild(el("span", { cls: "tri-techbook-countvalue", text: school.researchedCount + "/" + school.total }));
-      counts.appendChild(item);
+    const right = el("div", { cls: "tri-v6-headstats" });
+    const funding = tech.funding;
+    right.appendChild(el("span", { cls: "tri-v6-kicker", text: "// POLICY" }));
+    right.appendChild(el("span", { cls: "tri-v6-headmeta", text: "资源倾斜 " + Math.round(funding?.percent ?? 50) + "% · 研究 ×" + (funding?.researchSpeed ?? 1).toFixed(2) + " · 非科研产出 ×" + (funding?.otherProduction ?? 1).toFixed(2) }));
+    const chosen = tech.development?.categories ?? [];
+    const devNames = chosen.map((id) => (id === "natural" ? "自然科学" : id === "engineering" ? "工程应用" : "社会科学"));
+    right.appendChild(el("span", { cls: "tri-v6-headmeta", text: chosen.length > 0 ? "发展纲领：" + devNames.join(" + ") + "（已选 +10% / 未选 -35%）" : "发展纲领：未选择（E3 起可选 1~2 个大类）" }));
+    head.appendChild(right);
+  }
+
+  /* ------------------------------ controls ------------------------- */
+  function renderControls(): void {
+    const tech = current?.tech;
+    if (!tech) return;
+    branchSelect.value = filterBranch;
+    eraSelect.value = String(filterEra);
+    schoolSelect.value = filterSchool ?? "";
+    if (schoolSelect.options.length <= 1) {
+      for (const school of tech.schools) schoolSelect.appendChild(el("option", { text: school.name, attrs: { value: school.id } }));
     }
-    right.appendChild(counts);
-    statusBar.appendChild(right);
+    if (fundingDraft == null) fundingDraft = Math.round(tech.funding?.percent ?? 50);
+    if (document.activeElement !== fundingSlider) fundingSlider.value = String(Math.round(tech.funding?.percent ?? 50));
+    updateFundingText();
+    const boost = tech.boost;
+    if (boost && boost.techName) {
+      boostBtn.disabled = !boost.available;
+      const costText = boost.cost.map((cost) => cost.name + " " + num(cost.amount)).join(" / ") || "—";
+      setText(boostBtn, boost.available
+        ? "注入资源加速 · +" + num(boost.gain) + " 进度（" + costText + "）"
+        : "注入资源加速不可用" + (boost.reason ? "：" + boost.reason : ""));
+    } else {
+      boostBtn.disabled = true;
+      setText(boostBtn, "注入资源加速 · 需先选择研究项目");
+    }
+    renderDev();
+  }
+
+  function updateFundingText(): void {
+    const tech = current?.tech;
+    if (!tech) return;
+    const percent = fundingDraft ?? Math.round(tech.funding?.percent ?? 50);
+    const researchSpeed = percent <= 50 ? 0.6 + (percent / 50) * 0.4 : 1 + ((percent - 50) / 50) * 0.35;
+    const other = 1.1 + (0.9 - 1.1) * (percent / 100);
+    setText(fundingValue, Math.round(percent) + "%");
+    setText(fundingMeta, "研究 ×" + researchSpeed.toFixed(2) + " · 其他产出 ×" + other.toFixed(2));
+    if (document.activeElement !== fundingSlider) fundingSlider.value = String(Math.round(percent));
+  }
+
+  function renderDev(): void {
+    const tech = current?.tech;
+    if (!tech) return;
+    const development = tech.development;
+    if (!development) return;
+    if (pendingDev == null) pendingDev = [...development.categories];
+    clear(devChips);
+    for (const option of development.options as DevelopmentCategoryView[]) {
+      const selected = pendingDev.includes(option.id);
+      const btn = el("button", {
+        cls: "tri-v6-chip" + (selected ? " is-selected" : ""),
+        attrs: { type: "button", "data-dev-category": option.id, title: option.description },
+      });
+      btn.appendChild(el("span", { cls: "tri-v6-chip-name", text: option.name }));
+      btn.appendChild(el("span", { cls: "tri-v6-chip-count", text: option.researchedCount + "/" + option.total }));
+      devChips.appendChild(btn);
+    }
+    const disabled = !development.unlocked || !pendingDev || pendingDev.length === 0;
+    devConfirm.disabled = disabled;
+    setText(devHint, development.unlocked
+      ? "已选：+10% 研究速度 · 未选：-35%（1~2 个大类）"
+      : "E3 蒸汽纪元起可以确定发展纲领");
+  }
+
+  /* ------------------------------ tree ----------------------------- */
+  function renderTree(): void {
+    const view = current;
+    if (!view?.tech) return;
+    clear(svgHost);
+    const branches = view.tech.branches;
+    // layout: rows = branches, columns = eras
+    const rowHeights = branches.map((branch) => {
+      let maxCount = 2;
+      for (const era of ERA_INFOS) {
+        const count = branch.techs.filter((tech) => tech.era === era.era).length;
+        maxCount = Math.max(maxCount, count);
+      }
+      return Math.max(98, maxCount * (NODE_H + 8) + ROW_PAD * 2);
+    });
+    const baseW = LEFT_PAD + ERA_INFOS.length * (NODE_W + COL_GAP) + 40;
+    const baseH = TOP_PAD + rowHeights.reduce((sum, value) => sum + value + ROW_GAP, 0) + 24;
+    const svg = document.createElementNS(SVG_NS, "svg");
+    svg.setAttribute("viewBox", "0 0 " + baseW + " " + baseH);
+    svg.dataset.basew = String(baseW);
+    svg.dataset.baseh = String(baseH);
+    svg.setAttribute("class", "tri-v6-svg");
+    const positions = new Map<string, NodePos>();
+
+    // era header
+    const headerY = 16;
+    for (let i = 0; i < ERA_INFOS.length; i += 1) {
+      const era = ERA_INFOS[i];
+      const x = LEFT_PAD + i * (NODE_W + COL_GAP);
+      const label = document.createElementNS(SVG_NS, "text");
+      label.setAttribute("x", String(x + NODE_W / 2));
+      label.setAttribute("y", String(headerY));
+      label.setAttribute("text-anchor", "middle");
+      label.setAttribute("class", "tri-v6-erahead" + (era.era === view.civ.era.value ? " is-current" : ""));
+      label.textContent = "E" + era.era + " " + era.name;
+      svg.appendChild(label);
+    }
+
+    let rowY = TOP_PAD;
+    for (let b = 0; b < branches.length; b += 1) {
+      const branch = branches[b];
+      const rowHeight = rowHeights[b];
+      const dimRow = Boolean(filterBranch && filterBranch !== branch.id);
+      const band = document.createElementNS(SVG_NS, "rect");
+      band.setAttribute("x", "6");
+      band.setAttribute("y", String(rowY));
+      band.setAttribute("width", String(baseW - 12));
+      band.setAttribute("height", String(rowHeight));
+      band.setAttribute("rx", "6");
+      band.setAttribute("class", "tri-v6-band" + (dimRow ? " is-dim" : "") + (b % 2 === 0 ? " is-alt" : ""));
+      band.dataset.branch = branch.id;
+      svg.appendChild(band);
+      const branchLabel = document.createElementNS(SVG_NS, "text");
+      branchLabel.setAttribute("x", "14");
+      branchLabel.setAttribute("y", String(rowY + rowHeight / 2 - 4));
+      branchLabel.setAttribute("class", "tri-v6-branchlabel");
+      branchLabel.textContent = branch.name;
+      svg.appendChild(branchLabel);
+      const branchCount = document.createElementNS(SVG_NS, "text");
+      branchCount.setAttribute("x", "14");
+      branchCount.setAttribute("y", String(rowY + rowHeight / 2 + 13));
+      branchCount.setAttribute("class", "tri-v6-branchcount");
+      branchCount.textContent = branch.researchedCount + " / " + branch.total;
+      svg.appendChild(branchCount);
+
+      for (let e = 0; e < ERA_INFOS.length; e += 1) {
+        const era = ERA_INFOS[e];
+        const list = branch.techs.filter((tech) => tech.era === era.era);
+        const cellX = LEFT_PAD + e * (NODE_W + COL_GAP);
+        const totalH = list.length * (NODE_H + 8);
+        let y = rowY + (rowHeight - totalH) / 2 + 4;
+        for (const tech of list) {
+          positions.set(tech.id, { x: cellX, y, tech, branchId: branch.id });
+          y += NODE_H + 8;
+        }
+      }
+      rowY += rowHeight + ROW_GAP;
+    }
+
+    // edges first
+    const edgeLayer = document.createElementNS(SVG_NS, "g");
+    for (const tech of branches.flatMap((branch) => branch.techs)) {
+      const child = positions.get(tech.id);
+      if (!child) continue;
+      for (const req of tech.requires) {
+        const parent = positions.get(req);
+        if (!parent) continue;
+        const x1 = parent.x + NODE_W;
+        const y1 = parent.y + NODE_H / 2;
+        const x2 = child.x;
+        const y2 = child.y + NODE_H / 2;
+        const mid = x1 + Math.max(18, (x2 - x1) / 2);
+        const path = document.createElementNS(SVG_NS, "path");
+        path.setAttribute("d", "M" + x1 + " " + y1 + " C" + mid + " " + y1 + " " + mid + " " + y2 + " " + x2 + " " + y2);
+        path.setAttribute("class", "tri-v6-edge" + edgeStateClass(parent.tech, tech, filterBranch, filterEra, filterSchool));
+        edgeLayer.appendChild(path);
+      }
+    }
+    svg.appendChild(edgeLayer);
+
+    // nodes
+    const nodeLayer = document.createElementNS(SVG_NS, "g");
+    for (const entry of positions.values()) {
+      const tech = entry.tech;
+      const dim = (filterBranch && filterBranch !== entry.branchId)
+        || (filterEra !== 0 && filterEra !== tech.era)
+        || (filterSchool !== null && tech.school !== filterSchool);
+      const state = tech.researched ? "researched" : tech.isActive ? "active" : tech.blockedReason ? "locked" : tech.available ? "available" : "blocked";
+      const group = document.createElementNS(SVG_NS, "g");
+      group.setAttribute("class", "tri-v6-node is-" + state + (dim ? " is-dim" : "") + (selectedTechId === tech.id ? " is-selected" : "") + (tech.exclusiveBlockedBy ? " is-doctrine-blocked" : ""));
+      group.setAttribute("transform", "translate(" + entry.x + " " + entry.y + ")");
+      group.dataset.techId = tech.id;
+      group.dataset.branch = entry.branchId;
+      group.dataset.tech = tech.id;
+      group.dataset.available = tech.available ? "true" : "false";
+      group.setAttribute("tabindex", "0");
+      group.setAttribute("role", "button");
+      group.setAttribute("data-v6-action", "tech");
+      group.setAttribute("title", tech.name + " · " + tech.effectSummary + (tech.blockedReason ? "（" + tech.blockedReason + "）" : ""));
+      const rect = document.createElementNS(SVG_NS, "rect");
+      rect.setAttribute("width", String(NODE_W));
+      rect.setAttribute("height", String(NODE_H));
+      rect.setAttribute("rx", "5");
+      rect.setAttribute("class", "tri-v6-noderect");
+      const name = document.createElementNS(SVG_NS, "text");
+      name.setAttribute("x", "8");
+      name.setAttribute("y", "14");
+      name.setAttribute("class", "tri-v6-nodename");
+      name.textContent = tech.name.length > 11 ? tech.name.slice(0, 10) + "…" : tech.name;
+      const meta = document.createElementNS(SVG_NS, "text");
+      meta.setAttribute("x", "8");
+      meta.setAttribute("y", "26");
+      meta.setAttribute("class", "tri-v6-nodemeta");
+      meta.textContent = "T" + tech.tier + " · " + num(tech.cost) + (tech.researched ? " · 已完成" : tech.isActive ? " · 研究中" : "");
+      group.append(rect, name, meta);
+      nodeLayer.appendChild(group);
+    }
+    svg.appendChild(nodeLayer);
+    svgHost.appendChild(svg);
+    applyScale();
+  }
+
+  function edgeStateClass(parent: TechView, child: TechView, branch: string, era: number, school: TechSchool | null): string {
+    if (filterBranch && filterBranch !== branch) return " is-dim";
+    if (filterEra !== 0 && filterEra !== (parent.era as number) && filterEra !== (child.era as number)) return " is-dim";
+    if (school && parent.school !== school && child.school !== school) return " is-dim";
+    return child.researched ? " is-done" : parent.researched ? " is-open" : "";
   }
 
   /* ------------------------------ sidebar -------------------------- */
-  function renderSidebar(view: ViewModel): void {
+  function renderSide(): void {
+    const view = current;
+    if (!view?.tech) return;
     const tech = view.tech;
     clear(side);
-    const schoolHead = el("div", { cls: "tri-techbook-sidehead" });
-    schoolHead.appendChild(el("span", { cls: "tri-techbook-kicker", text: "// SCHOOLS · 学派" }));
-    schoolHead.appendChild(el("span", { cls: "tri-techbook-sidehint", text: "点击筛选 · 设为重点" }));
+    const schoolHead = el("div", { cls: "tri-v6-sidehead" });
+    schoolHead.appendChild(el("span", { cls: "tri-v6-kicker", text: "// SCHOOLS · 研究重心" }));
     side.appendChild(schoolHead);
-    const allBtn = el("button", {
-      cls: "tri-techbook-all" + (filterSchool == null ? " is-active" : ""),
-      attrs: { type: "button", "data-tb-action": "filter", "data-school": NO_SCHOOL },
-    });
-    allBtn.appendChild(el("span", { text: "全部学派" }));
-    allBtn.appendChild(el("span", { cls: "tri-techbook-allcount", text: tech.researchedTotal + " / " + tech.totalTechs }));
-    side.appendChild(allBtn);
     for (const school of tech.schools) side.appendChild(renderSchoolRow(school));
     if (tech.schoolFocus) {
-      const clearFocus = el("button", { cls: "tri-btn tri-btn-sm tri-btn-ghost tri-techbook-clearfocus", attrs: { type: "button", "data-tb-action": "school-focus", "data-school": "" } });
-      clearFocus.appendChild(el("span", { cls: "tri-btn-label", text: "取消研究重心" }));
+      const clearFocus = el("button", { cls: "tri-v6-btn tri-v6-btn-ghost", attrs: { type: "button", "data-v6-action": "school-focus", "data-school": "" }, text: "取消研究重心" });
       side.appendChild(clearFocus);
     }
-
-    const docHead = el("div", { cls: "tri-techbook-sidehead tri-techbook-dochead" });
-    docHead.appendChild(el("span", { cls: "tri-techbook-kicker", text: "// DOCTRINES · 互斥教义" }));
-    docHead.appendChild(el("span", { cls: "tri-techbook-sidehint", text: "一经裁定 · 不可回退" }));
+    const docHead = el("div", { cls: "tri-v6-sidehead" });
+    docHead.appendChild(el("span", { cls: "tri-v6-kicker", text: "// DOCTRINES · 互斥教义" }));
     side.appendChild(docHead);
     if (tech.doctrines.length === 0) {
-      side.appendChild(el("p", { cls: "tri-pol-hint", text: "当前时代尚未出现互斥教义。" }));
+      side.appendChild(el("p", { cls: "tri-v6-hint", text: "当前时代尚未出现互斥教义。" }));
     } else {
       for (const group of tech.doctrines) side.appendChild(renderDoctrine(group));
     }
   }
 
   function renderSchoolRow(school: TechSchoolView): HTMLElement {
-    const row = el("div", { cls: "tri-school" + (school.focused ? " is-focused" : "") + (filterSchool === school.id ? " is-filtered" : "") });
-    const main = el("button", { cls: "tri-school-main", attrs: { type: "button", "data-tb-action": "filter", "data-school": school.id, title: school.description } });
-    const dot = el("span", { cls: "tri-school-dot" });
+    const row = el("div", { cls: "tri-v6-school" + (school.focused ? " is-focused" : "") });
+    const main = el("div", { cls: "tri-v6-schoolmain" });
+    const dot = el("span", { cls: "tri-v6-dot" });
     dot.style.background = school.color;
     main.appendChild(dot);
-    main.appendChild(el("span", { cls: "tri-school-name", text: school.name }));
-    main.appendChild(el("span", { cls: "tri-school-count", text: school.researchedCount + " / " + school.total }));
-    const nameRow = el("span", { cls: "tri-school-sub", text: school.short + " · 精通 " + pct(school.mastery, 0) + " · 点数 " + num(school.points) });
-    const track = el("span", { cls: "tri-school-track" });
-    const fill = el("span", { cls: "tri-school-fill" });
-    fill.style.width = school.total > 0 ? Math.max(0, Math.min(100, (school.researchedCount / school.total) * 100)) + "%" : "0%";
-    track.appendChild(fill);
+    main.appendChild(el("span", { cls: "tri-v6-schoolname", text: school.name }));
+    main.appendChild(el("span", { cls: "tri-v6-schoolcount", text: school.researchedCount + "/" + school.total }));
+    row.appendChild(main);
+    row.appendChild(el("span", { cls: "tri-v6-schoolsub", text: school.short + " · 精通 " + pct(school.mastery, 0) }));
     const focusBtn = el("button", {
-      cls: "tri-btn tri-btn-xs" + (school.focused ? " is-armed" : ""),
-      attrs: { type: "button", "data-tb-action": "school-focus", "data-school": school.id, title: school.focused ? "当前研究重心" : "设为研究重心（同派研究 +15%）" },
+      cls: "tri-v6-btn tri-v6-btn-xs" + (school.focused ? " is-armed" : ""),
+      attrs: { type: "button", "data-v6-action": "school-focus", "data-school": school.id, title: "设为研究重心（同派 +15% / 跨派 -5%）" },
+      text: school.focused ? "重心" : "设为重点",
     });
-    focusBtn.appendChild(el("span", { cls: "tri-btn-label", text: school.focused ? "重心" : "设为重点" }));
     if (school.focused) focusBtn.disabled = true;
-    append(row, main, nameRow, track, focusBtn);
+    row.appendChild(focusBtn);
     return row;
   }
 
   function renderDoctrine(group: DoctrineGroupView): HTMLElement {
-    const box = el("div", { cls: "tri-doctrine" });
-    const head = el("div", { cls: "tri-doctrine-head" });
-    head.appendChild(el("span", { cls: "tri-doctrine-title", text: group.title }));
+    const box = el("div", { cls: "tri-v6-doctrine" });
+    const headRow = el("div", { cls: "tri-v6-doctrine-head" });
+    headRow.appendChild(el("span", { cls: "tri-v6-doctrine-title", text: group.title }));
     const chosen = group.options.find((option) => option.chosen);
-    head.appendChild(el("span", { cls: "tri-doctrine-state" + (chosen ? " is-chosen" : ""), text: chosen ? "已裁定 · " + chosen.name : "待裁定" }));
-    box.appendChild(head);
-    box.appendChild(el("p", { cls: "tri-doctrine-desc", text: group.description }));
-    const options = el("div", { cls: "tri-doctrine-options" });
+    headRow.appendChild(el("span", { cls: "tri-v6-doctrine-state" + (chosen ? " is-chosen" : ""), text: chosen ? "已裁定 · " + chosen.name : "待裁定" }));
+    box.appendChild(headRow);
+    box.appendChild(el("p", { cls: "tri-v6-doctrine-desc", text: group.description }));
+    const options = el("div", { cls: "tri-v6-doctrine-options" });
     for (const option of group.options) {
       const isChosen = group.chosenTechId === option.techId;
       const locked = Boolean(group.chosenTechId) && !isChosen;
       const btn = el("button", {
-        cls: "tri-doctrine-opt" + (isChosen ? " is-chosen" : "") + (locked ? " is-locked" : ""),
+        cls: "tri-v6-doctrine-opt" + (isChosen ? " is-chosen" : "") + (locked ? " is-locked" : ""),
         attrs: {
           type: "button",
-          "data-tb-action": "doctrine",
+          "data-v6-action": "doctrine",
           "data-tech-id": option.techId,
           title: locked ? "同组教义已被裁定，永久封闭" : option.description,
         },
       });
-      btn.appendChild(el("span", { cls: "tri-doctrine-optname", text: option.name }));
-      btn.appendChild(el("span", { cls: "tri-doctrine-opttag", text: isChosen ? "已选择" : option.researched ? "已研究" : locked ? "封闭" : "可选" }));
+      btn.appendChild(el("span", { cls: "tri-v6-doctrine-optname", text: option.name }));
+      btn.appendChild(el("span", { cls: "tri-v6-doctrine-opttag", text: isChosen ? "已选择" : option.researched ? "已研究" : locked ? "封闭" : "可选" }));
       if (isChosen || locked) btn.disabled = true;
       options.appendChild(btn);
     }
@@ -251,171 +522,114 @@ export function buildResearchModal(shell: GameShell, _close: () => void): ModalI
     return box;
   }
 
-  /* ------------------------------ matrix --------------------------- */
-  function renderMatrix(view: ViewModel): void {
-    const tech = view.tech;
-    clear(matrix);
-    matrix.appendChild(el("div", { cls: "tri-tb-corner", text: "分支 / 时代" }));
-    for (const era of ERA_INFOS) {
-      const head = el("div", { cls: "tri-tb-erahead", attrs: { "data-era": String(era.era) } });
-      head.appendChild(el("span", { cls: "tri-tb-eracode", text: "E" + era.era }));
-      head.appendChild(el("span", { cls: "tri-tb-eraname", text: era.name }));
-      head.appendChild(el("span", { cls: "tri-tb-erasub", text: era.subtitle }));
-      matrix.appendChild(head);
-    }
-    for (const branch of tech.branches) {
-      const branchHead = el("div", { cls: "tri-tb-branchhead" });
-      const iconWrap = el("span", { cls: "tri-tb-branchicon" });
-      iconWrap.appendChild(icon(branch.icon || "research", 15));
-      branchHead.appendChild(iconWrap);
-      const text = el("span", { cls: "tri-tb-branchtext" });
-      text.appendChild(el("span", { cls: "tri-tb-branchname", text: branch.name }));
-      text.appendChild(el("span", { cls: "tri-tb-branchcount", text: branch.researchedCount + " / " + branch.total }));
-      branchHead.appendChild(text);
-      if (branch.color) {
-        const strip = el("span", { cls: "tri-tb-branchstrip" });
-        strip.style.background = branch.color;
-        branchHead.appendChild(strip);
-      }
-      matrix.appendChild(branchHead);
-      for (const era of ERA_INFOS) {
-        const cell = el("div", { cls: "tri-tb-cell", attrs: { "data-era": String(era.era) } });
-        const entries = branch.techs.filter((entry) => entry.era === era.era);
-        if (entries.length === 0) cell.appendChild(el("span", { cls: "tri-tb-empty", text: "—" }));
-        for (const entry of entries) cell.appendChild(renderTechCard(entry, branch.id));
-        matrix.appendChild(cell);
-      }
-    }
-  }
-
-  function renderTechCard(tech: TechView, branchId: string): HTMLElement {
-    const btn = el("button", {
-      cls: "tri-tb-card",
-      attrs: {
-        type: "button",
-        "data-tb-action": "tech",
-        "data-tech-id": tech.id,
-        "data-state": tech.researched ? "researched" : tech.isActive ? "active" : tech.blockedReason ? "locked" : "available",
-        "data-branch": branchId,
-        title: tech.name + " · " + (tech.effectSummary || "") + (tech.blockedReason ? "（" + tech.blockedReason + "）" : ""),
-      },
-    });
-    if (filterSchool && tech.school && tech.school !== filterSchool) btn.classList.add("is-filtered-out");
-    if (tech.exclusiveChosen) btn.classList.add("is-doctrine-chosen");
-    if (tech.exclusiveBlockedBy) btn.classList.add("is-doctrine-blocked");
-    const head = el("span", { cls: "tri-tb-cardhead" });
-    head.appendChild(el("span", { cls: "tri-tb-cardname", text: tech.name }));
-    head.appendChild(el("span", { cls: "tri-tb-tier", text: "T" + tech.tier }));
-    btn.appendChild(head);
-    if (tech.effectSummary) btn.appendChild(el("span", { cls: "tri-tb-effect", text: tech.effectSummary }));
-    const meta = el("span", { cls: "tri-tb-meta" });
-    meta.appendChild(el("span", { cls: "tri-tb-cost", text: tech.researched ? "已研究" : num(tech.cost) + " 科研" }));
-    const state = tech.researched ? "已研究" : tech.isActive ? "研究中" : tech.blockedReason ? "锁定" : tech.exclusiveBlockedBy ? "教义封闭" : "可研究";
-    meta.appendChild(el("span", { cls: "tri-tb-state", text: state }));
-    if (tech.schoolName) meta.appendChild(el("span", { cls: "tri-tb-school", text: tech.schoolName }));
-    btn.appendChild(meta);
-    return btn;
-  }
-
   /* ------------------------------ drawer --------------------------- */
-  function renderDrawer(view: ViewModel): void {
-    const tech = view.tech;
-    const selected = selectedTechId ? findTech(tech.branches, selectedTechId) : null;
-    if (!selected) {
-      selectedTechId = null;
+  function findTech(id: string): TechView | null {
+    for (const branch of current?.tech?.branches ?? []) {
+      const hit = branch.techs.find((tech) => tech.id === id);
+      if (hit) return hit;
+    }
+    return null;
+  }
+
+  function renderDrawer(): void {
+    const view = current;
+    const selected = selectedTechId ? findTech(selectedTechId) : null;
+    if (!selected || !view?.tech) {
       drawer.classList.add("tri-hidden");
       clear(drawer);
       return;
     }
     drawer.classList.remove("tri-hidden");
     clear(drawer);
-    const closeBtn = el("button", { cls: "tri-btn tri-btn-icon tri-techbook-drawerclose", attrs: { type: "button", "data-tb-action": "close-drawer", title: "收起详情（Esc）" } });
-    closeBtn.appendChild(icon("close", 15));
+    const closeBtn = el("button", { cls: "tri-v6-btn tri-v6-btn-icon tri-v6-drawerclose", attrs: { type: "button", "data-v6-action": "close-drawer", title: "收起详情" } });
+    closeBtn.appendChild(icon("close", 14));
     drawer.appendChild(closeBtn);
-    const kicker = el("span", { cls: "tri-techbook-drawerkicker", text: "// TECH DOSSIER · " + selected.branchName });
-    drawer.appendChild(kicker);
-    drawer.appendChild(el("h3", { cls: "tri-techbook-drawertitle", text: selected.name }));
-    const meta = el("div", { cls: "tri-techbook-drawermeta" });
-    meta.appendChild(el("span", { cls: "tri-tb-tier", text: "T" + selected.tier }));
-    meta.appendChild(el("span", { text: "E" + selected.era + " 时代" }));
-    meta.appendChild(el("span", { text: num(selected.cost) + " 科研点" }));
-    if (selected.schoolName) meta.appendChild(el("span", { cls: "tri-techbook-drawerschool", text: selected.schoolName }));
+    drawer.appendChild(el("span", { cls: "tri-v6-kicker", text: "// TECH DOSSIER · " + selected.branchName }));
+    drawer.appendChild(el("h3", { cls: "tri-v6-drawertitle", text: selected.name }));
+    const meta = el("div", { cls: "tri-v6-drawermeta" });
+    meta.appendChild(el("span", { cls: "tri-v6-tag", text: "E" + selected.era + " · T" + selected.tier }));
+    meta.appendChild(el("span", { cls: "tri-v6-tag", text: num(selected.cost) + " 科研点" }));
+    if (selected.schoolName) meta.appendChild(el("span", { cls: "tri-v6-tag", text: selected.schoolName }));
     drawer.appendChild(meta);
-    if (selected.flavor) {
-      const quote = el("blockquote", { cls: "tri-techbook-flavor" });
-      quote.appendChild(el("span", { text: selected.flavor }));
-      drawer.appendChild(quote);
-    }
-    if (selected.description) drawer.appendChild(el("p", { cls: "tri-techbook-desc", text: selected.description }));
-    if (selected.descriptionLong) drawer.appendChild(el("p", { cls: "tri-techbook-long", text: selected.descriptionLong }));
+    if (selected.flavor) drawer.appendChild(el("blockquote", { cls: "tri-v6-flavor", text: selected.flavor }));
+    if (selected.description) drawer.appendChild(el("p", { cls: "tri-v6-desc", text: selected.description }));
+    if (selected.descriptionLong) drawer.appendChild(el("p", { cls: "tri-v6-long", text: selected.descriptionLong }));
     if (selected.effectsDetail && selected.effectsDetail.length > 0) {
-      const effects = el("div", { cls: "tri-techbook-effects" });
-      effects.appendChild(el("span", { cls: "tri-techbook-kicker", text: "// EFFECTS" }));
-      const list = el("ul", { cls: "tri-techbook-effectlist" });
+      const effects = el("div", { cls: "tri-v6-effects" });
+      effects.appendChild(el("span", { cls: "tri-v6-kicker", text: "// EFFECTS" }));
+      const list = el("ul", { cls: "tri-v6-effectlist" });
       for (const line of selected.effectsDetail) list.appendChild(el("li", { text: line }));
       effects.appendChild(list);
       drawer.appendChild(effects);
     } else if (selected.effectSummary) {
-      drawer.appendChild(el("p", { cls: "tri-techbook-effectline", text: selected.effectSummary }));
+      drawer.appendChild(el("p", { cls: "tri-v6-effectline", text: selected.effectSummary }));
     }
     if (selected.requiresNames.length > 0) {
-      drawer.appendChild(el("p", { cls: "tri-techbook-req", text: "前置：" + selected.requiresNames.join(" · ") }));
+      drawer.appendChild(el("p", { cls: "tri-v6-req", text: "前置：" + selected.requiresNames.join(" · ") }));
     }
     if (selected.exclusiveGroup) {
-      const doctr = el("div", { cls: "tri-techbook-doctrine" });
-      doctr.appendChild(el("span", { cls: "tri-techbook-kicker", text: "// EXCLUSIVE DOCTRINE" }));
-      doctr.appendChild(
-        el("p", {
-          cls: "tri-techbook-doctrine-text",
-          text: selected.exclusiveChosen
-            ? "此教义已被采纳，同组其他技术永久封闭。"
-            : selected.exclusiveBlockedBy
-              ? "同组教义已被「" + selected.exclusiveBlockedBy + "」裁定，此项永久封闭。"
-              : "与本项同组的互斥技术将在裁定后永久封闭，只能择其一。",
-        }),
-      );
+      const doctr = el("div", { cls: "tri-v6-doctrine" });
+      doctr.appendChild(el("span", { cls: "tri-v6-kicker", text: "// EXCLUSIVE DOCTRINE" }));
+      doctr.appendChild(el("p", { cls: "tri-v6-doctrine-desc", text: selected.exclusiveChosen
+        ? "此教义已被采纳，同组其他技术永久封闭。"
+        : selected.exclusiveBlockedBy
+          ? "同组教义已被「" + selected.exclusiveBlockedBy + "」裁定，此项永久封闭。"
+          : "与本项同组的互斥技术将在裁定后永久封闭，只能择其一。" }));
       if (!selected.exclusiveChosen && !selected.exclusiveBlockedBy) {
-        const pick = el("button", { cls: "tri-btn tri-btn-sm", attrs: { type: "button", "data-tb-action": "doctrine", "data-tech-id": selected.id } });
-        pick.appendChild(el("span", { cls: "tri-btn-label", text: "裁定此教义" }));
+        const pick = el("button", { cls: "tri-v6-btn tri-v6-btn-primary", attrs: { type: "button", "data-v6-action": "doctrine", "data-tech-id": selected.id }, text: "裁定此教义" });
         doctr.appendChild(pick);
       }
       drawer.appendChild(doctr);
     }
-    const footer = el("div", { cls: "tri-techbook-drawerfoot" });
+    const foot = el("div", { cls: "tri-v6-drawerfoot" });
     if (selected.researched) {
-      footer.appendChild(el("span", { cls: "tri-techbook-done", text: "✓ 已研究" }));
+      foot.appendChild(el("span", { cls: "tri-v6-done", text: "✓ 已研究" }));
     } else if (selected.isActive) {
-      const cancel = el("button", { cls: "tri-btn tri-btn-sm tri-btn-ghost", attrs: { type: "button", "data-tb-action": "cancel" } });
-      cancel.appendChild(el("span", { cls: "tri-btn-label", text: "中止研究" }));
-      footer.appendChild(el("span", { cls: "tri-techbook-active", text: "研究中 · " + pct(view.civ.science.percent, 0) }));
-      footer.appendChild(cancel);
+      foot.appendChild(el("span", { cls: "tri-v6-active", text: "研究中 · " + pct(view.civ.science.percent, 0) }));
+      foot.appendChild(el("button", { cls: "tri-v6-btn tri-v6-btn-ghost", attrs: { type: "button", "data-v6-action": "cancel" }, text: "中止研究" }));
     } else {
-      const researchBtn = el("button", { cls: "tri-btn tri-btn-sm tri-btn-primary", attrs: { type: "button", "data-tb-action": "research", "data-tech-id": selected.id } });
-      researchBtn.appendChild(icon("research", 13));
-      researchBtn.appendChild(el("span", { cls: "tri-btn-label", text: "开始研究 · " + num(selected.cost) }));
+      const researchBtn = el("button", {
+        cls: "tri-v6-btn tri-v6-btn-primary",
+        attrs: {
+          type: "button",
+          "data-v6-action": "research",
+          "data-tech-id": selected.id,
+          "data-action": "start-research",
+          "data-available": selected.available ? "true" : "false",
+        },
+        text: "开始研究 · " + num(selected.cost),
+      });
       if (!selected.available || selected.blockedReason || selected.exclusiveBlockedBy) researchBtn.disabled = true;
-      footer.appendChild(researchBtn);
-      if (selected.blockedReason) footer.appendChild(el("span", { cls: "tri-techbook-blocked", text: selected.blockedReason }));
+      foot.appendChild(researchBtn);
+      if (selected.blockedReason) foot.appendChild(el("span", { cls: "tri-v6-blocked", text: selected.blockedReason }));
     }
-    drawer.appendChild(footer);
+    drawer.appendChild(foot);
+  }
+
+  function render(force = false): void {
+    const view = current;
+    renderHead();
+    renderControls();
+    if (!view?.tech) return;
+    const next = treeSignature(view);
+    if (force || next !== signature) {
+      signature = next;
+      renderTree();
+      renderSide();
+      renderDrawer();
+    }
   }
 
   return {
     el: root,
     update(view) {
+      const activeChanged = (current?.tech?.activeTechId ?? null) !== (view.tech?.activeTechId ?? null);
       current = view;
+      if (activeChanged) fundingDraft = null;
       render();
     },
     destroy() {
       offAction();
     },
   };
-}
-
-function findTech(branches: ViewModel["tech"]["branches"], id: string): TechView | null {
-  for (const branch of branches) {
-    const hit = branch.techs.find((tech) => tech.id === id);
-    if (hit) return hit;
-  }
-  return null;
 }

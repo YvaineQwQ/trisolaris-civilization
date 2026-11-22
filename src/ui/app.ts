@@ -8,6 +8,9 @@
 import "./styles.css";
 // v1.3「终末地工业画册」主题层：白纸墨字、印刷装饰、单一信号黄。
 import "./theme-print.css";
+// v1.6 字体四角色 + 四类形状设计系统（须在主题层之后）。
+import "./design-v6.css";
+import "./layout-v6.css";
 import type { AppController } from "../game/viewTypes";
 import type { ScreenHandle, ScreenKind, Tone, UiContext, UiState } from "./types";
 import { createMenuScreen } from "./screen-menu";

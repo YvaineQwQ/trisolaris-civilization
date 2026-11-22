@@ -14,6 +14,12 @@ import { createLeftPanel } from "./panels-left";
 import { createRightPanel } from "./panels-right";
 import { createCenterOverlay } from "./center-overlay";
 import { createDock } from "./dock";
+import { createChroniclePanel } from "./chronicle-panel";
+import type { ChroniclePanelHandle } from "./chronicle-panel";
+import { createEventDrawer } from "./event-drawer";
+import type { EventDrawerHandle } from "./event-drawer";
+import { createEventTicker } from "./event-ticker";
+import type { EventTickerHandle } from "./event-ticker";
 import { createModals } from "./modals";
 import type { ModalsHandle } from "./modals";
 import { createMobileNav } from "./mobile-nav";
@@ -114,6 +120,9 @@ export function createGameScreen(ctx: UiContext): ScreenHandle {
   const right = createRightPanel(shell);
   const center = createCenterOverlay(shell);
   const dock = createDock(shell);
+  const chronicle: ChroniclePanelHandle = createChroniclePanel(shell);
+  const eventDrawer: EventDrawerHandle = createEventDrawer(shell);
+  let ticker: EventTickerHandle | null = null;
   modals = createModals(shell);
 
   /* v1.4 移动端：底部导航 + 抽屉遮罩。桌面端两者都由 CSS 隐藏。 */
@@ -159,12 +168,16 @@ export function createGameScreen(ctx: UiContext): ScreenHandle {
   /* 3D 辅助视图挂载在中央观测视口内，避免全屏画布与纸面版块错位。 */
   center.el.appendChild(scene3dHost);
 
-  const main = el("div", { cls: "tri-game-main" });
+  const main = el("div", { cls: "tri-game-main has-chronicle" });
   /* 桌面默认折叠右决策栏为窄条：舞台列宽同步收窄，避免中心视口被空列挤压。 */
   if (ctx.state.rightCollapsed) main.classList.add("is-right-collapsed");
-  append(main, center.el, right.el);
+  append(main, center.el, right.el, chronicle.el);
+  /* 编年史侧栏默认展开（可在侧栏内收起为窄条）；事件抽屉固定在右侧。 */
+  chronicle.open();
+  main.classList.add("has-chronicle");
   const stage = el("div", { cls: "tri-game-stage" });
-  append(stage, hud.el, main, dock.el);
+  ticker = createEventTicker({ onOpenChronicle: () => chronicle.open() });
+  append(stage, hud.el, main, ticker.el, dock.el, eventDrawer.el);
 
   /* --------------------------- overlays ------------------------------- */
   const pauseOverlay = el("div", { cls: "tri-pause-overlay tri-hidden" });
@@ -337,6 +350,9 @@ export function createGameScreen(ctx: UiContext): ScreenHandle {
     hud.update(view);
     left.update(view);
     right.update(view);
+    chronicle.update(view);
+    eventDrawer.update(view);
+    ticker?.update(view);
     dock.update(view);
     center.update(view, scene);
     modals?.update(view);
@@ -347,8 +363,9 @@ export function createGameScreen(ctx: UiContext): ScreenHandle {
   }
 
   /**
-   * v1.3：事件触发 → 自动弹出事件档案并暂停模拟；玩家关闭档案而未抉择时
-   * 记录为「稍后处理」，避免每帧重新弹窗，并在关闭后恢复时间。
+   * v1.6：事件触发 → 右侧非阻塞抽屉（无全屏遮罩、不自动暂停），
+   * 玩家可以在做出抉择前继续观察 HUD / 中央数据；关闭抽屉 = 稍后处理，
+   * 不会每帧自动重开。完整档案仍可从抽屉里打开旧 modal。
    */
   function syncPendingEvent(view: ViewModel): void {
     const active = view.events?.active ?? null;
@@ -356,6 +373,7 @@ export function createGameScreen(ctx: UiContext): ScreenHandle {
     if (!active) {
       eventPromptDefId = null;
       dismissedEventDefId = null;
+      if (eventDrawer.visible()) eventDrawer.close();
       if (autoPausedForEvent) {
         autoPausedForEvent = false;
         if (view.meta.paused) {
@@ -368,35 +386,12 @@ export function createGameScreen(ctx: UiContext): ScreenHandle {
       }
       return;
     }
-    if (eventPromptDefId === active.defId) {
-      if (modalActive !== "event") {
-        dismissedEventDefId = active.defId;
-        eventPromptDefId = null;
-        if (autoPausedForEvent) {
-          autoPausedForEvent = false;
-          if (view.meta.paused) {
-            try {
-              safeApi()?.actions.togglePause();
-            } catch (error) {
-              console.warn("[trisolaris] resume after event failed", error);
-            }
-          }
-        }
-      }
-      return;
-    }
+    if (eventPromptDefId === active.defId) return;
     if (dismissedEventDefId === active.defId) return;
+    /* 全屏模态（帮助/设置等）打开时先不打扰；关闭后下一帧再弹抽屉。 */
     if (modalActive != null) return;
     eventPromptDefId = active.defId;
-    if (!view.meta.paused) {
-      try {
-        safeApi()?.actions.togglePause();
-        autoPausedForEvent = true;
-      } catch (error) {
-        console.warn("[trisolaris] pause for event failed", error);
-      }
-    }
-    modals?.open("event");
+    eventDrawer.open();
   }
 
   /**
@@ -798,6 +793,10 @@ export function createGameScreen(ctx: UiContext): ScreenHandle {
       left.destroy();
       right.destroy();
       center.destroy();
+      chronicle.destroy();
+      eventDrawer.destroy();
+      ticker?.destroy();
+      ticker = null;
       dock.destroy();
       mobileNav.destroy();
       modals?.destroy();

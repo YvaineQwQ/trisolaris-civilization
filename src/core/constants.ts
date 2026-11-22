@@ -162,7 +162,7 @@ export const OBSERVATORY_LEVELS: ObservatoryLevelInfo[] = [
     positionSigma: 0.0032, velocitySigma: 0.12, massSigma: 0.14, predictionHorizon: 24,
     dataRate: 34, energyCost: 170, taskTurns: 2,
     capabilities: ["三体动力学建模", "轨道偏心率估算", "引力扰动计算", "中期轨道预测"],
-    upgradeScience: 1400, requiresEra: 4, upgradeCost: { minerals: 2600, metals: 1100, energy: 1900 }, requiresTech: "astro_threebody",
+    upgradeScience: 1400, requiresEra: 5, upgradeCost: { minerals: 2600, metals: 1100, energy: 1900 }, requiresTech: "astro_threebody",
   },
   {
     level: 5, name: "行星科学与深空观测中心", description: "分析复杂轨道，预测环境趋势与灾害概率，进行长期模型分析。",
@@ -176,7 +176,7 @@ export const OBSERVATORY_LEVELS: ObservatoryLevelInfo[] = [
     positionSigma: 0.00042, velocitySigma: 0.014, massSigma: 0.012, predictionHorizon: 110,
     dataRate: 120, energyCost: 380, taskTurns: 3,
     capabilities: ["多波段观测", "多模型交叉验证", "高精度轨道估算", "混沌敏感性分析", "长期趋势预测"],
-    upgradeScience: 7200, requiresEra: 5, upgradeCost: { minerals: 12000, metals: 6000, energy: 10000 }, requiresTech: "astro_supernet",
+    upgradeScience: 7200, requiresEra: 6, upgradeCost: { minerals: 12000, metals: 6000, energy: 10000 }, requiresTech: "astro_supernet",
   },
 ];
 
@@ -192,9 +192,9 @@ export const CONFIDENCE_LABELS: { min: number; label: string; tone: string }[] =
  * 时代进化系统（阶段 12）：文明从原始部落一步步走向星际文明。
  * 每个时代解锁不同的资源、建筑与科技；旧时代建筑需要逐级升级。
  */
-export const ERA_MAX = 5;
+export const ERA_MAX = 6;
 
-/** 资源解锁时代：food/water/minerals/science 自原始时代可用；金属在城邦时代；能源（电力）在工业时代。 */
+/** 资源解锁时代：food/water/minerals/science 自原始时代可用；金属在城邦时代；能源（动力/电力）在蒸汽时代。 */
 export const RESOURCE_UNLOCK_ERA: Record<string, number> = {
   food: 1,
   water: 1,
@@ -204,6 +204,13 @@ export const RESOURCE_UNLOCK_ERA: Record<string, number> = {
   energy: 3,
 };
 
+/**
+ * v1.6 六时代。旧 E3「蒸汽与电气」拆为 E3 蒸汽 / E4 电气，旧 E4 后移为 E5、旧 E5 后移为 E6。
+ * 时代硬约束（JSON 自检与 src/civilization/eras.ts 共同保证）：
+ *  - E3 蒸汽纪元：允许蒸汽动力/机械，禁止电力、内燃机、无线电、计算机、卫星、空间站、核能；
+ *  - E4 电气纪元：允许电力/无线电/早期计算机/核裂变，禁止卫星、空间站、核聚变；
+ *  - 卫星、火箭、空间站、星际殖民不得早于 E5（本表注释即验收口径）。
+ */
 export const ERAS: import("./types").EraDef[] = [
   {
     era: 1,
@@ -218,7 +225,7 @@ export const ERAS: import("./types").EraDef[] = [
     name: "文明曙光",
     subtitle: "农业城邦",
     description: "灌溉、文字与青铜让部落变成城邦。人们筑起水渠与城墙，开始怀疑那三颗星并不遵循简单的规律。",
-    unlockSummary: "解锁金属（矿场含初级冶炼）；灌溉农田、城邦住宅、水渠、矿场、学园、集市。",
+    unlockSummary: "解锁金属（矿场含初级冶炼）；灌溉农田、城邦住宅、水渠、矿场、学园、集市、科学院建筑群 Lv.1。",
     requirements: [
       { id: "pop", label: "人口达到 900", kind: "population", target: 900, unit: "人" },
       { id: "techs", label: "累计研究 2 项科技", kind: "techsTotal", target: 2, unit: "项" },
@@ -227,10 +234,10 @@ export const ERAS: import("./types").EraDef[] = [
   },
   {
     era: 3,
-    name: "混沌时代",
-    subtitle: "蒸汽与电气",
-    description: "蒸汽机与电网点燃工业的火焰，望远镜与机械计算机第一次把天空变成可测量的对象——而混沌也开始回应文明的窥探。",
-    unlockSummary: "解锁能源（电力）；机械化农场、水处理厂、燃煤电站、钢铁厂、机械厂、科学院、地下避难所。",
+    name: "蒸汽纪元",
+    subtitle: "蒸汽与钢铁",
+    description: "蒸汽机、铁路与高炉把文明推进蒸汽纪元。机械计算机与光学望远镜第一次把天空变成可测量、可计算的对象——而混沌也开始回应文明的窥探。",
+    unlockSummary: "解锁能源（蒸汽动力）；机械化农场、水处理厂、燃煤电站、钢铁厂、蒸汽工厂、科学院、地下避难所；科学院建筑群 Lv.2。本时代禁止电力、内燃机、无线电、计算机、卫星、空间站与核能。",
     requirements: [
       { id: "pop", label: "人口达到 1800", kind: "population", target: 1800, unit: "人" },
       { id: "techs", label: "累计研究 6 项科技", kind: "techsTotal", target: 6, unit: "项" },
@@ -240,28 +247,41 @@ export const ERAS: import("./types").EraDef[] = [
   },
   {
     era: 4,
-    name: "预测未来",
-    subtitle: "信息与航天",
-    description: "计算机、核能与人造卫星让文明第一次看见未来几十年。超算中心与轨道研究所在混沌中寻找可以依靠的确定性。",
-    unlockSummary: "高级住区、垂直农场、循环水厂、核电站、自动化矿山、超算中心、气候调节设施、卫星站。",
+    name: "电气纪元",
+    subtitle: "电力与内燃机",
+    description: "电网、内燃机、无线电与真空管电子计算机点亮城市。文明第一次用机器处理信息，也开始为天空中的下一次灾变建立工业化的应对体系。",
+    unlockSummary: "公寓楼、化肥农场、污水回用厂、电气工厂、电气研究院、核电站；科学院建筑群 Lv.3。本时代允许电力/无线电/早期计算机/核裂变，禁止卫星、空间站与核聚变。",
     requirements: [
-      { id: "pop", label: "人口达到 3200", kind: "population", target: 3200, unit: "人" },
-      { id: "techs", label: "累计研究 11 项科技", kind: "techsTotal", target: 11, unit: "项" },
-      { id: "techs3", label: "完成 2 项工业时代科技", kind: "techsInEra", target: 2, era: 3, unit: "项" },
+      { id: "pop", label: "人口达到 2600", kind: "population", target: 2600, unit: "人" },
+      { id: "techs", label: "累计研究 10 项科技", kind: "techsTotal", target: 10, unit: "项" },
+      { id: "techs3", label: "完成 2 项蒸汽时代科技", kind: "techsInEra", target: 2, era: 3, unit: "项" },
       { id: "obs", label: "高级观测中心（观测 Lv.3）", kind: "observatoryLevel", target: 3, unit: "级" },
     ],
   },
   {
     era: 5,
+    name: "信息纪元",
+    subtitle: "信息与早期航天",
+    description: "计算机、核聚变工程与人造卫星让文明第一次看见未来几十年。超算中心与轨道研究所在混沌中寻找可以依靠的确定性，而火箭把传感器送出大气层。",
+    unlockSummary: "高级住区、垂直农场、循环水厂、自动化矿山、超算中心、气候调节设施、卫星站、太空港、聚变反应堆；科学院建筑群 Lv.4。",
+    requirements: [
+      { id: "pop", label: "人口达到 3600", kind: "population", target: 3600, unit: "人" },
+      { id: "techs", label: "累计研究 15 项科技", kind: "techsTotal", target: 15, unit: "项" },
+      { id: "techs4", label: "完成 2 项电气时代科技", kind: "techsInEra", target: 2, era: 4, unit: "项" },
+      { id: "obs", label: "高级观测中心（观测 Lv.3）", kind: "observatoryLevel", target: 3, unit: "级" },
+    ],
+  },
+  {
+    era: 6,
     name: "文明的选择",
     subtitle: "星际文明",
     description: "聚变、纳米制造与星际航行把选择摆在文明面前：守护母星、建造行星发动机，或把火种撒向另一颗恒星。",
-    unlockSummary: "生态穹顶、人造生物圈、聚变反应堆、纳米工厂、量子实验室、太空港、星际殖民基地、行星发动机、深空雷达。",
+    unlockSummary: "生态穹顶、人造生物圈、聚变反应堆、纳米工厂、量子实验室、星际殖民基地、行星发动机、深空雷达；科学院建筑群 Lv.5。",
     requirements: [
       { id: "pop", label: "人口达到 5200", kind: "population", target: 5200, unit: "人" },
-      { id: "techs", label: "累计研究 17 项科技", kind: "techsTotal", target: 17, unit: "项" },
-      { id: "techs4", label: "完成 2 项信息时代科技", kind: "techsInEra", target: 2, era: 4, unit: "项" },
-      { id: "obs", label: "轨道动力学研究所（观测 Lv.4）", kind: "observatoryLevel", target: 4, unit: "级" },
+      { id: "techs", label: "累计研究 21 项科技", kind: "techsTotal", target: 21, unit: "项" },
+      { id: "techs5", label: "完成 2 项信息时代科技", kind: "techsInEra", target: 2, era: 5, unit: "项" },
+      { id: "obs", label: "轨道动力学研究所（观测 Lv.5）", kind: "observatoryLevel", target: 5, unit: "级" },
     ],
   },
 ] as const;

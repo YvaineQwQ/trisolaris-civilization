@@ -1,7 +1,8 @@
 /**
  * 时代进化系统（阶段 12）。
  *
- * 文明从原始部落（E1）走向星际文明（E5）。每个时代解锁新的资源、建筑与科技，
+ * v1.6 六时代：E1 原始部落 / E2 农业城邦 / E3 蒸汽纪元 / E4 电气纪元 /
+ * E5 信息与早期航天 / E6 星际文明。每个时代解锁不同的资源、建筑与科技，
  * 旧时代建筑通过「升级」进入下一时代层级；时代推进由明确的文明条件驱动，
  * 不再只由天文台等级或科技总数单一计分。
  */
@@ -139,6 +140,22 @@ export function buildingEra(def: BuildingDef): number {
 
 export function isBuildingAvailableInEra(era: number, def: BuildingDef): boolean {
   return buildingEra(def) <= era;
+}
+
+/**
+ * 旧存档时代迁移（v1.5 → v1.6）：
+ * 旧 E3「蒸汽与电气」拆分后，旧 E3 存档保留为 E3（蒸汽）；
+ * 旧 E4「信息与航天」后移为 E5；旧 E5「星际文明」后移为 E6。
+ * 旧存档里的科技 id 全部保留，因此已研究科技与事件引用不需要重写。
+ */
+export function migrateLegacyEra(era: number): number {
+  const value = Number.isFinite(era) ? Math.floor(era) : 1;
+  if (value <= 1) return 1;
+  if (value === 2) return 2;
+  if (value === 3) return 3;
+  if (value === 4) return 5;
+  if (value === 5) return 6;
+  return 6;
 }
 
 /** 旧时代建筑产出折减（高一个时代 0.8，两个及以上 0.6）。 */

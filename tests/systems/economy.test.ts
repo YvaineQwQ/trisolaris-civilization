@@ -517,16 +517,16 @@ describe("时代条件与推进（civilization/eras.ts）", () => {
     }
   });
 
-  it("eraStatus 在 E5：next=null、无待满足条件、cannot advance；applyEraAdvance 封顶", () => {
-    const world = createWorld({ era: 5 });
-    const status = eraStatus(world.civ, world.tech, world.buildings, 5);
-    expect(status.era).toBe(5);
+  it("eraStatus 在 E6：next=null、无待满足条件、cannot advance；applyEraAdvance 封顶", () => {
+    const world = createWorld({ era: 6 });
+    const status = eraStatus(world.civ, world.tech, world.buildings, 6);
+    expect(status.era).toBe(6);
     expect(status.next).toBeNull();
     expect(status.requirements).toEqual([]);
     expect(status.canAdvance).toBe(false);
-    expect(canAdvanceEra(world.civ, world.tech, world.buildings, 6)).toBe(false);
+    expect(canAdvanceEra(world.civ, world.tech, world.buildings, 7)).toBe(false);
     expect(applyEraAdvance(world.civ)).toBeNull();
-    expect(world.civ.era).toBe(5);
+    expect(world.civ.era).toBe(6);
   });
 
   it("applyEraAdvance 逐代推进返回新时代", () => {
@@ -537,7 +537,8 @@ describe("时代条件与推进（civilization/eras.ts）", () => {
     expect(applyEraAdvance(civ)).toBe(3);
     expect(applyEraAdvance(civ)).toBe(4);
     expect(applyEraAdvance(civ)).toBe(5);
-    expect(civ.era).toBe(5);
+    expect(applyEraAdvance(civ)).toBe(6);
+    expect(civ.era).toBe(6);
     expect(applyEraAdvance(civ)).toBeNull();
   });
 
@@ -598,9 +599,9 @@ describe("时代条件与推进（civilization/eras.ts）", () => {
     expect(e1.progress).toBeGreaterThanOrEqual(0);
     expect(e1.progress).toBeLessThanOrEqual(1);
     expect(e1.name.length).toBeGreaterThan(0);
-    const e5 = eraInfo(civ, 6, 0);
-    expect(e5.era).toBe(5);
-    expect(e5.progress).toBe(1);
+    const e6 = eraInfo(civ, 6, 0);
+    expect(e6.era).toBe(6);
+    expect(e6.progress).toBe(1);
   });
 });
 

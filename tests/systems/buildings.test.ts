@@ -52,51 +52,56 @@ function unlockedAt(era: number): (id: ResourceId) => boolean {
 /** 主升级链的冻结内容（id / 时代 / 链内层级）。 */
 const MAIN_CHAINS: Record<string, { ids: string[]; eras: number[]; tiers: number[] }> = {
   housing: {
-    ids: ["camp", "townHouse", "housingDistrict", "highRise", "ecodomeCity"],
-    eras: [1, 2, 3, 4, 5],
-    tiers: [1, 2, 3, 4, 5],
+    ids: ["camp", "townHouse", "housingDistrict", "apartmentBlock", "highRise", "ecodomeCity"],
+    eras: [1, 2, 3, 4, 5, 6],
+    tiers: [1, 2, 3, 4, 5, 6],
   },
   food: {
-    ids: ["farm1", "irrigatedFarm", "mechanizedFarm", "verticalFarm", "biosphereFarm"],
-    eras: [1, 2, 3, 4, 5],
-    tiers: [1, 2, 3, 4, 5],
+    ids: ["farm1", "irrigatedFarm", "mechanizedFarm", "fertilizedFarm", "verticalFarm", "biosphereFarm"],
+    eras: [1, 2, 3, 4, 5, 6],
+    tiers: [1, 2, 3, 4, 5, 6],
   },
   water: {
-    ids: ["well1", "aqueduct", "waterPlant", "recyclingPlant", "atmosphericWater"],
-    eras: [1, 2, 3, 4, 5],
-    tiers: [1, 2, 3, 4, 5],
+    ids: ["well1", "aqueduct", "waterPlant", "sewagePlant", "recyclingPlant", "atmosphericWater"],
+    eras: [1, 2, 3, 4, 5, 6],
+    tiers: [1, 2, 3, 4, 5, 6],
   },
   industry: {
-    ids: ["quarry1", "mine", "steelMill", "automatedMine", "nanoFactory"],
-    eras: [1, 2, 3, 4, 5],
-    tiers: [1, 2, 3, 4, 5],
+    ids: ["quarry1", "mine", "steelMill", "electrifiedFactory", "automatedMine", "nanoFactory"],
+    eras: [1, 2, 3, 4, 5, 6],
+    tiers: [1, 2, 3, 4, 5, 6],
   },
   research: {
-    ids: ["elderHall", "academy", "scienceAcademy", "supercomputer", "quantumLab"],
-    eras: [1, 2, 3, 4, 5],
-    tiers: [1, 2, 3, 4, 5],
+    ids: ["elderHall", "academy", "scienceAcademy", "researchInstitute", "supercomputer", "quantumLab"],
+    eras: [1, 2, 3, 4, 5, 6],
+    tiers: [1, 2, 3, 4, 5, 6],
   },
   energy: {
     ids: ["coalPlant", "nuclearPlant", "fusionReactor"],
     eras: [3, 4, 5],
     tiers: [1, 2, 3],
   },
+  academyComplex: {
+    ids: ["academyComplex1", "academyComplex2", "academyComplex3", "academyComplex4", "academyComplex5"],
+    eras: [2, 3, 4, 5, 6],
+    tiers: [1, 2, 3, 4, 5],
+  },
 };
 
-describe("建筑内容自检（阶段 12 · 五时代 38 座）", () => {
-  it("共 38 座建筑、id 唯一，五个时代每代至少 5 座可新建", () => {
-    expect(BUILDING_DEFS.length).toBe(38);
+describe("建筑内容自检（v1.6 · 六时代 48 座）", () => {
+  it("共 48 座建筑、id 唯一，六个时代每代至少 5 座可新建", () => {
+    expect(BUILDING_DEFS.length).toBe(48);
     const ids = BUILDING_DEFS.map((d) => d.id);
     expect(new Set(ids).size).toBe(ids.length);
     expect(ids.filter((id) => !BUILDING_DEF_MAP[id])).toEqual([]);
 
-    for (let era = 1; era <= 5; era++) {
+    for (let era = 1; era <= 6; era++) {
       const list = BUILDING_DEFS.filter((d) => d.era === era);
       expect(list.length, `第 ${era} 时代可新建建筑不足 5 座`).toBeGreaterThanOrEqual(5);
     }
     // 时代分布（内容冻结值）
-    expect([1, 2, 3, 4, 5].map((era) => BUILDING_DEFS.filter((d) => d.era === era).length)).toEqual([
-      6, 6, 8, 8, 10,
+    expect([1, 2, 3, 4, 5, 6].map((era) => BUILDING_DEFS.filter((d) => d.era === era).length)).toEqual([
+      6, 7, 9, 8, 9, 9,
     ]);
     // 四个分类都有建筑
     for (const category of BUILDING_CATEGORY_ORDER) {
@@ -111,7 +116,7 @@ describe("建筑内容自检（阶段 12 · 五时代 38 座）", () => {
       expect(def.icon.length, def.id).toBeGreaterThan(0);
       expect(BUILDING_CATEGORY_ORDER).toContain(def.category);
       expect(def.era, def.id).toBeGreaterThanOrEqual(1);
-      expect(def.era, def.id).toBeLessThanOrEqual(5);
+      expect(def.era, def.id).toBeLessThanOrEqual(6);
       expect(def.requiresEra, `${def.id} requiresEra 必须与 era 一致`).toBe(def.era);
       expect(def.tier, `${def.id} tier`).toBeGreaterThanOrEqual(1);
       expect(def.buildTurns, `${def.id} 工期`).toBeGreaterThanOrEqual(1);
@@ -171,7 +176,7 @@ describe("建筑内容自检（阶段 12 · 五时代 38 座）", () => {
     }
   });
 
-  it("主升级链完整：housing/food/water/industry/research 各 5 级，energy 3 级", () => {
+  it("主升级链完整：housing/food/water/industry/research 各 6 级，energy 3 级，科学院建筑群 5 级", () => {
     for (const [group, spec] of Object.entries(MAIN_CHAINS)) {
       const chain = buildingUpgradeChain(group);
       expect(chain.map((d) => d.id), group).toEqual(spec.ids);

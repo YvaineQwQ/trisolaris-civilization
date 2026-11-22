@@ -431,8 +431,8 @@ class StartupController implements StartupHandle {
   // ── 资源 ───────────────────────────────────────────────────────────
 
   private wireAssets(): void {
-    const emblemSrc = this.assetBase + "council-emblem.svg";
-    const markSrc = this.assetBase + "council-emblem-mark.svg";
+    const emblemSrc = this.assetBase + "council-emblem-v6.png";
+    const markSrc = this.assetBase + "council-emblem-v6-mark.png";
     const reticleSrc = this.assetBase + "reticle-ring.svg";
     const emblemImg = this.root.querySelector<HTMLImageElement>(".su-emblem");
     const reticleImg = this.root.querySelector<HTMLImageElement>(".su-reticle-asset");

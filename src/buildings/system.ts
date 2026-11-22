@@ -276,6 +276,7 @@ function emptyEffects(): Required<Omit<BuildingEffects, "capacity" | "production
     capacity: { food: 0, water: 0, energy: 0, minerals: 0, metals: 0, science: 0 },
     housing: 0,
     research: 0,
+    researchSpeed: 0,
     observationBonus: 0,
     thermalShielding: 0,
     industry: 0,
@@ -292,7 +293,7 @@ function emptyEffects(): Required<Omit<BuildingEffects, "capacity" | "production
  */
 export function buildingEffectScale(era: number | undefined, def: BuildingDef): number {
   if (era == null || !Number.isFinite(era)) return 1;
-  return outdatedMultiplier(Math.max(1, Math.min(5, Math.floor(era))), def);
+  return outdatedMultiplier(Math.max(1, Math.min(6, Math.floor(era))), def);
 }
 
 /**
@@ -326,6 +327,7 @@ export function aggregateBuildingEffects(
     }
     total.housing += (e.housing ?? 0) * effective;
     total.research += (e.research ?? 0) * effective;
+    total.researchSpeed += (e.researchSpeed ?? 0) * effective;
     total.observationBonus += (e.observationBonus ?? 0) * effective;
     total.thermalShielding += (e.thermalShielding ?? 0) * effective;
     total.industry += (e.industry ?? 0) * effective;
@@ -335,6 +337,7 @@ export function aggregateBuildingEffects(
     total.colonyProgress += (e.colonyProgress ?? 0) * effective;
   }
 
+  total.researchSpeed = clamp(total.researchSpeed, 0, 1.5);
   total.observationBonus = clamp(total.observationBonus, 0, 2);
   total.disasterResistance = clamp(total.disasterResistance, 0, 0.9);
   total.housing = Math.max(0, total.housing);
@@ -462,6 +465,7 @@ export function describeEffects(def: BuildingDef): string[] {
   }
   if (e.housing) out.push(`住房 ${signedNumber(e.housing)}`);
   if (e.research) out.push(`科研 ${signedNumber(e.research)}/回合`);
+  if (e.researchSpeed) out.push(`全文明研究速度 ${signedPercent(e.researchSpeed)}`);
   if (e.observationBonus) out.push(`观测质量 ${signedPercent(e.observationBonus)}`);
   if (e.thermalShielding) out.push(`温度耐受 ${signedNumber(e.thermalShielding)}°C`);
   if (e.industry) out.push(`工业产能 ${signedNumber(e.industry)}`);

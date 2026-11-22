@@ -9,9 +9,10 @@
  * The UI and renderer must never import physics/game modules directly.
  */
 import type { Vec2, Vec3 } from "../core/math";
+import type { EffectBand } from "../events/outcome-ranges";
 import type {
   DepartmentId, DifficultyKey, EventCategory, FactionId, GalaxyPreview, GameMode,
-  LogEntry, NewGameOptions, ObservationKind, PoliticsLogEntry, StarId, StarTarget,
+  LogEntry, NewGameOptions, ObservationKind, PoliticsLogEntry, ResearchCategory, StarId, StarTarget,
   TechSchool, WeatherKind,
 } from "../core/types";
 
@@ -283,6 +284,54 @@ export interface DoctrineGroupView {
   options: DoctrineOptionView[];
 }
 
+/** v1.6 发展纲领：一个大类及其研究进度。 */
+export interface DevelopmentCategoryView {
+  id: ResearchCategory;
+  name: string;
+  short: string;
+  description: string;
+  color: string;
+  selected: boolean;
+  researchedCount: number;
+  total: number;
+}
+
+/** v1.6 发展纲领状态（E3 起选择 1~2 个大类）。 */
+export interface DevelopmentView {
+  unlocked: boolean;
+  chosen: boolean;
+  categories: ResearchCategory[];
+  options: DevelopmentCategoryView[];
+  /** 已选大类研究速度 +10%。 */
+  focusBonus: number;
+  /** 未选大类研究速度 -35%。 */
+  neglectPenalty: number;
+}
+
+/** v1.6 科研资源倾斜状态（0~100%）。 */
+export interface ResearchFundingView {
+  percent: number;
+  /** 研究速度乘数（0.6..1.35）。 */
+  researchSpeed: number;
+  /** 科研点产出乘数。 */
+  scienceProduction: number;
+  /** 非科研资源产出乘数（倾斜的代价）。 */
+  otherProduction: number;
+}
+
+/** v1.6 注入资源加速报价。 */
+export interface ResearchBoostView {
+  available: boolean;
+  reason: string | null;
+  techId: string | null;
+  techName: string;
+  gain: number;
+  percent: number;
+  cost: FlowCostView[];
+  uses: number;
+  usedThisTurn: boolean;
+}
+
 export interface TechBranchView {
   id: string;
   name: string;
@@ -303,6 +352,19 @@ export interface TechTreeView {
   totalTechs: number;
   /** Active research count/slots (v1.3 keeps one active project but exposes queue depth). */
   activeTechId: string | null;
+  /* ---- v1.6 科研政策 ---- */
+  development: DevelopmentView;
+  funding: ResearchFundingView;
+  /** 当前项目的加速报价；没有在研项目时为 null。 */
+  boost: ResearchBoostView | null;
+  /** 在研项目的速度构成（学派 / 发展纲领 / 资源倾斜 / 科学院建筑）。 */
+  activeSpeed: {
+    total: number;
+    schoolFactor: number;
+    developmentFactor: number;
+    fundingFactor: number;
+    academyFactor: number;
+  } | null;
 }
 
 export interface ObservatoryView {
@@ -617,6 +679,11 @@ export interface EventEffectView {
   before: number | null;
   after: number | null;
   delta: number | null;
+  /** v1.6：选择前的区间；结算报告使用精确值，两个字段为 null。 */
+  minDelta?: number | null;
+  maxDelta?: number | null;
+  minAfter?: number | null;
+  maxAfter?: number | null;
   unit: string;
   tone: "gain" | "loss" | "neutral";
   detail: string | null;
@@ -629,8 +696,10 @@ export interface EventChoiceView {
   risk: string | null;
   available: boolean;
   unavailableReason: string | null;
-  /** 量化预估（与结算报告同源，直接显示具体数值）。 */
+  /** 选择前的量化区间（v1.6：不显示精确值；结算报告才显示实际值）。 */
   effects: EventEffectView[];
+  /** 原始区间，供事件抽屉直接使用（含历史修正）。 */
+  bands?: EffectBand[];
   /** 兼容旧 UI 的短句预览。 */
   preview: string[];
 }
@@ -755,6 +824,12 @@ export interface GameActions {
   chooseSchoolFocus(school: TechSchool | null): void;
   /** v1.3：在互斥教义组中选择一项科技。 */
   chooseDoctrine(techId: string): void;
+  /** v1.6：确定/调整发展纲领（1~2 个研究大类，E3 起可用）。 */
+  chooseDevelopmentCategories(categories: ResearchCategory[]): void;
+  /** v1.6：设置科研资源倾斜 0~100%。 */
+  setResearchFunding(percent: number): void;
+  /** v1.6：消耗矿物/金属/能源，立即为当前项目注入研究进度（每回合限一次）。 */
+  boostResearch(): void;
   /** v1.3：任命候选人到其部门。 */
   appointMinister(candidateId: string): void;
   /** v1.3：罢免部门部长。 */

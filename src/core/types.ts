@@ -430,6 +430,8 @@ export interface BuildingEffects {
   capacity?: Partial<Record<ResourceId, number>>;
   housing?: number;
   research?: number;
+  /** v1.6：全文明研究速度加性百分比（0.08 = +8%），科学院建筑群使用。 */
+  researchSpeed?: number;
   /** Additive observation quality bonus (fraction). */
   observationBonus?: number;
   /** Reduces temperature stress by this many degrees equivalent. */
@@ -551,7 +553,14 @@ export type TechBranch =
   | "space"
   | "computing"
   | "society"
-  | "military";
+  | "military"
+  | "social";
+
+/**
+ * v1.6 发展纲领：三大研究大类。
+ * 玩家在 E3 起选择 1~2 个作为重点，已选大类研究速度 +10%，未选大类 -35%。
+ */
+export type ResearchCategory = "natural" | "engineering" | "social";
 
 /**
  * v1.3 学说（流派）：每项科技属于一个学说。玩家可选择「研究重心」，
@@ -625,6 +634,15 @@ export interface TechState {
   doctrineChoices?: Record<string, string>;
   /** v1.3 各学说累计研究点数（用于精通等级）。 */
   schoolPoints?: Partial<Record<TechSchool, number>>;
+  /* ---- v1.6 科研政策（全部随存档持久化）---- */
+  /** 发展纲领：已选择的 1~2 个研究大类；null/缺省 = 未选择。 */
+  developmentCategories?: ResearchCategory[] | null;
+  /** 科研资源倾斜 0..100（%）。50 = 中性；0 约 -40% 研究速度，100 约 +35%。 */
+  researchFunding?: number;
+  /** 每项科研项目「注入资源加速」的使用次数（用于递增价格）。 */
+  researchBoostCounts?: Record<string, number>;
+  /** 最近一次加速所在回合（每回合限一次）。 */
+  lastBoostTurn?: number;
 }
 
 /** ---------------------------------------------------------------- *

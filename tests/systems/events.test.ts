@@ -44,6 +44,7 @@ import {
   scheduledEventsView,
 } from "../../src/events/system";
 import type { EventContext, EventResolution } from "../../src/events/system";
+import { forecastEffectBands } from "../../src/events/outcome-ranges";
 
 const CATEGORIES = Object.keys(EVENT_CATEGORY_NAMES);
 const TEST_SEED = "EVENTS-TEST-SEED";
@@ -330,10 +331,10 @@ describe("事件内容完整性", () => {
     expect(problems.join("\n")).toBe("");
   });
 
-  it("eraMin/eraMax 覆盖 E1–E5 且互不矛盾", () => {
+  it("eraMin/eraMax 覆盖 E1–E6 且互不矛盾", () => {
     for (const def of EVENT_DEFS) {
       expect(def.eraMin, def.id).toBeGreaterThanOrEqual(1);
-      expect(def.eraMax, def.id).toBeLessThanOrEqual(5);
+      expect(def.eraMax, def.id).toBeLessThanOrEqual(6);
       expect(def.eraMin, def.id).toBeLessThanOrEqual(def.eraMax);
       expect(def.weight, def.id).toBeGreaterThan(0);
       expect(Number.isFinite(def.weight), def.id).toBe(true);
@@ -756,26 +757,45 @@ describe("v1.5 事件节奏 / 量化 / 30 秒延迟结算", () => {
     expect(EVENT_OUTCOME_DELAY_SECONDS).toBe(30);
   });
 
-  it("选择前量化预估与实际结算一致，包含资源/稳定度/后续概率", () => {
-    const ctx = makeCtx({ era: 2, stability: 60, population: 1200 });
-    ctx.elapsedRealSeconds = 12;
-    const state = createEventState("FORECAST");
-    const def = getEventDef("env_red_dawn")!;
-    state.pending = [{ defId: def.id, triggerTurn: 0, triggerYear: 0, context: "测试" }];
-    const choice = def.choices.find((item) => item.id === "shelter")!;
-    const forecast = forecastEventEffects(choice.effects, ctx);
-    expect(forecast.some((effect) => effect.key === "resource:food" && effect.delta != null)).toBe(true);
-    expect(forecast.some((effect) => effect.key === "stability" && effect.delta != null)).toBe(true);
-    expect(forecast.some((effect) => effect.kind === "influence")).toBe(true);
-    const beforeFood = ctx.civ.resources.food.amount;
-    const beforeStability = ctx.civ.stability;
-    expect(resolveEventChoice(state, "shelter", ctx).ok).toBe(true);
-    const foodEffect = forecast.find((effect) => effect.key === "resource:food")!;
-    const stabilityEffect = forecast.find((effect) => effect.key === "stability")!;
-    expect(ctx.civ.resources.food.amount - beforeFood).toBeCloseTo(foodEffect.delta ?? 0, 5);
-    expect(ctx.civ.stability - beforeStability).toBeCloseTo(stabilityEffect.delta ?? 0, 5);
-    expect(state.pendingOutcome).not.toBeNull();
-    expect(state.pendingOutcome!.effects.length).toBeGreaterThan(0);
+  it("选择前区间覆盖实际结算，且同 seed 可复现（v1.6 范围结算）", () => {
+    const run = () => {
+      const ctx = makeCtx({ era: 2, stability: 60, population: 1200 });
+      ctx.elapsedRealSeconds = 12;
+      const state = createEventState("FORECAST");
+      const def = getEventDef("env_red_dawn")!;
+      state.pending = [{ defId: def.id, triggerTurn: 0, triggerYear: 0, context: "测试" }];
+      const choice = def.choices.find((item) => item.id === "shelter")!;
+      // v1.6：选择前只展示区间；结算在区间内确定性取值，不再等于精确中心值。
+      const bands = forecastEffectBands(choice.effects, ctx, state, def.category, forecastEventEffects);
+      const foodBand = bands.find((band) => band.key === "resource:food")!;
+      const stabilityBand = bands.find((band) => band.key === "stability")!;
+      expect(foodBand.deltaMin).not.toBeNull();
+      expect(foodBand.deltaMax).not.toBeNull();
+      expect(foodBand.deltaMin!).toBeLessThan(foodBand.deltaMax!);
+      const beforeFood = ctx.civ.resources.food.amount;
+      const beforeStability = ctx.civ.stability;
+      expect(resolveEventChoice(state, "shelter", ctx).ok).toBe(true);
+      const actualFood = ctx.civ.resources.food.amount - beforeFood;
+      const actualStability = ctx.civ.stability - beforeStability;
+      // 实际结算值必须落在玩家选择前看到的区间内
+      expect(actualFood).toBeGreaterThanOrEqual(foodBand.deltaMin! - 1e-6);
+      expect(actualFood).toBeLessThanOrEqual(foodBand.deltaMax! + 1e-6);
+      expect(actualStability).toBeGreaterThanOrEqual(stabilityBand.deltaMin! - 1e-6);
+      expect(actualStability).toBeLessThanOrEqual(stabilityBand.deltaMax! + 1e-6);
+      // 30 秒结算报告与真实落地使用同一套数字
+      expect(state.pendingOutcome).not.toBeNull();
+      const reportFood = state.pendingOutcome!.effects.find((effect) => effect.key === "resource:food")!;
+      const reportStability = state.pendingOutcome!.effects.find((effect) => effect.key === "stability")!;
+      // 报告数值保留两位小数，与真实落地允许 0.01 级舍入差
+      expect(reportFood.delta).toBeCloseTo(actualFood, 2);
+      expect(reportStability.delta).toBeCloseTo(actualStability, 2);
+      expect(state.pendingOutcome!.effects.some((effect) => effect.kind === "influence")).toBe(true);
+      return { actualFood, actualStability };
+    };
+    const first = run();
+    const second = run();
+    // 同一 seed + 同一操作序列 => 同一实际结算
+    expect(first).toEqual(second);
   });
 
   it("选择后 30 秒才生成报告；报告未确认前不会抽取新事件", () => {

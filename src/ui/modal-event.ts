@@ -149,15 +149,29 @@ export function buildEventModal(shell: GameShell, close: () => void): ModalInsta
       if (choice.effects.length > 0) {
         const impacts = el("span", { cls: "tri-eventdoc-impacts" });
         for (const effect of choice.effects) {
+          const hasBand = effect.minDelta != null && effect.maxDelta != null;
+          const fmt = (n: number): string => {
+            const abs = Math.abs(n);
+            const digits = abs >= 100 ? 0 : 1;
+            return (n > 0 ? "+" : n < 0 ? "−" : "±") + abs.toFixed(digits).replace(/\.0$/, "");
+          };
+          const rangeText = hasBand
+            ? effect.label + " " + fmt(effect.minDelta ?? 0) + " ~ " + fmt(effect.maxDelta ?? 0)
+            : effect.label;
           const chip = el("span", {
             cls: "tri-eventdoc-impact",
             attrs: { "data-tone": effect.tone, "data-kind": effect.kind },
-            text: (effect.delta != null
-              ? effect.label + " " + (effect.delta > 0 ? "+" : effect.delta < 0 ? "−" : "±")
-                + Math.abs(effect.delta) + (effect.unit ? " " + effect.unit : "")
-              : effect.label + " · " + (effect.detail ?? "状态变化")),
+            text: (hasBand
+              ? rangeText + (effect.unit ? " " + effect.unit : "")
+              : effect.delta != null
+                ? effect.label + " " + (effect.delta > 0 ? "+" : effect.delta < 0 ? "−" : "±")
+                  + Math.abs(effect.delta) + (effect.unit ? " " + effect.unit : "")
+                : effect.label + " · " + (effect.detail ?? "状态变化")),
           });
-          if (effect.before != null && effect.after != null) {
+          if (hasBand && effect.before != null && effect.minAfter != null && effect.maxAfter != null) {
+            chip.title = effect.label + "：预计 " + Math.round(effect.minAfter) + " ~ " + Math.round(effect.maxAfter)
+              + "（当前 " + Math.round(effect.before) + "）" + (effect.detail ? "（" + effect.detail + "）" : "");
+          } else if (effect.before != null && effect.after != null) {
             chip.title = effect.label + "：" + Math.round(effect.before) + " → " + Math.round(effect.after)
               + (effect.detail ? "（" + effect.detail + "）" : "");
           } else if (effect.detail) {
@@ -181,7 +195,7 @@ export function buildEventModal(shell: GameShell, close: () => void): ModalInsta
       choices.appendChild(button);
     });
     editorial.appendChild(choices);
-    editorial.appendChild(el("p", { cls: "tri-eventdoc-hint", text: "数值为按当前状态计算的量化结果；选择后 30 秒送达实际结算报告。" }));
+    editorial.appendChild(el("p", { cls: "tri-eventdoc-hint", text: "数值为按当前状态与既往事件估算的区间；选择后在区间内随机结算，30 秒后送达实际结果。" }));
     append(layout, figure, editorial);
     return layout;
   }

@@ -1,9 +1,9 @@
 {
   "name": "trisolaris-civilization",
   "private": true,
-  "version": "1.5.0",
+  "version": "1.6.0",
   "type": "module",
-  "description": "TRISOLARIS: CIVILIZATION â€” a hard sci-fi 3D three-body civilization strategy game",
+  "description": "TRISOLARIS: CIVILIZATION â€?a hard sci-fi 3D three-body civilization strategy game",
   "scripts": {
     "dev": "vite --host 127.0.0.1 --port 5173",
     "build": "tsc --noEmit && vite build",

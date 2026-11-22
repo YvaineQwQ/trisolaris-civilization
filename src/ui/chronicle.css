@@ -1,0 +1,369 @@
+/* ================================================================== *
+ *  v1.6 编年史宽侧栏（chronicle-panel.ts 专用样式）
+ *  只作用于 .tri-chronicle；列宽由 layout-v6.css 的 --chronicle-w 控制。
+ *  语气：重大 = 红/金左边条；伤亡 = 灰白；科学 = 墨绿；普通 = 墨黑。
+ * ================================================================== */
+
+.tri-chronicle {
+  --chronicle-w: 304px;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  width: var(--chronicle-w);
+  min-width: 0;
+  max-width: 340px;
+  height: 100%;
+  background: var(--paper-2);
+  border-left: 1px solid var(--line);
+  color: var(--ink);
+  font-family: var(--font-sans);
+  overflow: hidden;
+  box-shadow: var(--shadow-rail);
+  z-index: 12;
+}
+
+/* 收起 / 隐藏后的窄条：垂直文字，点击展开 */
+.tri-chronicle-peek {
+  display: none;
+  width: 44px;
+  min-width: 44px;
+  height: 100%;
+  padding: 14px 0;
+  border: 0;
+  border-left: 1px solid var(--line);
+  background: var(--paper-3);
+  color: var(--ink);
+  cursor: pointer;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  font-family: var(--font-tech);
+}
+.tri-chronicle.is-collapsed .tri-chronicle-peek,
+.tri-chronicle:not(.is-open) .tri-chronicle-peek {
+  display: flex;
+}
+.tri-chronicle-peek:hover { background: var(--signal); }
+.tri-chronicle-peek-en {
+  writing-mode: vertical-rl;
+  font-size: 9px;
+  letter-spacing: 0.32em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.tri-chronicle-peek-cn {
+  writing-mode: vertical-rl;
+  font-family: var(--font-sans);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.24em;
+}
+
+.tri-chronicle.is-collapsed .tri-chronicle-body,
+.tri-chronicle:not(.is-open) .tri-chronicle-body {
+  display: none;
+}
+
+.tri-chronicle-body {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  flex: 1 1 auto;
+}
+
+/* ---------------- 头部 ------------------------------------------- */
+.tri-chronicle-head {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 12px 12px 9px;
+  border-bottom: 1px solid var(--line);
+  background: var(--paper-2);
+}
+.tri-chronicle-heading {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+.tri-chronicle-kicker {
+  font-family: var(--font-display);
+  font-stretch: 125%;
+  font-weight: 800;
+  font-size: 10px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ink);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.tri-chronicle-count {
+  font-family: var(--font-tech);
+  font-size: 9px;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+.tri-chronicle-headtools {
+  display: flex;
+  gap: 2px;
+  flex: 0 0 auto;
+}
+.tri-chronicle-tool {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  padding: 0;
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+  border-radius: var(--shape-sm);
+}
+.tri-chronicle-tool:hover {
+  border-color: var(--line);
+  background: var(--paper-3);
+  color: var(--ink);
+}
+
+/* ---------------- 筛选 ------------------------------------------- */
+.tri-chronicle-filters {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--line);
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.tri-chronicle-filters::-webkit-scrollbar { display: none; }
+.tri-chronicle-filter {
+  flex: 0 0 auto;
+  padding: 3px 9px;
+  border: 1px solid var(--line);
+  border-radius: var(--shape-pill);
+  background: var(--paper-3);
+  color: var(--ink-2);
+  font-family: var(--font-sans);
+  font-size: 10px;
+  line-height: 1.4;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.tri-chronicle-filter:hover { border-color: var(--ink); }
+.tri-chronicle-filter.is-active {
+  border-color: var(--ink);
+  background: var(--ink);
+  color: var(--paper-2);
+}
+.tri-chronicle-filter-meta {
+  margin-left: auto;
+  flex: 0 0 auto;
+  font-family: var(--font-tech);
+  font-size: 8.5px;
+  letter-spacing: 0.03em;
+  color: var(--faint);
+  white-space: nowrap;
+}
+
+/* ---------------- 列表 ------------------------------------------- */
+.tri-chronicle-list {
+  flex: 1 1 auto;
+  min-height: 0;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+}
+.tri-chronicle-list::-webkit-scrollbar { width: 6px; }
+.tri-chronicle-list::-webkit-scrollbar-thumb { background: var(--line); }
+
+.tri-chronicle-item {
+  border-bottom: 1px solid var(--line);
+  border-left: 3px solid var(--ink);
+  background: var(--paper-2);
+}
+.tri-chronicle-item[data-tone="major"] { border-left-color: var(--danger-ink); background: rgba(163, 36, 27, 0.035); }
+.tri-chronicle-item[data-tone="death"] { border-left-color: #9a9a9a; background: var(--paper-3); }
+.tri-chronicle-item[data-tone="science"] { border-left-color: var(--ok-ink); }
+.tri-chronicle-item[data-tone="normal"] { border-left-color: var(--ink); }
+
+.tri-chronicle-item-card {
+  display: grid;
+  grid-template-columns: 14px minmax(0, 1fr);
+  column-gap: 6px;
+  row-gap: 3px;
+  padding: 9px 11px 10px;
+  outline: none;
+  cursor: pointer;
+}
+.tri-chronicle-item-card:hover { background: var(--paper-3); }
+.tri-chronicle-item-card:focus-visible { box-shadow: inset 0 0 0 2px var(--ink); }
+.tri-chronicle-item-icon {
+  grid-row: 1 / span 2;
+  margin-top: 2px;
+  color: var(--muted);
+}
+.tri-chronicle-item[data-tone="major"] .tri-chronicle-item-icon { color: var(--danger-ink); }
+.tri-chronicle-item[data-tone="death"] .tri-chronicle-item-icon { color: #6b6b6b; }
+.tri-chronicle-item[data-tone="science"] .tri-chronicle-item-icon { color: var(--ok-ink); }
+
+.tri-chronicle-item-meta {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  min-width: 0;
+  flex-wrap: wrap;
+  font-family: var(--font-tech);
+  font-size: 8.5px;
+  letter-spacing: 0.03em;
+  color: var(--faint);
+  font-variant-numeric: tabular-nums;
+}
+.tri-chronicle-item-year { color: var(--ink-2); font-weight: 500; }
+.tri-chronicle-item-kind {
+  padding: 0 5px;
+  border: 1px solid var(--line);
+  border-radius: var(--shape-xs);
+  color: var(--muted);
+}
+.tri-chronicle-item[data-tone="major"] .tri-chronicle-item-kind { border-color: var(--danger-ink); color: var(--danger-ink); }
+.tri-chronicle-item[data-tone="science"] .tri-chronicle-item-kind { border-color: var(--ok-ink); color: var(--ok-ink); }
+.tri-chronicle-item-stars {
+  margin-left: auto;
+  color: var(--amber);
+  font-size: 8px;
+  letter-spacing: 0.08em;
+}
+.tri-chronicle-item[data-tone="death"] .tri-chronicle-item-stars { color: var(--faint); }
+
+.tri-chronicle-item-title {
+  grid-column: 2;
+  margin: 0;
+  font-family: var(--font-sans);
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.35;
+  color: var(--ink);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+.tri-chronicle-item-detail {
+  grid-column: 2;
+  margin: 0;
+  font-size: 10.5px;
+  line-height: 1.5;
+  color: var(--muted);
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+.tri-chronicle-item-card.is-expanded .tri-chronicle-item-title,
+.tri-chronicle-item-card.is-expanded .tri-chronicle-item-detail {
+  display: block;
+  -webkit-line-clamp: unset;
+}
+.tri-chronicle-item-foot {
+  grid-column: 2;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 1px;
+  font-family: var(--font-tech);
+  font-size: 8px;
+  letter-spacing: 0.02em;
+  color: var(--faint);
+}
+.tri-chronicle-item-source { margin-left: auto; opacity: 0.7; }
+
+/* ---------------- 空态 ------------------------------------------- */
+.tri-chronicle-empty {
+  flex: 1 1 auto;
+  padding: 18px 14px;
+  border-top: 1px solid var(--line);
+}
+.tri-chronicle-empty-kicker {
+  display: block;
+  font-family: var(--font-tech);
+  font-size: 8.5px;
+  letter-spacing: 0.12em;
+  color: var(--faint);
+}
+.tri-chronicle-empty-text {
+  margin: 6px 0 0;
+  font-size: 11px;
+  line-height: 1.6;
+  color: var(--muted);
+}
+
+/* ---------------- 响应式 ----------------------------------------- */
+/* 中屏：编年史由 layout-v6.css 转为右侧浮层；这里只收紧内边距。 */
+@media (max-width: 1360px) {
+  .tri-chronicle { --chronicle-w: 276px; }
+  .tri-chronicle-item-card { padding: 8px 9px 9px; }
+}
+
+/* 移动端：底部抽屉（默认只露出 38px 的把手，点开占 46vh）。 */
+@media (max-width: 850px) {
+  .tri-chronicle {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    top: auto;
+    width: auto;
+    max-width: none;
+    height: 46vh;
+    max-height: 420px;
+    border-left: 0;
+    border-top: 1px solid var(--ink);
+    transform: translateY(calc(100% - 38px));
+    transition: transform 0.22s ease;
+    z-index: 60;
+    box-shadow: 0 -6px 18px rgba(17, 17, 17, 0.16);
+    pointer-events: auto;
+  }
+  .tri-chronicle.is-open { transform: translateY(0); }
+  .tri-chronicle.is-collapsed,
+  .tri-chronicle:not(.is-open) { width: auto; }
+  .tri-chronicle.is-collapsed .tri-chronicle-body,
+  .tri-chronicle:not(.is-open) .tri-chronicle-body { display: none; }
+  .tri-chronicle-peek {
+    display: flex;
+    width: 100%;
+    min-width: 0;
+    height: 38px;
+    min-height: 38px;
+    padding: 0 14px;
+    flex-direction: row;
+    justify-content: space-between;
+    border-left: 0;
+    border-bottom: 1px solid var(--line);
+  }
+  .tri-chronicle-peek-en,
+  .tri-chronicle-peek-cn { writing-mode: horizontal-tb; }
+  .tri-chronicle-peek-en { font-size: 9px; letter-spacing: 0.2em; }
+  .tri-chronicle-peek-cn { font-size: 12px; letter-spacing: 0.12em; }
+  .tri-chronicle.is-open .tri-chronicle-peek { display: none; }
+  .tri-chronicle.is-open .tri-chronicle-body { display: flex; }
+  .tri-chronicle-head { padding: 10px 12px 8px; }
+  .tri-chronicle-list { padding-bottom: env(safe-area-inset-bottom); }
+  .tri-chronicle-item-title { font-size: 12.5px; }
+  .tri-chronicle-item-detail { font-size: 11px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tri-chronicle { transition: none; }
+}

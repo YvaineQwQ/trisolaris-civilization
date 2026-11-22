@@ -22,17 +22,18 @@ export interface EraInfo {
 }
 
 const FALLBACK_ERAS: EraInfo[] = [
-  { era: 1, name: "原始时代", subtitle: "部落" },
-  { era: 2, name: "农业时代", subtitle: "城邦" },
-  { era: 3, name: "工业时代", subtitle: "蒸汽与电气" },
-  { era: 4, name: "信息时代", subtitle: "航天" },
-  { era: 5, name: "星际时代", subtitle: "抉择" },
+  { era: 1, name: "仰望星空", subtitle: "原始部落" },
+  { era: 2, name: "文明曙光", subtitle: "农业城邦" },
+  { era: 3, name: "蒸汽纪元", subtitle: "蒸汽与钢铁" },
+  { era: 4, name: "电气纪元", subtitle: "电力与内燃机" },
+  { era: 5, name: "信息纪元", subtitle: "信息与早期航天" },
+  { era: 6, name: "文明的选择", subtitle: "星际文明" },
 ];
 
 function rawEras(): EraInfo[] {
   const list = Array.isArray(ERAS) ? ERAS : [];
   const out: EraInfo[] = [];
-  for (let i = 0; i < 5; i += 1) {
+  for (let i = 0; i < 6; i += 1) {
     const source = list[i] as { era?: number; name?: string; subtitle?: string } | undefined;
     const fallback = FALLBACK_ERAS[i];
     out.push({
@@ -71,7 +72,7 @@ export function eraLabel(era: number | null | undefined): string {
 }
 
 /* ------------------------------------------------------------------ *
- *  Era emblem: concentric rings + E1..E5 tick arc                    *
+ *  Era emblem: concentric rings + E1..E6 tick arc                    *
  * ------------------------------------------------------------------ */
 
 export interface EraEmblemHandle {
@@ -79,7 +80,7 @@ export interface EraEmblemHandle {
   update(era: number, progress?: number): void;
 }
 
-/** Small SVG emblem: two concentric rings, five era ticks and the E-number. */
+/** Small SVG emblem: two concentric rings, six era ticks and the E-number. */
 export function eraEmblem(size = 30, className = ""): EraEmblemHandle {
   const svg = document.createElementNS(SVG_NS, "svg");
   svg.setAttribute("viewBox", "0 0 64 64");
@@ -148,7 +149,7 @@ export function eraEmblem(size = 30, className = ""): EraEmblemHandle {
 }
 
 /* ------------------------------------------------------------------ *
- *  Era rail: five-node timeline                                       *
+ *  Era rail: six-node timeline                                        *
  * ------------------------------------------------------------------ */
 
 export interface EraRailOptions {
@@ -164,7 +165,7 @@ export interface EraRailHandle {
   update(current: number, progress?: number): void;
 }
 
-/** Five-node era timeline with past / current / future states. */
+/** Six-node era timeline with past / current / future states. */
 export function eraRail(options: EraRailOptions = {}): EraRailHandle {
   const root = el("div", {
     cls:

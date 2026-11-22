@@ -16,11 +16,11 @@ export const STARTUP_MARKUP = `
       <b>三体纪元 · TRISOLARIS</b>
       <span>CIVILIZATION ARCHIVE / 文明档案</span>
     </div>
-    <span class="su-brand-build">V1.4 · CONTINUITY PROTOCOL</span>
+    <span class="su-brand-build">V1.6 · CONTINUITY PROTOCOL</span>
   </div>
 
   <div class="su-emblem-slot">
-    <img class="su-emblem" alt="纪元存续理事会徽章" />
+    <img class="su-emblem" alt="三体纪元存续理事会徽章 · 三颗银色天体与开启的轨道" />
     <img class="su-reticle-asset" alt="" aria-hidden="true" />
   </div>
 

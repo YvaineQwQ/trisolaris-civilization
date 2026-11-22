@@ -10,7 +10,7 @@ import {
 } from "../core/constants";
 import { GameLog } from "../core/logger";
 import type {
-  DepartmentId, GameState, LogEntry, ObservationKind, ResourceId, StarId, StarTarget,
+  DepartmentId, GameState, LogEntry, ObservationKind, ResearchCategory, ResourceId, StarId, StarTarget,
   TechSchool,
 } from "../core/types";
 import { stepPhysics } from "../physics/nbody";
@@ -27,16 +27,18 @@ import type { ObservationContext } from "../observation/observation";
 import { buildTaskOptions, checkUpgrade } from "../observation/observatory";
 import { observationContextFor } from "./state";
 import {
-  applyEraAdvance, buildingEra, canAdvanceEra, eraStatus, getEraDef, resourceUnlocked,
+  applyEraAdvance, buildingEra, canAdvanceEra, eraStatus, getEraDef, migrateLegacyEra, resourceUnlocked,
 } from "../civilization/eras";
+import { canAfford, spendResources } from "../civilization/state";
 import {
   advanceConstruction, aggregateBuildingEffects, checkBuild, constructionSpeed,
   getBuildingCount, startConstruction, startUpgrade, totalMaintenance, totalWorkers,
 } from "../buildings/system";
 import { BUILDING_DEFS, getBuildingDef } from "../buildings/definitions";
 import {
-  activeResearchInfo, advanceResearch, aggregateTechEffects, canResearch,
-  getTechMultipliers, setSchoolFocus, startResearch, techDisplayName,
+  activeResearchInfo, advanceResearch, aggregateTechEffects, applyResearchBoost, canResearch,
+  fundingModifiers, getTechMultipliers, isLegacyTechState, normalizeTechState, researchBoostQuote,
+  setDevelopmentCategories, setResearchFunding, setSchoolFocus, startResearch, techDisplayName,
 } from "../technology/system";
 import { chooseDoctrine as chooseTechDoctrine } from "../technology/system";
 import {
@@ -208,18 +210,27 @@ export class Game implements GameApi, GameActions {
     }
 
     // 1) Research: spend stockpiled science into the active project.
+    // v1.6: 科研资源倾斜调整科研点产出与非科研产出；科学院建筑群提供全文明研究速度。
+    const buildingEffects = aggregateBuildingEffects(s.buildings, BUILDING_DEFS, s.civ.era);
     const techMult = getTechMultipliers(s.tech);
+    const funding = fundingModifiers(s.tech);
+    techMult.research *= funding.scienceProduction;
+    for (const id of Object.keys(techMult.production) as ResourceId[]) {
+      if (id === "science") continue;
+      techMult.production[id] *= funding.otherProduction;
+    }
     if (politicsEffects) {
       techMult.research *= politicsEffects.researchMultiplier;
       techMult.industry *= politicsEffects.industryMultiplier;
       techMult.agriculture *= politicsEffects.agricultureMultiplier;
     }
+    const academyResearchSpeed = 1 + (buildingEffects.researchSpeed ?? 0);
     let researchSpent = 0;
     let researchCompleted: string | null = null;
     if (s.tech.activeTech) {
       const budget = s.civ.resources.science.amount;
       if (budget > 0) {
-        const result = advanceResearch(s.tech, budget);
+        const result = advanceResearch(s.tech, budget, academyResearchSpeed);
         researchSpent = result.spent;
         researchCompleted = result.completedId;
       }
@@ -236,13 +247,12 @@ export class Game implements GameApi, GameActions {
       this.log.add(entry.category, entry.severity, entry.message, year, turn);
     }
 
-    // 4) Building & technology aggregate effects.
-    const buildingEffects = aggregateBuildingEffects(s.buildings, BUILDING_DEFS, s.civ.era);
+    // 4) Building & technology aggregate effects (buildingEffects computed before research).
     if (politicsEffects && buildingEffects.production) {
       buildingEffects.production.food = (buildingEffects.production.food ?? 0) * politicsEffects.agricultureMultiplier;
     }
     const techEffects = aggregateTechEffects(s.tech);
-    techMult.research *= techEffects.researchSpeed ?? 1;
+    void academyResearchSpeed;
     const maintenance = totalMaintenance(s.buildings);
     const workerJobs = totalWorkers(s.buildings);
 
@@ -620,6 +630,15 @@ export class Game implements GameApi, GameActions {
       this.addLog("build", "warning", `升级 ${def.name} → ${target.name} 需要第 ${targetEra} 时代。`);
       return;
     }
+    const missingTech = target.requiresTech.filter((techId) => !s.tech.researched.includes(techId));
+    if (missingTech.length > 0) {
+      this.addLog(
+        "build",
+        "warning",
+        `升级 ${def.name} → ${target.name} 需要科技：${missingTech.map((techId) => techDisplayName(techId)).join("、")}。`,
+      );
+      return;
+    }
     const result = startUpgrade(s.buildings, s.civ, def, target, s.yearsElapsed);
     if (!result.ok) {
       this.addLog("build", "warning", "升级失败：" + (result.reason ?? "条件不满足"));
@@ -692,6 +711,69 @@ export class Game implements GameApi, GameActions {
       return;
     }
     this.addLog("tech", "success", "教义确立：" + techDisplayName(techId) + "。同组其他路线已被历史排除。");
+  }
+
+  /** v1.6 发展纲领：E3 起选择 1~2 个研究大类作为重点。 */
+  chooseDevelopmentCategories(categories: ResearchCategory[]): void {
+    const s = this.state;
+    if (s.gameOver) return;
+    const result = setDevelopmentCategories(s.tech, categories, s.civ.era);
+    if (!result.ok) {
+      this.addLog("tech", "warning", "无法确定发展纲领：" + (result.reason ?? "条件不满足"));
+      return;
+    }
+    const names = (result.categories ?? []).map((id) => (id === "natural" ? "自然科学" : id === "engineering" ? "工程应用" : "社会科学"));
+    this.addLog(
+      "tech",
+      "success",
+      `发展纲领确立：${names.join(" + ")}。已选大类研究速度 +10%，未选大类 -35%。`,
+    );
+  }
+
+  /** v1.6 科研资源倾斜：0~100%，越高研究越快，但非科研资源产出下降。 */
+  setResearchFunding(percent: number): void {
+    const s = this.state;
+    if (s.gameOver) return;
+    const result = setResearchFunding(s.tech, percent);
+    if (!result.ok) {
+      this.addLog("tech", "warning", "无法调整科研资源倾斜：" + (result.reason ?? "条件不满足"));
+      return;
+    }
+    const funding = fundingModifiers(s.tech);
+    this.addLog(
+      "tech",
+      "info",
+      `科研资源倾斜调整为 ${Math.round(result.percent)}%：研究速度 ×${funding.researchSpeed.toFixed(2)}，非科研产出 ×${funding.otherProduction.toFixed(2)}。`,
+    );
+  }
+
+  /** v1.6 注入资源加速：消耗矿物/金属/能源，立即为当前项目增加进度（每回合限一次）。 */
+  boostResearch(): void {
+    const s = this.state;
+    if (s.gameOver) return;
+    const quote = researchBoostQuote(s.tech, s.civ.era, s.civ.turn);
+    if (!quote.ok) {
+      this.addLog("tech", "warning", "无法注入资源加速：" + (quote.reason ?? "条件不满足"));
+      return;
+    }
+    const cost = quote.cost;
+    if (!canAfford(s.civ, cost).ok) {
+      this.addLog("tech", "warning", "注入资源不足：需要矿物/金属/能源，资源库存不足。");
+      return;
+    }
+    spendResources(s.civ, cost);
+    const result = applyResearchBoost(s.tech, quote.gain, s.civ.turn);
+    const costText = Object.entries(cost)
+      .map(([id, value]) => `${("minerals" === id ? "矿物" : "metals" === id ? "金属" : "能源")} ${value}`)
+      .join("、");
+    this.addLog(
+      "tech",
+      result.completedId ? "success" : "info",
+      `注入资源加速：消耗 ${costText}，项目「${quote.techName}」进度 +${Math.round(result.gain * 10) / 10}（${Math.round(quote.progressRatio * 100)}% 剩余进度）。`,
+    );
+    if (result.completedId) {
+      this.addLog("tech", "success", "研究完成：" + techDisplayName(result.completedId));
+    }
   }
 
   /** v1.3 政治：任命候选人。 */
@@ -866,6 +948,11 @@ export class Game implements GameApi, GameActions {
   foundColony(): void {
     const s = this.state;
     if (s.gameOver) return;
+    // v1.6: 星际殖民不得早于 E5（信息与早期航天）。
+    if (s.civ.era < 5) {
+      this.addLog("civilization", "warning", "星际殖民需要进入第 5 时代（信息与早期航天）。");
+      return;
+    }
     const result = foundColony(s.civ, s.tech, s.civ.resources, s.yearsElapsed);
     if (!result.ok) {
       this.addLog("civilization", "warning", "无法建立殖民地：" + (result.reason ?? "条件不满足"));
@@ -877,8 +964,12 @@ export class Game implements GameApi, GameActions {
   buildPlanetEngine(): void {
     const s = this.state;
     if (s.gameOver) return;
+    if (s.civ.era < 6) {
+      this.addLog("civilization", "warning", "行星发动机需要进入第 6 时代（星际文明）。");
+      return;
+    }
     if (!planetEngineReady(s.civ, s.buildings, s.tech)) {
-      this.addLog("civilization", "warning", "行星发动机尚未具备启动条件：需要第 5 时代、相应科技与已建成的发动机。");
+      this.addLog("civilization", "warning", "行星发动机尚未具备启动条件：需要第 6 时代、相应科技与已建成的发动机。");
       return;
     }
     this.finishGame(true, "流浪行星", "行星发动机点火，母星带着整个文明驶离三星的引力轨道。", "planet-engine");
@@ -972,6 +1063,12 @@ export class Game implements GameApi, GameActions {
 
   /** Replace the whole simulation state (load / import). */
   replaceState(state: GameState): void {
+    // v1.6 存档兼容：旧档（缺少 v1.6 科研政策字段）按原 era 值迁移到六时代坐标系；
+    // 旧 E3 保留为 E3（蒸汽），旧 E4 → E5，旧 E5 → E6，科技 id 全部保留。
+    if (isLegacyTechState(state.tech)) {
+      state.civ.era = migrateLegacyEra(state.civ.era);
+    }
+    normalizeTechState(state.tech);
     this.state = state;
     this.log.clear();
     this.log.restore(state.log, state.nextLogId);

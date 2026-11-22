@@ -1,25 +1,31 @@
 /**
- * 建筑定义表（38 座，五时代 · 原始部落 → 星际文明）。
+ * 建筑定义表（48 座 · 六时代 · 原始部落 → 星际文明）。
  *
- * 时代规则（与 docs/ERA_SYSTEM_SPEC.md 一致）：
- *  - E1（仰望星空 / 原始）：仅使用 food / water / minerals / science；禁止 metals / energy。
- *  - E2（文明曙光 / 城邦）：解锁 metals；仍然禁止 energy（电力）。
- *  - E3（混沌时代 / 蒸汽与电气）：解锁 energy，此后全部资源可用。
- *  - 每座建筑只能使用「其所属时代已解锁」的资源作为 cost / maintenance。
- *  - 每时代至少 5 座「本时代可新建」建筑；旧时代建筑需逐级升级（upgradeTo），
- *    否则产出按 outdatedMultiplier 折减（见 civilization/eras.ts 与 buildings/system.ts）。
+ * 时代规则（与 docs/ERA_V6.md、src/civilization/eras.ts 一致）：
+ *  - E1（仰望星空 / 原始部落）：仅 food / water / minerals / science；禁止 metals / energy。
+ *  - E2（文明曙光 / 农业城邦）：解锁 metals；禁止 energy。
+ *  - E3（蒸汽纪元）：解锁 energy（蒸汽动力）；禁止电力/内燃机/无线电/计算机/卫星/空间站/核能相关建筑。
+ *  - E4（电气纪元）：电力/无线电/早期计算机/核裂变可用；卫星站、太空港与聚变不得早于 E5。
+ *  - E5（信息与早期航天）：卫星站、太空港、聚变反应堆、超算中心。
+ *  - E6（星际文明）：生态穹顶、纳米工厂、量子实验室、深空阵列、殖民基地、行星发动机。
+ *  - 每座建筑只能使用「其所属时代已解锁」的资源作为 cost / maintenance / upgradeCost。
+ *  - 旧时代建筑需逐级升级（upgradeTo），否则产出按 outdatedMultiplier 折减。
  *
- * 升级链（upgradeGroup / tier / upgradeTo）：
- *  1. housing  聚落营地 → 城邦住宅 → 住宅区 → 高级住区 → 生态穹顶城市（tier 1..5）
- *  2. food     原始农田 → 灌溉农田 → 机械化农场 → 垂直农场 → 人造生物圈农场
- *  3. water    水井 → 水渠 → 水处理厂 → 循环水厂 → 大气水循环阵列
- *  4. industry 采石场 → 矿场 → 钢铁厂 → 自动化矿山 → 纳米制造厂（矿物/金属链）
- *  5. research 长者议事棚 → 学园 → 科学院 → 超算中心 → 量子实验室
+ * 升级链（upgradeGroup / tier / upgradeTo，每个链的 era 与 tier 都逐级 +1）：
+ *  1. housing  聚落营地 → 城邦住宅 → 住宅区 → 公寓楼 → 高级住区 → 生态穹顶城市（E1..E6）
+ *  2. food     原始农田 → 灌溉农田 → 机械化农场 → 化肥农场 → 垂直农场 → 人造生物圈农场
+ *  3. water    水井 → 水渠 → 水处理厂 → 污水回用厂 → 循环水厂 → 大气水循环阵列
+ *  4. industry 采石场 → 矿场 → 钢铁厂 → 电气化工厂 → 自动化矿山 → 纳米制造厂
+ *  5. research 长者议事棚 → 学园 → 科学院 → 电气研究院 → 超算中心 → 量子实验室
  *  6. energy   燃煤电站(E3) → 核电站(E4) → 聚变反应堆(E5)
  *  7. defense  地下避难所(E3) → 气候调节设施(E4)
  *  8. storage  集市(E2) → 仓库(E3)
- *  9. space    卫星站(E4) → 深空雷达阵列(E5)；太空港 / 星际殖民基地 / 行星发动机为独立高级建筑
+ *  9. space    卫星站(E5) → 深空雷达阵列(E6)
  * 10. observatory 观星台（唯一，E1 可建，提供观测 Lv.1；Lv.2~6 走观测系统升级）
+ * 11. academyComplex 科学院建筑群 Lv.1(E2) → Lv.2(E3) → Lv.3(E4) → Lv.4(E5) → Lv.5(E6)：
+ *     独立于既有学园（academy）与超算（supercomputer），每级提供全文明研究速度 +8%/16%/24%/32%/40%
+ *     与逐级科研产出，升级需要资源 + 科技前置。
+ *     太空港 / 星际殖民基地 / 行星发动机为独立高级建筑。
  *
  * 数值口径（1 回合 = 0.5 年）：
  *  - cost：一次性建造消耗；maintenance：每回合维护消耗；
@@ -50,11 +56,6 @@ export const BUILDING_CATEGORY_NAMES: Record<BuildingCategory, string> = {
 
 /** 全部建筑定义（顺序即 UI 展示顺序：按时代、分类、升级层级排列）。 */
 export const BUILDING_DEFS: BuildingDefEx[] = [
-  /* ================================================================== *
-   *  E1 · 仰望星空（原始部落）—— 仅 food / water / minerals / science
-   * ================================================================== */
-
-  /* ------------------------------ 基础 ------------------------------ */
   {
     id: "camp",
     name: "聚落营地",
@@ -71,7 +72,7 @@ export const BUILDING_DEFS: BuildingDefEx[] = [
     tier: 1,
     upgradeGroup: "housing",
     upgradeTo: "townHouse",
-    upgradeCost: {},
+    upgradeCost: {  },
     upgradeTurns: 0,
     outdatedMultiplier: 0.6,
     effects: { housing: 220, stability: 1 },
@@ -93,7 +94,7 @@ export const BUILDING_DEFS: BuildingDefEx[] = [
     tier: 1,
     upgradeGroup: "food",
     upgradeTo: "irrigatedFarm",
-    upgradeCost: {},
+    upgradeCost: {  },
     upgradeTurns: 0,
     outdatedMultiplier: 0.6,
     effects: { production: { food: 110 } },
@@ -115,7 +116,7 @@ export const BUILDING_DEFS: BuildingDefEx[] = [
     tier: 1,
     upgradeGroup: "water",
     upgradeTo: "aqueduct",
-    upgradeCost: {},
+    upgradeCost: {  },
     upgradeTurns: 0,
     outdatedMultiplier: 0.6,
     effects: { production: { water: 120 } },
@@ -137,14 +138,12 @@ export const BUILDING_DEFS: BuildingDefEx[] = [
     tier: 1,
     upgradeGroup: "industry",
     upgradeTo: "mine",
-    upgradeCost: {},
+    upgradeCost: {  },
     upgradeTurns: 0,
     outdatedMultiplier: 0.6,
     effects: { production: { minerals: 40 } },
     maxCount: 10,
   },
-
-  /* ------------------------------ 科研 ------------------------------ */
   {
     id: "elderHall",
     name: "长者议事棚",
@@ -161,7 +160,7 @@ export const BUILDING_DEFS: BuildingDefEx[] = [
     tier: 1,
     upgradeGroup: "research",
     upgradeTo: "academy",
-    upgradeCost: {},
+    upgradeCost: {  },
     upgradeTurns: 0,
     outdatedMultiplier: 0.6,
     effects: { research: 6, stability: 1 },
@@ -183,20 +182,14 @@ export const BUILDING_DEFS: BuildingDefEx[] = [
     tier: 1,
     upgradeGroup: "observatory",
     upgradeTo: null,
-    upgradeCost: {},
+    upgradeCost: {  },
     upgradeTurns: 0,
     outdatedMultiplier: 0.6,
     effects: { research: 8, observationBonus: 0.08 },
     maxCount: 1,
-    unique: true,
     observationLevel: 1,
+    unique: true,
   },
-
-  /* ================================================================== *
-   *  E2 · 文明曙光（农业城邦）—— 解锁 metals，仍无 energy
-   * ================================================================== */
-
-  /* ------------------------------ 基础 ------------------------------ */
   {
     id: "townHouse",
     name: "城邦住宅",
@@ -285,8 +278,6 @@ export const BUILDING_DEFS: BuildingDefEx[] = [
     effects: { production: { minerals: 220, metals: 60 } },
     maxCount: 10,
   },
-
-  /* ------------------------------ 科研 ------------------------------ */
   {
     id: "academy",
     name: "学园",
@@ -309,8 +300,6 @@ export const BUILDING_DEFS: BuildingDefEx[] = [
     effects: { research: 16, stability: 2 },
     maxCount: 4,
   },
-
-  /* ------------------------------ 仓储 ------------------------------ */
   {
     id: "market",
     name: "集市",
@@ -327,21 +316,12 @@ export const BUILDING_DEFS: BuildingDefEx[] = [
     tier: 1,
     upgradeGroup: "storage",
     upgradeTo: "warehouse",
-    upgradeCost: {},
+    upgradeCost: {  },
     upgradeTurns: 0,
     outdatedMultiplier: 0.6,
-    effects: {
-      capacity: { food: 4000, water: 3000, minerals: 3000, metals: 2000, energy: 2000, science: 20000 },
-      stability: 1,
-    },
+    effects: { capacity: { food: 4000, water: 3000, minerals: 3000, metals: 2000, energy: 2000, science: 20000 }, stability: 1 },
     maxCount: 6,
   },
-
-  /* ================================================================== *
-   *  E3 · 混沌时代（蒸汽与电气）—— 解锁 energy
-   * ================================================================== */
-
-  /* ------------------------------ 基础 ------------------------------ */
   {
     id: "housingDistrict",
     name: "住宅区",
@@ -357,7 +337,7 @@ export const BUILDING_DEFS: BuildingDefEx[] = [
     era: 3,
     tier: 3,
     upgradeGroup: "housing",
-    upgradeTo: "highRise",
+    upgradeTo: "apartmentBlock",
     upgradeCost: { minerals: 480, metals: 180, energy: 150 },
     upgradeTurns: 4,
     outdatedMultiplier: 0.6,
@@ -379,7 +359,7 @@ export const BUILDING_DEFS: BuildingDefEx[] = [
     era: 3,
     tier: 3,
     upgradeGroup: "food",
-    upgradeTo: "verticalFarm",
+    upgradeTo: "fertilizedFarm",
     upgradeCost: { minerals: 430, metals: 160, energy: 180 },
     upgradeTurns: 4,
     outdatedMultiplier: 0.6,
@@ -401,7 +381,7 @@ export const BUILDING_DEFS: BuildingDefEx[] = [
     era: 3,
     tier: 3,
     upgradeGroup: "water",
-    upgradeTo: "recyclingPlant",
+    upgradeTo: "sewagePlant",
     upgradeCost: { minerals: 400, metals: 140, energy: 170 },
     upgradeTurns: 4,
     outdatedMultiplier: 0.6,
@@ -427,13 +407,9 @@ export const BUILDING_DEFS: BuildingDefEx[] = [
     upgradeCost: { minerals: 320, metals: 130, energy: 100 },
     upgradeTurns: 4,
     outdatedMultiplier: 0.6,
-    effects: {
-      capacity: { food: 7000, water: 5000, minerals: 5000, metals: 3500, energy: 3500, science: 40000 },
-    },
+    effects: { capacity: { food: 7000, water: 5000, minerals: 5000, metals: 3500, energy: 3500, science: 40000 } },
     maxCount: 6,
   },
-
-  /* ------------------------------ 工业 ------------------------------ */
   {
     id: "steelMill",
     name: "钢铁厂",
@@ -449,7 +425,7 @@ export const BUILDING_DEFS: BuildingDefEx[] = [
     era: 3,
     tier: 3,
     upgradeGroup: "industry",
-    upgradeTo: "automatedMine",
+    upgradeTo: "electrifiedFactory",
     upgradeCost: { minerals: 450, metals: 190, energy: 220 },
     upgradeTurns: 5,
     outdatedMultiplier: 0.6,
@@ -472,14 +448,12 @@ export const BUILDING_DEFS: BuildingDefEx[] = [
     tier: 1,
     upgradeGroup: "energy",
     upgradeTo: "nuclearPlant",
-    upgradeCost: {},
+    upgradeCost: {  },
     upgradeTurns: 0,
     outdatedMultiplier: 0.6,
     effects: { production: { energy: 560 } },
     maxCount: 10,
   },
-
-  /* ------------------------------ 科研 ------------------------------ */
   {
     id: "scienceAcademy",
     name: "科学院",
@@ -495,15 +469,13 @@ export const BUILDING_DEFS: BuildingDefEx[] = [
     era: 3,
     tier: 3,
     upgradeGroup: "research",
-    upgradeTo: "supercomputer",
+    upgradeTo: "researchInstitute",
     upgradeCost: { minerals: 490, metals: 180, energy: 190 },
     upgradeTurns: 5,
     outdatedMultiplier: 0.6,
     effects: { research: 34, stability: 2, observationBonus: 0.02 },
     maxCount: 4,
   },
-
-  /* ------------------------------ 高级 ------------------------------ */
   {
     id: "bunker",
     name: "地下避难所",
@@ -520,18 +492,12 @@ export const BUILDING_DEFS: BuildingDefEx[] = [
     tier: 1,
     upgradeGroup: "defense",
     upgradeTo: "climateControl",
-    upgradeCost: {},
+    upgradeCost: {  },
     upgradeTurns: 0,
     outdatedMultiplier: 0.6,
     effects: { housing: 500, thermalShielding: 5, disasterResistance: 0.2, stability: 2 },
     maxCount: 6,
   },
-
-  /* ================================================================== *
-   *  E4 · 预测未来（信息与航天）
-   * ================================================================== */
-
-  /* ------------------------------ 基础 ------------------------------ */
   {
     id: "highRise",
     name: "高级住区",
@@ -543,9 +509,9 @@ export const BUILDING_DEFS: BuildingDefEx[] = [
     maintenance: { energy: 110 },
     workers: 0,
     requiresTech: [],
-    requiresEra: 4,
-    era: 4,
-    tier: 4,
+    requiresEra: 5,
+    era: 5,
+    tier: 5,
     upgradeGroup: "housing",
     upgradeTo: "ecodomeCity",
     upgradeCost: { minerals: 1150, metals: 480, energy: 450 },
@@ -565,9 +531,9 @@ export const BUILDING_DEFS: BuildingDefEx[] = [
     maintenance: { energy: 220 },
     workers: 180,
     requiresTech: ["bio_ecology"],
-    requiresEra: 4,
-    era: 4,
-    tier: 4,
+    requiresEra: 5,
+    era: 5,
+    tier: 5,
     upgradeGroup: "food",
     upgradeTo: "biosphereFarm",
     upgradeCost: { minerals: 1000, metals: 420, energy: 540 },
@@ -586,10 +552,10 @@ export const BUILDING_DEFS: BuildingDefEx[] = [
     buildTurns: 6,
     maintenance: { energy: 200 },
     workers: 160,
-    requiresTech: ["energy_solar"],
-    requiresEra: 4,
-    era: 4,
-    tier: 4,
+    requiresTech: ["energy_hydro"],
+    requiresEra: 5,
+    era: 5,
+    tier: 5,
     upgradeGroup: "water",
     upgradeTo: "atmosphericWater",
     upgradeCost: { minerals: 990, metals: 390, energy: 510 },
@@ -598,8 +564,6 @@ export const BUILDING_DEFS: BuildingDefEx[] = [
     effects: { production: { water: 1500 } },
     maxCount: 12,
   },
-
-  /* ------------------------------ 工业 ------------------------------ */
   {
     id: "automatedMine",
     name: "自动化矿山",
@@ -611,9 +575,9 @@ export const BUILDING_DEFS: BuildingDefEx[] = [
     maintenance: { energy: 260 },
     workers: 160,
     requiresTech: ["industry_alloys"],
-    requiresEra: 4,
-    era: 4,
-    tier: 4,
+    requiresEra: 5,
+    era: 5,
+    tier: 5,
     upgradeGroup: "industry",
     upgradeTo: "nanoFactory",
     upgradeCost: { minerals: 1080, metals: 470, energy: 600 },
@@ -632,7 +596,7 @@ export const BUILDING_DEFS: BuildingDefEx[] = [
     buildTurns: 7,
     maintenance: { minerals: 60 },
     workers: 170,
-    requiresTech: ["energy_solar"],
+    requiresTech: ["energy_nuclear"],
     requiresEra: 4,
     era: 4,
     tier: 2,
@@ -644,8 +608,6 @@ export const BUILDING_DEFS: BuildingDefEx[] = [
     effects: { production: { energy: 1700 } },
     maxCount: 8,
   },
-
-  /* ------------------------------ 科研 ------------------------------ */
   {
     id: "supercomputer",
     name: "超算中心",
@@ -656,10 +618,10 @@ export const BUILDING_DEFS: BuildingDefEx[] = [
     buildTurns: 7,
     maintenance: { energy: 240 },
     workers: 150,
-    requiresTech: ["industry_automation", "energy_solar"],
-    requiresEra: 4,
-    era: 4,
-    tier: 4,
+    requiresTech: ["comp_electronic", "energy_electric"],
+    requiresEra: 5,
+    era: 5,
+    tier: 5,
     upgradeGroup: "research",
     upgradeTo: "quantumLab",
     upgradeCost: { minerals: 1140, metals: 490, energy: 660 },
@@ -668,8 +630,6 @@ export const BUILDING_DEFS: BuildingDefEx[] = [
     effects: { research: 85, observationBonus: 0.05 },
     maxCount: 3,
   },
-
-  /* ------------------------------ 高级 ------------------------------ */
   {
     id: "climateControl",
     name: "气候调节设施",
@@ -680,7 +640,7 @@ export const BUILDING_DEFS: BuildingDefEx[] = [
     buildTurns: 7,
     maintenance: { energy: 300, minerals: 20 },
     workers: 120,
-    requiresTech: ["energy_solar"],
+    requiresTech: ["energy_electric"],
     requiresEra: 4,
     era: 4,
     tier: 2,
@@ -703,23 +663,17 @@ export const BUILDING_DEFS: BuildingDefEx[] = [
     maintenance: { energy: 120 },
     workers: 90,
     requiresTech: ["space_deep"],
-    requiresEra: 4,
-    era: 4,
+    requiresEra: 5,
+    era: 5,
     tier: 1,
     upgradeGroup: "space",
     upgradeTo: "deepSpaceArray",
-    upgradeCost: {},
+    upgradeCost: {  },
     upgradeTurns: 0,
     outdatedMultiplier: 0.6,
     effects: { observationBonus: 0.2, research: 25, warningBonus: 1 },
     maxCount: 4,
   },
-
-  /* ================================================================== *
-   *  E5 · 文明的选择（星际文明）
-   * ================================================================== */
-
-  /* ------------------------------ 基础 ------------------------------ */
   {
     id: "ecodomeCity",
     name: "生态穹顶城市",
@@ -731,9 +685,9 @@ export const BUILDING_DEFS: BuildingDefEx[] = [
     maintenance: { energy: 220, minerals: 20 },
     workers: 0,
     requiresTech: ["bio_genetic"],
-    requiresEra: 5,
-    era: 5,
-    tier: 5,
+    requiresEra: 6,
+    era: 6,
+    tier: 6,
     upgradeGroup: "housing",
     upgradeTo: null,
     upgradeCost: { minerals: 2500, metals: 1080, energy: 1020 },
@@ -752,9 +706,9 @@ export const BUILDING_DEFS: BuildingDefEx[] = [
     maintenance: { energy: 380 },
     workers: 240,
     requiresTech: ["bio_genetic"],
-    requiresEra: 5,
-    era: 5,
-    tier: 5,
+    requiresEra: 6,
+    era: 6,
+    tier: 6,
     upgradeGroup: "food",
     upgradeTo: null,
     upgradeCost: { minerals: 2300, metals: 960, energy: 1200 },
@@ -773,9 +727,9 @@ export const BUILDING_DEFS: BuildingDefEx[] = [
     maintenance: { energy: 360 },
     workers: 220,
     requiresTech: ["energy_fusion"],
-    requiresEra: 5,
-    era: 5,
-    tier: 5,
+    requiresEra: 6,
+    era: 6,
+    tier: 6,
     upgradeGroup: "water",
     upgradeTo: null,
     upgradeCost: { minerals: 2250, metals: 930, energy: 1140 },
@@ -783,8 +737,6 @@ export const BUILDING_DEFS: BuildingDefEx[] = [
     effects: { production: { water: 3200 } },
     maxCount: 12,
   },
-
-  /* ------------------------------ 工业 ------------------------------ */
   {
     id: "nanoFactory",
     name: "纳米制造厂",
@@ -796,9 +748,9 @@ export const BUILDING_DEFS: BuildingDefEx[] = [
     maintenance: { energy: 420, minerals: 40 },
     workers: 260,
     requiresTech: ["industry_megastructure"],
-    requiresEra: 5,
-    era: 5,
-    tier: 5,
+    requiresEra: 6,
+    era: 6,
+    tier: 6,
     upgradeGroup: "industry",
     upgradeTo: null,
     upgradeCost: { minerals: 2700, metals: 1200, energy: 1560 },
@@ -827,8 +779,6 @@ export const BUILDING_DEFS: BuildingDefEx[] = [
     effects: { production: { energy: 4800 } },
     maxCount: 8,
   },
-
-  /* ------------------------------ 科研 ------------------------------ */
   {
     id: "quantumLab",
     name: "量子实验室",
@@ -840,9 +790,9 @@ export const BUILDING_DEFS: BuildingDefEx[] = [
     maintenance: { energy: 460, minerals: 30 },
     workers: 240,
     requiresTech: ["industry_quantum"],
-    requiresEra: 5,
-    era: 5,
-    tier: 5,
+    requiresEra: 6,
+    era: 6,
+    tier: 6,
     upgradeGroup: "research",
     upgradeTo: null,
     upgradeCost: { minerals: 2880, metals: 1260, energy: 1680 },
@@ -850,8 +800,6 @@ export const BUILDING_DEFS: BuildingDefEx[] = [
     effects: { research: 260, observationBonus: 0.08 },
     maxCount: 3,
   },
-
-  /* ------------------------------ 高级 ------------------------------ */
   {
     id: "deepSpaceArray",
     name: "深空雷达阵列",
@@ -863,8 +811,8 @@ export const BUILDING_DEFS: BuildingDefEx[] = [
     maintenance: { energy: 280 },
     workers: 160,
     requiresTech: ["astro_chaos"],
-    requiresEra: 5,
-    era: 5,
+    requiresEra: 6,
+    era: 6,
     tier: 2,
     upgradeGroup: "space",
     upgradeTo: null,
@@ -889,7 +837,7 @@ export const BUILDING_DEFS: BuildingDefEx[] = [
     tier: 1,
     upgradeGroup: "space",
     upgradeTo: null,
-    upgradeCost: {},
+    upgradeCost: {  },
     upgradeTurns: 0,
     effects: { industry: 90, colonyProgress: 30, stability: 1 },
     maxCount: 2,
@@ -905,12 +853,12 @@ export const BUILDING_DEFS: BuildingDefEx[] = [
     maintenance: { energy: 260, metals: 20 },
     workers: 240,
     requiresTech: ["space_colony"],
-    requiresEra: 5,
-    era: 5,
+    requiresEra: 6,
+    era: 6,
     tier: 1,
     upgradeGroup: "space",
     upgradeTo: null,
-    upgradeCost: {},
+    upgradeCost: {  },
     upgradeTurns: 0,
     effects: { colonyProgress: 45 },
     maxCount: 1,
@@ -927,16 +875,229 @@ export const BUILDING_DEFS: BuildingDefEx[] = [
     maintenance: { energy: 800, metals: 80 },
     workers: 500,
     requiresTech: ["space_engine"],
-    requiresEra: 5,
-    era: 5,
+    requiresEra: 6,
+    era: 6,
     tier: 1,
     upgradeGroup: "space",
     upgradeTo: null,
-    upgradeCost: {},
+    upgradeCost: {  },
     upgradeTurns: 0,
     effects: { industry: 150, colonyProgress: 60, stability: -10, disasterResistance: 0.1 },
     maxCount: 1,
     unique: true,
+  },
+  {
+    id: "academyComplex1",
+    name: "科学院·讲习所",
+    category: "science",
+    description: "科学院建筑群的最高层级 Lv.1：讲习所、藏书室与首批专职研究者。全文明研究速度 +8%，科研产出 +20/回合。升级链：科学院建筑群 Lv.1→Lv.5（独立于学园与超算）。",
+    icon: "book",
+    cost: { minerals: 340, metals: 90 },
+    buildTurns: 4,
+    maintenance: { food: 14 },
+    workers: 50,
+    requiresTech: ["comp_archive"],
+    requiresEra: 2,
+    era: 2,
+    tier: 1,
+    upgradeGroup: "academyComplex",
+    upgradeTo: "academyComplex2",
+    effects: { research: 20, researchSpeed: 0.08, stability: 1 },
+    maxCount: 1,
+    unique: true,
+  },
+  {
+    id: "academyComplex2",
+    name: "科学院·实验楼",
+    category: "science",
+    description: "科学院建筑群 Lv.2：蒸汽动力的实验楼与标本馆。全文明研究速度 +16%，科研产出 +46/回合，观测质量 +1%。",
+    icon: "flask",
+    cost: { minerals: 900, metals: 340, energy: 360 },
+    buildTurns: 5,
+    maintenance: { energy: 110 },
+    workers: 140,
+    requiresTech: ["industry_alloys"],
+    requiresEra: 3,
+    era: 3,
+    tier: 2,
+    upgradeGroup: "academyComplex",
+    upgradeTo: "academyComplex3",
+    upgradeCost: { minerals: 540, metals: 204, energy: 216 },
+    upgradeTurns: 4,
+    effects: { research: 46, researchSpeed: 0.16, stability: 1, observationBonus: 0.01 },
+    maxCount: 1,
+    unique: true,
+  },
+  {
+    id: "academyComplex3",
+    name: "科学院·计算中心",
+    category: "science",
+    description: "科学院建筑群 Lv.3：电气化的计算与实验中心。全文明研究速度 +24%，科研产出 +90/回合，观测质量 +2%。",
+    icon: "cpu",
+    cost: { minerals: 1600, metals: 620, energy: 780 },
+    buildTurns: 6,
+    maintenance: { energy: 220 },
+    workers: 200,
+    requiresTech: ["comp_electronic"],
+    requiresEra: 4,
+    era: 4,
+    tier: 3,
+    upgradeGroup: "academyComplex",
+    upgradeTo: "academyComplex4",
+    upgradeCost: { minerals: 960, metals: 372, energy: 468 },
+    upgradeTurns: 5,
+    effects: { research: 90, researchSpeed: 0.24, observationBonus: 0.02 },
+    maxCount: 1,
+    unique: true,
+  },
+  {
+    id: "academyComplex4",
+    name: "科学院·联合体",
+    category: "science",
+    description: "科学院建筑群 Lv.4：跨学科联合体与全国实验室网络。全文明研究速度 +32%，科研产出 +160/回合，观测质量 +3%。",
+    icon: "research",
+    cost: { minerals: 2600, metals: 1050, energy: 1400 },
+    buildTurns: 7,
+    maintenance: { energy: 340 },
+    workers: 260,
+    requiresTech: ["comp_network"],
+    requiresEra: 5,
+    era: 5,
+    tier: 4,
+    upgradeGroup: "academyComplex",
+    upgradeTo: "academyComplex5",
+    upgradeCost: { minerals: 1560, metals: 630, energy: 840 },
+    upgradeTurns: 6,
+    effects: { research: 160, researchSpeed: 0.32, observationBonus: 0.03 },
+    maxCount: 1,
+    unique: true,
+  },
+  {
+    id: "academyComplex5",
+    name: "星际科学院",
+    category: "science",
+    description: "科学院建筑群 Lv.5：跨行星的科研共同体与自动实验网络。全文明研究速度 +40%，科研产出 +260/回合，观测质量 +4%。",
+    icon: "star",
+    cost: { minerals: 4200, metals: 1800, energy: 2200 },
+    buildTurns: 8,
+    maintenance: { energy: 460 },
+    workers: 320,
+    requiresTech: ["comp_ai"],
+    requiresEra: 6,
+    era: 6,
+    tier: 5,
+    upgradeGroup: "academyComplex",
+    upgradeTo: null,
+    upgradeCost: { minerals: 2520, metals: 1080, energy: 1320 },
+    upgradeTurns: 7,
+    effects: { research: 260, researchSpeed: 0.4, observationBonus: 0.04 },
+    maxCount: 1,
+    unique: true,
+  },
+  {
+    id: "apartmentBlock",
+    name: "公寓楼",
+    category: "basic",
+    description: "钢筋混凝土与电梯支撑的高层公寓，配合自来水、燃气与消防系统，住房第一次成为可以标准化的城市商品。",
+    icon: "home",
+    cost: { minerals: 1500, metals: 620, energy: 560 },
+    buildTurns: 6,
+    maintenance: { energy: 80 },
+    workers: 0,
+    requiresTech: [],
+    requiresEra: 4,
+    era: 4,
+    tier: 4,
+    upgradeGroup: "housing",
+    upgradeTo: "highRise",
+    upgradeCost: { minerals: 900, metals: 372, energy: 336 },
+    upgradeTurns: 5,
+    effects: { housing: 2600, stability: 3 },
+    maxCount: 20,
+  },
+  {
+    id: "fertilizedFarm",
+    name: "化肥农场",
+    category: "basic",
+    description: "合成氨化肥、良种与机械耕作叠加的现代农业，单位面积的粮食产量第一次不再由土壤肥力单独决定。",
+    icon: "wheat",
+    cost: { minerals: 1300, metals: 520, energy: 700 },
+    buildTurns: 6,
+    maintenance: { energy: 160, water: 30 },
+    workers: 150,
+    requiresTech: ["bio_agronomy"],
+    requiresEra: 4,
+    era: 4,
+    tier: 4,
+    upgradeGroup: "food",
+    upgradeCost: { minerals: 780, metals: 312, energy: 420 },
+    upgradeTurns: 5,
+    upgradeTo: "verticalFarm",
+    effects: { production: { food: 1150 } },
+    maxCount: 20,
+  },
+  {
+    id: "sewagePlant",
+    name: "污水回用厂",
+    category: "basic",
+    description: "以沉淀、过滤与消毒处理城市污水并回用于灌溉与工业，水第一次可以在城市内部循环而不是单向流走。",
+    icon: "water",
+    cost: { minerals: 1250, metals: 500, energy: 650 },
+    buildTurns: 6,
+    maintenance: { energy: 150 },
+    workers: 140,
+    requiresTech: ["energy_electric"],
+    requiresEra: 4,
+    era: 4,
+    tier: 4,
+    upgradeGroup: "water",
+    upgradeTo: "recyclingPlant",
+    upgradeCost: { minerals: 750, metals: 300, energy: 390 },
+    upgradeTurns: 5,
+    effects: { production: { water: 1100 } },
+    maxCount: 12,
+  },
+  {
+    id: "electrifiedFactory",
+    name: "电气化工厂",
+    category: "industry",
+    description: "以电动机、流水线与电气控制重组的工厂，每台机器都可以独立调速，工业第一次进入批量生产。",
+    icon: "factory",
+    cost: { minerals: 1400, metals: 560, energy: 800 },
+    buildTurns: 6,
+    maintenance: { energy: 200, minerals: 20 },
+    workers: 140,
+    requiresTech: ["industry_electric_factory"],
+    requiresEra: 4,
+    era: 4,
+    tier: 4,
+    upgradeGroup: "industry",
+    upgradeTo: "automatedMine",
+    upgradeCost: { minerals: 840, metals: 336, energy: 480 },
+    upgradeTurns: 5,
+    effects: { production: { minerals: 800, metals: 420 }, industry: 45 },
+    maxCount: 8,
+  },
+  {
+    id: "researchInstitute",
+    name: "电气研究院",
+    category: "science",
+    description: "电力驱动的实验室、计算室与工程试验场，把科学研究从个人兴趣变成有预算、有分工的长期事业。",
+    icon: "flask",
+    cost: { minerals: 1500, metals: 600, energy: 900 },
+    buildTurns: 6,
+    maintenance: { energy: 200 },
+    workers: 160,
+    requiresTech: ["comp_electronic"],
+    requiresEra: 4,
+    era: 4,
+    tier: 4,
+    upgradeGroup: "research",
+    upgradeTo: "supercomputer",
+    upgradeCost: { minerals: 900, metals: 360, energy: 540 },
+    upgradeTurns: 5,
+    effects: { research: 58, researchSpeed: 0.05, observationBonus: 0.03 },
+    maxCount: 4,
   },
 ];
 

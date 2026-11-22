@@ -5,6 +5,7 @@ import type { EventEffectForecast, EventState, GameState } from "../core/types";
 import {
   EVENT_CATEGORY_NAMES, eventModifiersView, forecastEventEffects, getActiveEvent, isChoiceAvailable,
 } from "../events";
+import { forecastEffectBands } from "../events/outcome-ranges";
 import type {
   ActiveEventView, EventEffectView, EventHistoryView, EventOutcomeView, EventsView,
 } from "./viewTypes";
@@ -23,6 +24,28 @@ function effectView(effect: EventEffectForecast): EventEffectView {
   };
 }
 
+/** 选择前只给区间；后端的 band 已把 cap 与夹取算进去。 */
+function bandView(band: import("../events/outcome-ranges").EffectBand): EventEffectView {
+  const center = band.deltaMin != null && band.deltaMax != null
+    ? (band.deltaMin + band.deltaMax) / 2
+    : null;
+  return {
+    key: band.key,
+    label: band.label,
+    kind: band.kind,
+    before: band.before,
+    after: band.afterMax,
+    delta: center,
+    minDelta: band.deltaMin,
+    maxDelta: band.deltaMax,
+    minAfter: band.afterMin,
+    maxAfter: band.afterMax,
+    unit: band.unit,
+    tone: band.tone,
+    detail: band.detail,
+  };
+}
+
 function signedNumber(value: number): string {
   const abs = Math.abs(value);
   const digits = abs >= 100 ? 0 : abs >= 10 ? 1 : 1;
@@ -31,6 +54,10 @@ function signedNumber(value: number): string {
 }
 
 function previewText(effect: EventEffectView): string {
+  if (effect.minDelta != null && effect.maxDelta != null) {
+    const unit = effect.unit ? " " + effect.unit : "";
+    return effect.label + " " + signedNumber(effect.minDelta) + " ~ " + signedNumber(effect.maxDelta) + unit;
+  }
   if (effect.delta != null && Math.abs(effect.delta) >= 0.005) {
     return effect.label + " " + signedNumber(effect.delta) + (effect.unit ? " " + effect.unit : "");
   }
@@ -69,7 +96,8 @@ function activeEventView(state: GameState): ActiveEventView | null {
     context: eventState.pending[0]?.context ?? "",
     choices: def.choices.map((choice) => {
       const check = isChoiceAvailable(choice, ctx, eventState);
-      const effects = forecastEventEffects(choice.effects, ctx).map(effectView);
+      const bands = forecastEffectBands(choice.effects, ctx, eventState, def.category, forecastEventEffects);
+      const effects = bands.map(bandView);
       return {
         id: choice.id,
         label: choice.label,
@@ -78,6 +106,7 @@ function activeEventView(state: GameState): ActiveEventView | null {
         available: check.ok,
         unavailableReason: check.ok ? null : check.reason,
         effects,
+        bands,
         preview: effects.map(previewText),
       };
     }),

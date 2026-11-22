@@ -27,6 +27,7 @@
  */
 import type {
   DepartmentId,
+  ResearchCategory,
   ResourceId,
   TechBranch,
   TechDef,
@@ -38,16 +39,21 @@ import { RESOURCE_IDS } from "../civilization/resources";
 import { clamp } from "../core/math";
 import {
   DOCTRINE_GROUPS,
+  TECH_CATEGORIES,
+  TECH_CATEGORY_OF_BRANCH,
+  TECH_CATEGORY_ORDER,
   TECH_DEFS,
   TECH_MAP,
   TECH_SCHOOLS,
   TECH_SCHOOL_ORDER,
   getDoctrineGroupMeta,
   getTechDef,
+  researchCategoryOf,
   techName,
   techSchoolOf,
+  techsByCategory,
 } from "./tree";
-import type { DoctrineGroupMeta, TechSchoolMeta } from "./tree";
+import type { DoctrineGroupMeta, ResearchCategoryMeta, TechSchoolMeta } from "./tree";
 
 /** 科技乘数集合（1 = 无加成；disaster 为伤害倍率，<1 表示减伤）。 */
 export interface TechMultipliers {
@@ -93,6 +99,34 @@ export const MASTERY_EFFECT_BONUS = 0.1;
 /** 精通点数归一化单位：单项科技贡献 = tier × cost / SCHOOL_POINT_UNIT。 */
 export const SCHOOL_POINT_UNIT = 10;
 
+/* ---- v1.6 发展纲领 ---- */
+/** 已选发展大类：研究速度 +10%。 */
+export const DEVELOPMENT_FOCUS_BONUS = 0.1;
+/** 未选发展大类：研究速度 -35%。 */
+export const DEVELOPMENT_NEGLECT_PENALTY = 0.35;
+/** 发展纲领开放时代（E3 蒸汽纪元起）。 */
+export const DEVELOPMENT_MIN_ERA = 3;
+/** 可选择的发展大类数量上限。 */
+export const DEVELOPMENT_MAX_CATEGORIES = 2;
+
+/* ---- v1.6 科研资源倾斜 ---- */
+/** 中性倾斜值：50% → 研究速度 ×1。 */
+export const RESEARCH_FUNDING_NEUTRAL = 50;
+/** 倾斜 0% 时的研究速度乘数（约 -40%）。 */
+export const RESEARCH_FUNDING_MIN_SPEED = 0.6;
+/** 倾斜 100% 时的研究速度乘数（约 +35%）。 */
+export const RESEARCH_FUNDING_MAX_SPEED = 1.35;
+/** 倾斜 100% 时非科研资源产出的乘数（用产出换速度）。 */
+export const RESEARCH_FUNDING_OTHER_PENALTY = 0.9;
+/** 倾斜 0% 时非科研资源产出的乘数（减少科研换产出）。 */
+export const RESEARCH_FUNDING_OTHER_BONUS = 1.1;
+
+/* ---- v1.6 注入资源加速 ---- */
+/** 每次加速获得当前项目剩余进度的比例。 */
+export const RESEARCH_BOOST_PROGRESS_RATIO = 0.2;
+/** 每多使用一次，加速资源成本额外增加的比例（价格随次数递增）。 */
+export const RESEARCH_BOOST_COST_GROWTH = 0.75;
+
 const DEPARTMENT_IDS: readonly DepartmentId[] = [
   "administration",
   "science",
@@ -112,6 +146,10 @@ export function createTechState(): TechState {
     schoolFocus: null,
     doctrineChoices: {},
     schoolPoints: {},
+    developmentCategories: null,
+    researchFunding: RESEARCH_FUNDING_NEUTRAL,
+    researchBoostCounts: {},
+    lastBoostTurn: -1,
   };
 }
 
@@ -135,10 +173,10 @@ export function activeTechDef(techState: TechState): TechDef | null {
   return techState.activeTech ? (getTechDef(techState.activeTech) ?? null) : null;
 }
 
-/** 把任意输入夹到合法时代 1..5（非法/缺省 = 5，保持旧调用"全解锁"语义）。 */
+/** 把任意输入夹到合法时代 1..6（非法/缺省 = 6，保持旧调用"全解锁"语义）。 */
 export function clampTechEra(era: number | undefined): number {
-  if (era == null || !Number.isFinite(era)) return 5;
-  return Math.max(1, Math.min(5, Math.floor(era)));
+  if (era == null || !Number.isFinite(era)) return 6;
+  return Math.max(1, Math.min(6, Math.floor(era)));
 }
 
 /* ------------------------------------------------------------------ *
@@ -192,14 +230,49 @@ export function syncSchoolPoints(techState: TechState): TechState {
   return techState;
 }
 
-/** 研究某项科技的速度倍率：同派 +15%，跨派 -5%，无重心 = 1。 */
+/** 科研资源倾斜 0..100 对应的研究速度乘数（50 → 1；0 → 0.6；100 → 1.35）。 */
+export function fundingResearchSpeedFactor(percent: number | undefined): number {
+  const p = Number.isFinite(percent as number) ? Math.max(0, Math.min(100, percent as number)) : RESEARCH_FUNDING_NEUTRAL;
+  if (p <= RESEARCH_FUNDING_NEUTRAL) {
+    const t = p / RESEARCH_FUNDING_NEUTRAL;
+    return RESEARCH_FUNDING_MIN_SPEED + (1 - RESEARCH_FUNDING_MIN_SPEED) * t;
+  }
+  const t = (p - RESEARCH_FUNDING_NEUTRAL) / (100 - RESEARCH_FUNDING_NEUTRAL);
+  return 1 + (RESEARCH_FUNDING_MAX_SPEED - 1) * t;
+}
+
+/** 当前科研资源倾斜百分比（缺省 50）。 */
+export function researchFundingPercent(techState: TechState): number {
+  const raw = techState.researchFunding;
+  return Number.isFinite(raw as number) ? Math.max(0, Math.min(100, raw as number)) : RESEARCH_FUNDING_NEUTRAL;
+}
+
+/** 发展纲领对某项科技的速度乘数：已选大类 +10%，未选大类 -35%，未选择时 1。 */
+export function developmentSpeedFactor(techState: TechState, techId: string): number {
+  const chosen = techState.developmentCategories;
+  if (!Array.isArray(chosen) || chosen.length === 0) return 1;
+  const category = researchCategoryOf(techId);
+  if (!category) return 1;
+  return chosen.includes(category) ? 1 + DEVELOPMENT_FOCUS_BONUS : 1 - DEVELOPMENT_NEGLECT_PENALTY;
+}
+
+/**
+ * 研究某项科技的速度倍率（v1.6 汇总）：
+ *  - 学派重心：同派 +15% / 跨派 -5%；
+ *  - 发展纲领：已选大类 +10% / 未选大类 -35%；
+ *  - 科研资源倾斜：0% → 0.6，50% → 1，100% → 1.35。
+ */
 export function researchSpeedFor(techState: TechState, techId: string): number {
   const def = getTechDef(techId);
   if (!def) return 1;
   const focus = techState.schoolFocus ?? null;
-  if (!focus) return 1;
   const school = schoolOfDef(def);
-  return school === focus ? 1 + FOCUS_SPEED_BONUS : 1 - CROSS_SCHOOL_PENALTY;
+  const schoolFactor = !focus ? 1 : school === focus ? 1 + FOCUS_SPEED_BONUS : 1 - CROSS_SCHOOL_PENALTY;
+  return (
+    schoolFactor *
+    developmentSpeedFactor(techState, techId) *
+    fundingResearchSpeedFactor(researchFundingPercent(techState))
+  );
 }
 
 /** 给定重心下研究该项科技所需的有效科研点（含速度加成，向上取整，供 UI 显示）。 */
@@ -409,45 +482,55 @@ export function cancelResearch(techState: TechState): boolean {
 }
 
 /**
+ * 当前项目进度达到成本时结算完成：写入 researched、累计 schoolPoints，
+ * 若为互斥教义科技则自动写入 doctrineChoices。返回完成信息；未完成时 completedId 为 null。
+ */
+function completeActiveResearch(techState: TechState): Omit<ResearchAdvance, "spent"> {
+  const def = activeTechDef(techState);
+  if (!def || techState.progress < def.cost - 1e-9) return { completedId: null };
+  techState.progress = def.cost;
+  if (!techState.researched.includes(def.id)) techState.researched.push(def.id);
+  const points = schoolPointsOfTech(def);
+  const school = schoolOfDef(def);
+  if (!techState.schoolPoints) techState.schoolPoints = {};
+  const prev = techState.schoolPoints[school];
+  techState.schoolPoints[school] = (typeof prev === "number" && Number.isFinite(prev) ? prev : 0) + points;
+  let doctrineChosen: string | undefined;
+  if (def.exclusiveGroup) {
+    if (!techState.doctrineChoices) techState.doctrineChoices = {};
+    if (!techState.doctrineChoices[def.exclusiveGroup]) {
+      techState.doctrineChoices[def.exclusiveGroup] = def.id;
+      doctrineChosen = def.id;
+    }
+  }
+  techState.activeTech = null;
+  techState.progress = 0;
+  return { completedId: def.id, doctrineChosen, schoolPointsGained: points };
+}
+
+/**
  * 用 scienceBudget 点科研投入推进当前研究。
- *  - 学派重心加速/减速在此生效：实际进度 = 消耗科研点 × 研究速度；
+ *  - 学派重心 / 发展纲领 / 科研资源倾斜在此生效：实际进度 = 消耗科研点 × 研究速度；
+ *  - externalSpeed 为建筑层加成（科学院建筑群的全文明研究速度）；
  *  - 只消耗完成本科技所需的点数，多余预算不扣除（由调用方保留）；
  *  - 完成时写入 researched、累计 schoolPoints，若为互斥教义科技则自动写入 doctrineChoices。
  */
-export function advanceResearch(techState: TechState, scienceBudget: number): ResearchAdvance {
+export function advanceResearch(techState: TechState, scienceBudget: number, externalSpeed = 1): ResearchAdvance {
   const def = activeTechDef(techState);
   if (!def) return { completedId: null, spent: 0 };
   const budget = Number.isFinite(scienceBudget) ? Math.max(0, scienceBudget) : 0;
   if (budget <= 0) return { completedId: null, spent: 0 };
 
-  const speed = researchSpeedFor(techState, def.id);
+  const buildingSpeed = Number.isFinite(externalSpeed) && externalSpeed > 0 ? externalSpeed : 1;
+  const speed = researchSpeedFor(techState, def.id) * buildingSpeed;
   const remaining = Math.max(0, def.cost - techState.progress);
   const spent = Math.min(budget, speed > 0 ? remaining / speed : remaining);
   const gained = spent * speed;
   techState.progress = clamp(techState.progress + gained, 0, def.cost);
   techState.totalScience += spent;
 
-  if (techState.progress >= def.cost - 1e-9) {
-    techState.progress = def.cost;
-    if (!techState.researched.includes(def.id)) techState.researched.push(def.id);
-    const points = schoolPointsOfTech(def);
-    const school = schoolOfDef(def);
-    if (!techState.schoolPoints) techState.schoolPoints = {};
-    const prev = techState.schoolPoints[school];
-    techState.schoolPoints[school] = (typeof prev === "number" && Number.isFinite(prev) ? prev : 0) + points;
-    let doctrineChosen: string | undefined;
-    if (def.exclusiveGroup) {
-      if (!techState.doctrineChoices) techState.doctrineChoices = {};
-      if (!techState.doctrineChoices[def.exclusiveGroup]) {
-        techState.doctrineChoices[def.exclusiveGroup] = def.id;
-        doctrineChosen = def.id;
-      }
-    }
-    techState.activeTech = null;
-    techState.progress = 0;
-    return { completedId: def.id, spent, doctrineChosen, schoolPointsGained: points };
-  }
-  return { completedId: null, spent };
+  const done = completeActiveResearch(techState);
+  return { completedId: done.completedId, spent, doctrineChosen: done.doctrineChosen, schoolPointsGained: done.schoolPointsGained };
 }
 
 /** 当前研究进度信息（供 UI 科研面板）。 */
@@ -705,3 +788,253 @@ export function branchProgress(
 
 /** 六学派元数据（order 保证 UI 渲染顺序稳定）。 */
 export const TECH_SCHOOL_LIST: readonly TechSchoolMeta[] = TECH_SCHOOL_ORDER.map((id) => TECH_SCHOOLS[id]);
+
+
+/* ------------------------------------------------------------------ *
+ *  v1.6 发展纲领 / 科研资源倾斜 / 注入资源加速                         *
+ * ------------------------------------------------------------------ */
+
+export interface ResearchCategoryView extends ResearchCategoryMeta {
+  selected: boolean;
+}
+
+export interface DevelopmentProgramInfo {
+  /** 是否已选择发展纲领（至少 1 个大类）。 */
+  chosen: boolean;
+  /** 当前选择的大类。 */
+  categories: ResearchCategory[];
+  options: ResearchCategoryView[];
+  /** 已选大类研究速度加成（0.1 = +10%）。 */
+  focusBonus: number;
+  /** 未选大类研究速度惩罚（0.35 = -35%）。 */
+  neglectPenalty: number;
+  /** 是否已到可选时代（E3）。 */
+  unlocked: boolean;
+}
+
+/** 发展纲领状态（供科研 UI）。 */
+export function developmentProgramInfo(techState: TechState, era: number): DevelopmentProgramInfo {
+  const chosen = Array.isArray(techState.developmentCategories)
+    ? TECH_CATEGORY_ORDER.filter((id) => (techState.developmentCategories ?? []).includes(id))
+    : [];
+  return {
+    chosen: chosen.length > 0,
+    categories: chosen,
+    options: TECH_CATEGORY_ORDER.map((id) => ({ ...TECH_CATEGORIES[id], selected: chosen.includes(id) })),
+    focusBonus: DEVELOPMENT_FOCUS_BONUS,
+    neglectPenalty: DEVELOPMENT_NEGLECT_PENALTY,
+    unlocked: clampTechEra(era) >= DEVELOPMENT_MIN_ERA,
+  };
+}
+
+export interface DevelopmentChoiceResult extends ResearchCheck {
+  categories?: ResearchCategory[];
+  notice?: string;
+}
+
+/**
+ * 选择发展纲领：E3 起可指定 1~2 个研究大类作为重点。
+ * 已选大类研究速度 +10%，未选大类 -35%；再次调用即调整重点（写入 TechState 持久化）。
+ */
+export function setDevelopmentCategories(
+  techState: TechState,
+  categories: readonly ResearchCategory[],
+  era: number = 6,
+): DevelopmentChoiceResult {
+  if (clampTechEra(era) < DEVELOPMENT_MIN_ERA) {
+    return { ok: false, reason: "发展纲领需到第 3 时代（蒸汽纪元）才能确定" };
+  }
+  const list: ResearchCategory[] = [];
+  for (const raw of categories) {
+    if (!TECH_CATEGORY_ORDER.includes(raw)) return { ok: false, reason: "未知研究大类：" + raw };
+    if (!list.includes(raw)) list.push(raw);
+  }
+  if (list.length < 1) return { ok: false, reason: "至少选择 1 个发展大类" };
+  if (list.length > DEVELOPMENT_MAX_CATEGORIES) {
+    return { ok: false, reason: "最多只能选择 2 个发展大类（玩家只能选择其中一个或两个大类发展）" };
+  }
+  const previous = techState.developmentCategories?.length ?? 0;
+  techState.developmentCategories = list;
+  return {
+    ok: true,
+    reason: null,
+    categories: list,
+    notice: previous > 0 ? "发展纲领已调整" : "发展纲领已确立",
+  };
+}
+
+export interface FundingChoiceResult extends ResearchCheck {
+  percent: number;
+}
+
+/** 设置科研资源倾斜 0..100；非法输入夹取，缺省 50。 */
+export function setResearchFunding(techState: TechState, percent: number): FundingChoiceResult {
+  if (!Number.isFinite(percent)) return { ok: false, reason: "倾斜值必须是 0~100 的数字", percent: researchFundingPercent(techState) };
+  const value = Math.max(0, Math.min(100, Math.round(percent * 10) / 10));
+  techState.researchFunding = value;
+  return { ok: true, reason: null, percent: value };
+}
+
+export interface FundingModifiers {
+  percent: number;
+  /** 科研速度乘数（0.6..1.35）。 */
+  researchSpeed: number;
+  /** 科研点（science 资源）产出乘数。 */
+  scienceProduction: number;
+  /** 非科研资源产出乘数（用产出换取科研倾斜）。 */
+  otherProduction: number;
+}
+
+/** 科研资源倾斜的完整乘数：倾斜越高研究越快，但非科研产出下降。 */
+export function fundingModifiers(techState: TechState): FundingModifiers {
+  const percent = researchFundingPercent(techState);
+  const researchSpeed = fundingResearchSpeedFactor(percent);
+  const t = percent / 100;
+  const scienceProduction = 0.75 + 0.55 * t; // 0% → 0.75，100% → 1.30
+  const otherProduction = RESEARCH_FUNDING_OTHER_BONUS
+    + (RESEARCH_FUNDING_OTHER_PENALTY - RESEARCH_FUNDING_OTHER_BONUS) * t; // 0% → 1.10，100% → 0.90
+  return { percent, researchSpeed, scienceProduction, otherProduction };
+}
+
+/** 研究速度构成（供 UI 解释当前倍率）。 */
+export interface ResearchSpeedBreakdown {
+  total: number;
+  schoolFactor: number;
+  developmentFactor: number;
+  fundingFactor: number;
+}
+
+export function researchSpeedBreakdown(techState: TechState, techId: string): ResearchSpeedBreakdown {
+  const def = getTechDef(techId);
+  if (!def) return { total: 1, schoolFactor: 1, developmentFactor: 1, fundingFactor: 1 };
+  const focus = techState.schoolFocus ?? null;
+  const school = schoolOfDef(def);
+  const schoolFactor = !focus ? 1 : school === focus ? 1 + FOCUS_SPEED_BONUS : 1 - CROSS_SCHOOL_PENALTY;
+  const developmentFactor = developmentSpeedFactor(techState, techId);
+  const fundingFactor = fundingResearchSpeedFactor(researchFundingPercent(techState));
+  return { total: schoolFactor * developmentFactor * fundingFactor, schoolFactor, developmentFactor, fundingFactor };
+}
+
+export interface ResearchBoostQuote {
+  ok: boolean;
+  reason: string | null;
+  techId: string | null;
+  techName: string;
+  /** 本次注入立即增加的科研点。 */
+  gain: number;
+  /** 注入后完成度占剩余进度的比例 0..1。 */
+  progressRatio: number;
+  /** 资源消耗（矿物 / 金属 / 能源，未解锁的资源不会出现）。 */
+  cost: Partial<Record<ResourceId, number>>;
+  /** 当前项目已加速次数。 */
+  uses: number;
+  /** 本回合是否已使用过加速。 */
+  usedThisTurn: boolean;
+}
+
+/**
+ * 注入资源加速报价：消耗矿物/金属/能源中的一种或组合，立即给当前项目增加进度。
+ * 价格随「同一项目使用次数」递增；每回合只能使用一次（由 lastBoostTurn 判定）。
+ */
+export function researchBoostQuote(techState: TechState, era: number, turn: number): ResearchBoostQuote {
+  const def = activeTechDef(techState);
+  const empty: ResearchBoostQuote = {
+    ok: false, reason: null, techId: null, techName: "", gain: 0, progressRatio: 0, cost: {}, uses: 0, usedThisTurn: false,
+  };
+  if (!def) return { ...empty, reason: "没有正在研究的项目" };
+  const uses = Math.max(0, Math.floor(techState.researchBoostCounts?.[def.id] ?? 0));
+  const usedThisTurn = typeof techState.lastBoostTurn === "number" && techState.lastBoostTurn === turn;
+  const remaining = Math.max(0, def.cost - techState.progress);
+  if (remaining <= 1e-9) return { ...empty, techId: def.id, techName: def.name, uses, usedThisTurn, reason: "当前项目已经完成" };
+  const gain = Math.min(remaining, Math.max(1, Math.ceil(remaining * RESEARCH_BOOST_PROGRESS_RATIO * 100) / 100));
+  const base = Math.max(20, Math.ceil(gain * 2));
+  const costMultiplier = 1 + RESEARCH_BOOST_COST_GROWTH * uses;
+  const cost: Partial<Record<ResourceId, number>> = {};
+  const unlocked = clampTechEra(era);
+  const shares: { id: ResourceId; share: number }[] = [{ id: "minerals", share: 0.5 }];
+  if (unlocked >= 2) shares.push({ id: "metals", share: 0.25 });
+  if (unlocked >= 3) shares.push({ id: "energy", share: 0.25 });
+  const shareTotal = shares.reduce((sum, item) => sum + item.share, 0);
+  for (const item of shares) {
+    cost[item.id] = Math.max(1, Math.ceil(base * (item.share / shareTotal) * costMultiplier));
+  }
+  if (usedThisTurn) {
+    return { ok: false, reason: "本回合已经注入过一次资源，每回合限一次", techId: def.id, techName: def.name, gain, progressRatio: gain / remaining, cost, uses, usedThisTurn };
+  }
+  return { ok: true, reason: null, techId: def.id, techName: def.name, gain, progressRatio: gain / remaining, cost, uses, usedThisTurn };
+}
+
+export interface ResearchBoostResult extends ResearchAdvance {
+  gain: number;
+}
+
+/**
+ * 提交一次注入资源加速（资源已由调用方扣除）。
+ * 直接把 gain 点进度写入当前项目；达到成本时按正常研究完成流程结算。
+ */
+export function applyResearchBoost(techState: TechState, gain: number, turn: number): ResearchBoostResult {
+  const def = activeTechDef(techState);
+  const amount = Number.isFinite(gain) ? Math.max(0, gain) : 0;
+  if (!def || amount <= 0) return { completedId: null, spent: 0, gain: 0 };
+  const delta = Math.min(Math.max(0, def.cost - techState.progress), amount);
+  techState.progress = clamp(techState.progress + delta, 0, def.cost);
+  if (!techState.researchBoostCounts) techState.researchBoostCounts = {};
+  techState.researchBoostCounts[def.id] = Math.max(0, Math.floor(techState.researchBoostCounts[def.id] ?? 0)) + 1;
+  techState.lastBoostTurn = turn;
+  const done = completeActiveResearch(techState);
+  return {
+    completedId: done.completedId,
+    spent: 0,
+    doctrineChosen: done.doctrineChosen,
+    schoolPointsGained: done.schoolPointsGained,
+    gain: delta,
+  };
+}
+
+/**
+ * 归一化旧存档的科技状态：补齐 v1.6 字段并夹取非法值。
+ * 返回同一个 state 以支持链式调用。
+ */
+export function normalizeTechState(techState: TechState): TechState {
+  if (!Array.isArray(techState.researched)) techState.researched = [];
+  if (!techState.activeTech) techState.activeTech = null;
+  if (!Number.isFinite(techState.progress)) techState.progress = 0;
+  if (!Number.isFinite(techState.totalScience)) techState.totalScience = 0;
+  if (!techState.doctrineChoices || typeof techState.doctrineChoices !== "object") techState.doctrineChoices = {};
+  if (!techState.schoolPoints || typeof techState.schoolPoints !== "object") techState.schoolPoints = {};
+  const rawCats = techState.developmentCategories;
+  if (Array.isArray(rawCats)) {
+    const filtered = rawCats.filter((id): id is ResearchCategory => TECH_CATEGORY_ORDER.includes(id));
+    techState.developmentCategories = filtered.length > 0 ? filtered.slice(0, DEVELOPMENT_MAX_CATEGORIES) : null;
+  } else {
+    techState.developmentCategories = null;
+  }
+  if (!Number.isFinite(techState.researchFunding)) techState.researchFunding = RESEARCH_FUNDING_NEUTRAL;
+  techState.researchFunding = Math.max(0, Math.min(100, techState.researchFunding as number));
+  if (!techState.researchBoostCounts || typeof techState.researchBoostCounts !== "object") techState.researchBoostCounts = {};
+  if (!Number.isFinite(techState.lastBoostTurn)) techState.lastBoostTurn = -1;
+  return techState;
+}
+
+/** 是否旧版（v1.5 及更早）存档：缺失 v1.6 科研政策字段。 */
+export function isLegacyTechState(techState: TechState): boolean {
+  return techState.researchFunding == null;
+}
+
+/** 三大研究大类元数据（供 UI 渲染顺序稳定）。 */
+export const RESEARCH_CATEGORY_LIST: readonly ResearchCategoryMeta[] = TECH_CATEGORY_ORDER.map((id) => TECH_CATEGORIES[id]);
+
+/** 某研究大类下的科技数量。 */
+export function categoryTechCount(category: ResearchCategory): number {
+  return techsByCategory(category).length;
+}
+
+/** 某科技的分支所属研究大类；未知返回 null。 */
+export function researchCategoryFor(techId: string): ResearchCategory | null {
+  return researchCategoryOf(techId);
+}
+
+/** 分支 → 研究大类。 */
+export function categoryOfBranch(branch: TechBranch): ResearchCategory {
+  return TECH_CATEGORY_OF_BRANCH[branch];
+}

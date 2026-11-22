@@ -1,0 +1,156 @@
+/* v1.6 布局：编年史宽侧栏 + 底栏事件摘要（与事件组件样式分离，组件样式在 chronicle.css）。 */
+:root { --chronicle-w: 304px; --ticker-h: 34px; }
+
+/* 三栏：中央观测 / 右侧决策窄条 / 右侧编年史。 */
+.tri-game-main.has-chronicle {
+  grid-template-columns: minmax(0, 1fr) var(--right-w) var(--chronicle-w);
+}
+.tri-game-main.has-chronicle.is-right-collapsed {
+  grid-template-columns: minmax(0, 1fr) 46px var(--chronicle-w);
+}
+.tri-game-main.has-chronicle > .tri-chronicle {
+  pointer-events: auto;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  border-left: 1px solid var(--line);
+  background: var(--paper-2);
+  box-shadow: var(--shadow-rail);
+  z-index: 12;
+}
+.tri-game-main.has-chronicle.is-chronicle-collapsed {
+  grid-template-columns: minmax(0, 1fr) var(--right-w) 44px;
+}
+.tri-game-main.has-chronicle.is-right-collapsed.is-chronicle-collapsed {
+  grid-template-columns: minmax(0, 1fr) 46px 44px;
+}
+
+/* 底栏事件摘要：只保留随机事件 / 结果 / 重大事件。 */
+.tri-event-ticker {
+  flex: 0 0 auto;
+  height: var(--ticker-h);
+  display: flex;
+  align-items: center;
+  gap: 0;
+  margin: 0 14px 4px;
+  border: 1px solid var(--line);
+  border-left: 3px solid var(--signal);
+  background: var(--paper-2);
+  box-shadow: var(--shadow-rail);
+  overflow: hidden;
+  pointer-events: auto;
+}
+.tri-event-ticker .tri-ticker-kicker {
+  flex: 0 0 auto;
+  align-self: stretch;
+  display: inline-flex;
+  align-items: center;
+  padding: 0 10px;
+  background: var(--ink);
+  color: #fff;
+  font-family: var(--font-display);
+  font-stretch: 125%;
+  font-weight: 800;
+  font-size: 9px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.tri-event-ticker .tri-ticker-items {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.tri-event-ticker .tri-ticker-items::-webkit-scrollbar { display: none; }
+.tri-event-ticker .tri-ticker-item {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: baseline;
+  gap: 7px;
+  padding: 0 10px;
+  height: 24px;
+  line-height: 24px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  font-size: 10.5px;
+  color: var(--ink-2);
+  white-space: nowrap;
+}
+.tri-event-ticker .tri-ticker-item[data-tone="major"] {
+  border-color: var(--danger-ink);
+  background: rgba(163, 36, 27, 0.06);
+  color: var(--danger-ink);
+}
+.tri-event-ticker .tri-ticker-item[data-tone="death"] {
+  border-color: var(--ink);
+  background: var(--paper-3);
+  color: var(--ink);
+}
+.tri-event-ticker .tri-ticker-item[data-tone="science"] {
+  border-color: var(--ok-ink);
+  background: rgba(28, 107, 70, 0.06);
+  color: var(--ok-ink);
+}
+.tri-event-ticker .tri-ticker-item b {
+  font-family: var(--font-tech);
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+}
+.tri-event-ticker .tri-ticker-open {
+  flex: 0 0 auto;
+  align-self: stretch;
+  border: none;
+  border-left: 1px solid var(--line);
+  background: var(--paper-3);
+  color: var(--ink);
+  font-family: var(--font-tech);
+  font-size: 9px;
+  letter-spacing: 0.08em;
+  padding: 0 11px;
+  cursor: pointer;
+}
+.tri-event-ticker .tri-ticker-open:hover { background: var(--signal); }
+.tri-event-ticker .tri-ticker-empty {
+  padding: 0 12px;
+  color: var(--muted);
+  font-size: 10px;
+}
+
+@media (max-width: 1360px) {
+  :root { --chronicle-w: 276px; }
+  .tri-event-ticker { margin: 0 10px 3px; }
+}
+@media (max-width: 1180px) {
+  /* 小屏：编年史不再挤压舞台，变成右侧浮层；仍可见。 */
+  .tri-game-main.has-chronicle,
+  .tri-game-main.has-chronicle.is-right-collapsed,
+  .tri-game-main.has-chronicle.is-right-collapsed.is-chronicle-collapsed {
+    grid-template-columns: minmax(0, 1fr) var(--right-w);
+  }
+  .tri-game-main.has-chronicle > .tri-chronicle {
+    position: absolute;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    width: min(var(--chronicle-w), 82vw);
+    z-index: 40;
+    box-shadow: var(--shadow-lg);
+  }
+  .tri-game-main.has-chronicle.is-chronicle-collapsed > .tri-chronicle {
+    width: 44px;
+  }
+}
+@media (max-width: 850px) {
+  .tri-event-ticker { display: none; }
+}
+@media (max-height: 520px) and (orientation: landscape) {
+  :root { --ticker-h: 28px; }
+  .tri-event-ticker .tri-ticker-item { height: 21px; line-height: 21px; font-size: 9.5px; }
+}
+/* v1.6.1 mobile guard */
+@media (max-width: 1180px) { .tri-game-main.has-chronicle > .tri-chronicle { display: none !important; } }
+@media (max-width: 850px) { .tri-event-ticker { display: none !important; } }
+@media (max-width: 1180px) { .tri-game-main.has-chronicle.is-right-collapsed { grid-template-columns: minmax(0, 1fr) 46px; } }

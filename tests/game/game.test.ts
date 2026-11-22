@@ -90,7 +90,7 @@ describe("game integration", () => {
     expect(view.civ.era.requirements.length).toBeGreaterThan(0);
     expect(view.civ.era.subtitle.length).toBeGreaterThan(0);
     expect(view.objectives.length).toBeGreaterThan(0);
-    expect(view.tech.branches.length).toBe(8);
+    expect(view.tech.branches.length).toBe(9);
     expect(view.tech.schools.length).toBeGreaterThanOrEqual(6);
     expect(view.politics?.departments.length).toBe(6);
     expect(view.events).toBeTruthy();
@@ -310,11 +310,31 @@ describe("game integration", () => {
   it("tech schools and doctrines are exposed through the view", () => {
     const game = makeGame();
     const view = game.view();
-    expect(view.tech.branches.length).toBe(8);
-    expect(view.tech.totalTechs).toBeGreaterThanOrEqual(64);
+    expect(view.tech.branches.length).toBe(9);
+    expect(view.tech.totalTechs).toBeGreaterThanOrEqual(180);
     expect(view.tech.schools.length).toBeGreaterThanOrEqual(6);
     expect(view.tech.doctrines.length).toBeGreaterThanOrEqual(6);
-    expect(view.tech.branches.every((b) => b.techs.every((t) => t.descriptionLong && t.flavor))).toBe(true);
+    expect(view.tech.totalTechs).toBe(192);
+    expect(view.tech.branches.every((b) => b.techs.every((t) => t.effectSummary.length > 0))).toBe(true);
+    // v1.6 科研政策视图字段
+    expect(view.tech.funding.percent).toBe(50);
+    expect(view.tech.development.unlocked).toBe(false);
+    expect(view.tech.development.chosen).toBe(false);
+    expect(view.tech.boost).toBeNull();
+    game.setSpeedIndex(0);
+    game.actions.setResearchFunding(80);
+    expect(game.state.tech.researchFunding).toBe(80);
+    expect(game.view().tech.funding.percent).toBe(80);
+    // E1 无法确定发展纲领（E3 起开放）
+    game.actions.chooseDevelopmentCategories(["natural"]);
+    expect(game.state.tech.developmentCategories ?? null).toBeNull();
+    // 注入资源加速：立即给当前项目增加进度
+    game.actions.startResearch("astro_basic");
+    const progressBefore = game.state.tech.progress;
+    const mineralsBefore = game.state.civ.resources.minerals.amount;
+    game.actions.boostResearch();
+    expect(game.state.tech.progress).toBeGreaterThan(progressBefore);
+    expect(game.state.civ.resources.minerals.amount).toBeLessThan(mineralsBefore);
     game.actions.chooseSchoolFocus("observation");
     expect(game.state.tech.schoolFocus).toBe("observation");
     expect(game.view().tech.schools.find((s) => s.id === "observation")?.focused).toBe(true);

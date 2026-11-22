@@ -41,6 +41,7 @@ import type {
   TechState,
 } from "../core/types";
 import { EVENT_DEFS, TAG_LABELS, getEventDef } from "./definitions";
+import { rollEventEffects } from "./outcome-ranges";
 
 /** 事件链排期条目：followUps 的延迟落地。 */
 export interface ScheduledEvent {
@@ -1079,9 +1080,19 @@ export function resolveEventChoice(state: EventState, choiceId: string, ctx: Eve
 
   const turn = normalizeTurn(ctx.turn);
   advanceEventClock(state, turn);
-  // 先按“当前状态”量化，再落地；两者使用同一套上限与夹取规则。
-  const forecast = forecastEventEffects(choice.effects, ctx);
-  const applied = applyEventEffects(state, def, choice, ctx);
+  // v1.6：先在区间内随机取值，再按同一套上限/夹取规则量化并落地。
+  // 选择前 UI 显示同一 seed/历史/难度下的范围；报告显示实际 before→after。
+  const rolled = rollEventEffects(choice.effects ?? {}, state, {
+    category: def.category,
+    turn,
+    randomSeed: ctx.randomSeed ?? (state as { eventSeed?: string }).eventSeed ?? "trisolaris",
+    era: ctx.era ?? ctx.civ.era,
+    difficulty: ctx.difficulty ?? "normal",
+    eventId: def.id,
+    choiceId: choice.id,
+  });
+  const forecast = forecastEventEffects(rolled, ctx);
+  const applied = applyEventEffects(state, def, { ...choice, effects: rolled }, ctx);
 
   const year = yearOf(ctx);
   const entry: EventHistoryEntry = {
@@ -1153,7 +1164,7 @@ export function resolveEventChoice(state: EventState, choiceId: string, ctx: Eve
     logs,
     followUp,
     historyEntry: entry,
-    effects: choice.effects,
+    effects: rolled,
   };
 }
 
