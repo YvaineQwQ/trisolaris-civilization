@@ -5054,3 +5054,205 @@ h1, h2, h3, h4, .tri-panel-title span, .tri-modal-title-text h2, .tri-menu-title
   .tri-panel-right .tri-deck-collapse { width: 44px; height: 44px; }
   .tri-dock-collapse { width: 44px; height: 44px; }
 }
+
+
+/* ================================================================== *
+ * V6. 手机横屏适配（844×390 / 667×375 / 896×414 等）
+ * 目标：横屏不出现纵向截断、面板互相挤压或按钮溢出；
+ * 竖屏样式不受影响（只在 orientation:landscape 且高度 <=560 时生效）。
+ * ================================================================== */
+@media (max-width: 1024px) and (orientation: landscape) and (max-height: 560px) {
+  /* ---------- 主菜单：左右双栏，整体压进一屏 ---------- */
+  .tri-menu { overflow: hidden; }
+  .tri-menu::after { inset: 8px; }
+  .tri-menu-content {
+    left: 0;
+    right: 0;
+    width: auto;
+    max-width: none;
+    margin: 0;
+    padding: 8px 22px 30px;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(238px, 34vw);
+    align-items: center;
+    align-content: center;
+    gap: 18px;
+  }
+  .tri-menu-head { gap: 3px; min-width: 0; }
+  .tri-menu-masthead { font-size: 6.5px; letter-spacing: 0.12em; padding-bottom: 4px; margin-bottom: 3px; gap: 6px; }
+  .tri-menu-masthead-rule { height: 3px; }
+  .tri-menu-eyebrow,
+  .tri-menu-chips,
+  .tri-menu-status { display: none; }
+  .tri-menu-title { font-size: clamp(38px, 10.5vh, 56px); line-height: 0.9; }
+  .tri-menu-title::after { font-size: 0.42em; margin-left: 6px; }
+  .tri-menu-title-en { font-size: 8px; letter-spacing: 0.3em; }
+  .tri-menu-subtitle { font-size: 7.5px; letter-spacing: 0.18em; }
+  .tri-menu-tagline {
+    font-size: 9.5px;
+    line-height: 1.55;
+    margin: 0;
+    max-width: 100%;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .tri-menu-nav { width: 100%; max-width: 318px; justify-self: end; gap: 5px; }
+  .tri-menu-btn { min-height: 42px; padding: 6px 11px; gap: 8px; font-size: 11px; letter-spacing: 0.08em; }
+  .tri-menu-btn .tri-icon { width: 16px; height: 16px; }
+  .tri-menu-foot {
+    left: 22px;
+    right: 22px;
+    bottom: 7px;
+    padding-top: 3px;
+    gap: 8px;
+    font-size: 6.5px;
+  }
+  .tri-menu-foot > *:nth-child(n + 3) { display: none; }
+
+  /* ---------- 新游戏初始化：横向双栏，表单/预览各自滚动 ---------- */
+  .tri-newgame-inner { padding: 8px 14px 10px; gap: 8px; overflow: hidden; }
+  .tri-newgame-head { gap: 8px; padding-bottom: 6px; flex-wrap: nowrap; }
+  .tri-newgame-heading { min-width: 0; gap: 1px; }
+  .tri-newgame-heading h1 { font-size: 20px; letter-spacing: 0.08em; }
+  .tri-newgame-sub { font-size: 8.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .tri-newgame-steps { display: none; }
+  .tri-newgame-body {
+    display: grid;
+    grid-template-columns: minmax(0, 0.92fr) minmax(0, 1.08fr);
+    gap: 10px;
+    min-height: 0;
+  }
+  .tri-newgame-form,
+  .tri-newgame-preview { min-height: 0; overflow-y: auto; padding-right: 4px; gap: 8px; }
+  .tri-preview-stage { min-height: 0; aspect-ratio: 16 / 9; }
+  .tri-block { padding: 8px 10px; }
+  .tri-block-head { margin-bottom: 6px; }
+  .tri-block-head h2 { font-size: 10.5px; }
+  .tri-choice-grid { grid-template-columns: 1fr 1fr; gap: 5px; }
+  .tri-choice-card { padding: 6px 8px; gap: 2px; }
+  .tri-newgame-form .tri-btn-lg { min-height: 42px; }
+
+  /* ---------- 弹窗：横屏也用全屏，内部滚动，避免被压扁 ---------- */
+  .tri-modal-layer { padding: 0; }
+  .tri-modal {
+    width: 100vw;
+    height: 100dvh;
+    max-height: none;
+    border: none;
+    border-radius: 0;
+  }
+  .tri-modal-head {
+    position: sticky;
+    top: 0;
+    z-index: 6;
+    min-height: 42px;
+    padding: 5px 52px 4px;
+    padding-top: calc(5px + env(safe-area-inset-top));
+  }
+  .tri-modal-title-text h2 { font-size: 13px; letter-spacing: 0.18em; }
+  .tri-modal-title-text .tri-kicker { font-size: 6.5px; }
+  .tri-modal-close { right: 8px; top: 50%; width: 40px; height: 40px; }
+  .tri-modal-content {
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    padding: 8px 12px calc(10px + env(safe-area-inset-bottom));
+  }
+  .tri-modal-foot { padding: 6px 12px calc(6px + env(safe-area-inset-bottom)); }
+  .tri-menu-panel {
+    width: 100vw;
+    height: 100dvh;
+    max-height: none;
+    border: none;
+    border-radius: 0;
+  }
+  .tri-menu-panel-body { overflow-y: auto; padding: 10px 14px calc(12px + env(safe-area-inset-bottom)); }
+  .tri-pause-card,
+  .tri-ending-card { max-height: calc(100dvh - 16px); overflow-y: auto; padding: 14px 18px; }
+  .tri-ending-title { font-size: 22px; }
+
+  /* ---------- 左右抽屉/决策栏：紧凑页头，内容独立滚动 ---------- */
+  .tri-drawer-head { padding-top: calc(5px + env(safe-area-inset-top)); }
+  .tri-drawer-tabs { padding: 4px 8px; gap: 4px; }
+  .tri-drawer-tab { min-height: 38px; font-size: 10px; padding: 0 10px; }
+  .tri-drawer-tools { padding: 3px 8px; }
+  .tri-panel-right .tri-deck-head { padding: 5px 12px 4px; }
+  .tri-panel-right .tri-deck-name { font-size: 13px; }
+  .tri-panel-right .tri-deck-collapse { top: calc(6px + env(safe-area-inset-top)); width: 38px; height: 38px; }
+  .tri-panel-right .tri-tabs { padding: 4px 8px; gap: 4px; }
+  .tri-panel-right .tri-tab { min-height: 38px; min-width: 56px; font-size: 9.5px; padding: 0 8px; }
+  .tri-panel-right .tri-panel-foot { padding-bottom: calc(4px + env(safe-area-inset-bottom)); }
+
+  /* ---------- HUD / 底部导航：压缩装饰，不压主舞台 ---------- */
+  .tri-hud-band { height: 16px; font-size: 6px; padding: 0 10px; gap: 6px; }
+  .tri-hud-top { min-height: 32px; padding: 2px 10px 0; }
+  .tri-hud-brandtext b { font-size: 11.5px; }
+  .tri-hud-act { min-height: 34px; height: 34px; padding: 0 8px; }
+  .tri-hud-alertband { height: 17px; font-size: 8px; }
+  .tri-mobilenav-btn { min-height: 44px; font-size: 8px; }
+  .tri-mobilenav-icon svg { width: 18px; height: 18px; }
+  .tri-mobilenav-label { display: none; }
+  .tri-dock { bottom: calc(44px + env(safe-area-inset-bottom)); max-height: calc(100dvh - 44px - env(safe-area-inset-bottom)); }
+  .tri-dock-inner { padding: 10px 12px calc(10px + env(safe-area-inset-bottom)); gap: 8px; }
+  .tri-dock-btn { min-height: 44px; }
+  .tri-toasts { bottom: calc(54px + env(safe-area-inset-bottom)); }
+
+  /* ---------- 顶栏抽屉/弹层里的长内容统一允许内部滚动 ---------- */
+  .tri-panel-body,
+  .tri-tabpanel,
+  .tri-techbook-body,
+  .tri-politics-body,
+  .tri-event-body { overscroll-behavior: contain; }
+}
+
+/* 特别矮的横屏（如 568×320）：进一步隐藏非关键信息，保证按钮可见 */
+@media (max-width: 1024px) and (orientation: landscape) and (max-height: 360px) {
+  .tri-menu-content { padding-top: 4px; padding-bottom: 22px; gap: 12px; grid-template-columns: minmax(0, 1fr) minmax(220px, 36vw); }
+  .tri-menu-title { font-size: clamp(32px, 9.4vh, 42px); }
+  .tri-menu-tagline { -webkit-line-clamp: 1; }
+  .tri-menu-btn { min-height: 38px; font-size: 10.5px; }
+  .tri-menu-foot { display: none; }
+  .tri-newgame-heading h1 { font-size: 18px; }
+  .tri-newgame-sub { display: none; }
+  .tri-modal-head { min-height: 38px; padding-top: calc(3px + env(safe-area-inset-top)); }
+  .tri-modal-close { width: 38px; height: 38px; }
+  .tri-hud-band { display: none; }
+  .tri-hud-top { min-height: 30px; }
+  .tri-hud-alertband { display: none; }
+}
+
+
+/* 手机横屏刘海/挖孔安全区：左右内边距不吃掉按钮 */
+@media (max-width: 1024px) and (orientation: landscape) and (max-height: 560px) {
+  /* 横屏刘海安全区 */
+  .tri-menu-content {
+    padding-left: max(22px, env(safe-area-inset-left));
+    padding-right: max(22px, env(safe-area-inset-right));
+  }
+  .tri-menu-foot {
+    left: max(22px, env(safe-area-inset-left));
+    right: max(22px, env(safe-area-inset-right));
+  }
+  .tri-newgame-inner {
+    padding-left: max(14px, env(safe-area-inset-left));
+    padding-right: max(14px, env(safe-area-inset-right));
+  }
+  .tri-modal-content {
+    padding-left: max(12px, env(safe-area-inset-left));
+    padding-right: max(12px, env(safe-area-inset-right));
+  }
+  .tri-modal-head,
+  .tri-drawer-head,
+  .tri-panel-right .tri-deck-head,
+  .tri-panel-right .tri-tabs {
+    padding-left: max(12px, env(safe-area-inset-left));
+    padding-right: max(12px, env(safe-area-inset-right));
+  }
+  .tri-hud-band,
+  .tri-hud-top { padding-left: max(10px, env(safe-area-inset-left)); padding-right: max(10px, env(safe-area-inset-right)); }
+  .tri-mobilenav {
+    padding-left: env(safe-area-inset-left);
+    padding-right: env(safe-area-inset-right);
+  }
+}

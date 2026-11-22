@@ -181,3 +181,10 @@ node .\artifacts\ui-v15\_qa\qa-v15.mjs 'http://127.0.0.1:5173/?skipstartup=1' .\
   全部保留，未破坏契约。
 - 移动端新增的 `.tri-mobilenav / .tri-mobile-scrim / .tri-drawer-tabs / .tri-drawer-tools / .tri-curve-*` 类均为新增，
   桌面默认 `display:none` 或零影响。
+
+
+## 手机横屏适配（v1.4.1）
+
+- 新增 `@media (max-width:1024px) and (orientation:landscape) and (max-height:560px)` 横屏布局，详见 `docs/MOBILE_LANDSCAPE.md`。
+- 主菜单双栏、新纪元双栏、弹窗全屏内部滚动、抽屉紧凑页头、底部导航图标化、刘海安全区。
+- 验收尺寸 844×390 / 667×375 / 568×320；竖屏 390×844 与桌面 1280×720 回归通过。

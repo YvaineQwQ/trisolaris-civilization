@@ -292,3 +292,22 @@ node scripts/qa-run.mjs 'http://127.0.0.1:5173/?autostart=1&seed=DEMO&difficulty
 - 无头 SwiftShader 下 3D 近景贴图上传慢/画面异常；已用 headed GPU Edge 验证最终视觉，建议用户以硬件 GPU 浏览器为准。
 - 启动 PV 默认每次会话播放一次；?startup=1（autostart 时）或 replayStartup 可强制重播。
 - 移动端未在真机 iOS Safari 做长时回归。
+
+---
+
+# 附录：v1.4.1 手机横屏适配验收
+
+日期：2026-11-22 | 环境：Windows 11 / Edge 158 / Node v26.13.1
+
+| 项目 | 结果 |
+| --- | --- |
+| tsc --noEmit | 0 错误 |
+| 全量测试 | 15 文件 / 219 用例通过 |
+| vite build | 通过 |
+| 844×390 横屏（菜单/新纪元/主游戏/档案/决策/政治/科技树/终端） | 通过，截图见 docs/MOBILE_LANDSCAPE.md |
+| 667×375 横屏 | 通过 |
+| 568×320 横屏 | 通过，HUD 自动精简 |
+| 390×844 竖屏回归 | 通过，无变化 |
+| 1280×720 桌面回归 | 通过，无变化 |
+| 页面级横向溢出 | 无（667 科技树 pageScrollW=667） |
+| 运行期异常 | 0 exception / 0 console error / 0 failed request |
