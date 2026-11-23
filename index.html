@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>三体纪元 · TRISOLARIS: CIVILIZATION</title>
+    <link rel="icon" href="./startup/council-emblem-v7-mark.png" />
+    <link rel="preload" as="style" href="./fonts/fonts.css" />
+    <link rel="stylesheet" href="./fonts/fonts.css" />
+    <link rel="stylesheet" href="./fonts/harmonyos-sans.css" />
+    <meta name="description" content="硬科幻三体天体力学文明经营策略游戏" />
+    <script type="module" crossorigin src="./assets/index-CfI-bzyq.js"></script>
+    <link rel="stylesheet" crossorigin href="./assets/index-C8Rz6d3S.css">
+  </head>
+  <body>
+    <!-- v1.4 启动动画首帧黑幕：由 src/startup 的 dismissStartupBootVeil() 移除 -->
+    <div id="tri-boot-veil" aria-hidden="true"></div>
+    <style>
+      #tri-boot-veil { position: fixed; inset: 0; z-index: 2147482999; background: #000; }
+    </style>
+    <script>
+      (function () {
+        var params = new URLSearchParams(location.search);
+        var autostart = params.get("autostart") === "1";
+        var skip = params.get("skipstartup") === "1" || (autostart && params.get("startup") !== "1");
+        if (skip) {
+          var v0 = document.getElementById("tri-boot-veil");
+          if (v0 && v0.parentNode) v0.parentNode.removeChild(v0);
+          return;
+        }
+        setTimeout(function () {
+          var v = document.getElementById("tri-boot-veil");
+          if (v && v.parentNode) v.parentNode.removeChild(v);
+        }, 15000);
+      })();
+    </script>
+    <div id="app">
+      <canvas id="scene-canvas" aria-label="星系观测画面"></canvas>
+      <div id="ui-root"></div>
+    </div>
+  </body>
+</html>

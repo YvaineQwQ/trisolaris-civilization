@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="240" height="56" viewBox="0 0 240 56" fill="none" role="img" aria-label="Parallelogram tab base" shape-rendering="geometricPrecision">
+  <title>Parallelogram tab base</title>
+  <defs>
+    <linearGradient id="tabFill" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#0D1620" stop-opacity=".96"/>
+      <stop offset=".55" stop-color="#090F16" stop-opacity=".94"/>
+      <stop offset="1" stop-color="#060A0F" stop-opacity=".96"/>
+    </linearGradient>
+    <linearGradient id="tabTop" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#37E5FF" stop-opacity=".08"/>
+      <stop offset=".42" stop-color="#37E5FF" stop-opacity=".5"/>
+      <stop offset="1" stop-color="#37E5FF" stop-opacity=".12"/>
+    </linearGradient>
+  </defs>
+  <path d="M14 2 H238 L226 54 H2 Z" fill="url(#tabFill)" stroke="#37E5FF" stroke-opacity=".42" stroke-width="1.2"/>
+  <path d="M19 7 H231 L222 49 H7 Z" stroke="#37E5FF" stroke-opacity=".12" stroke-width="1"/>
+  <path d="M21 7.5 H226" stroke="url(#tabTop)" stroke-width="1.4"/>
+  <path d="M13 6 L4 50" stroke="#FFC857" stroke-opacity=".72" stroke-width="2"/>
+  <path d="M216 14 H224 M219 22 H227 M221 30 H229" stroke="#37E5FF" stroke-opacity=".35" stroke-width="1"/>
+  <path d="M20 44 H212" stroke="#37E5FF" stroke-opacity=".08" stroke-width="1"/>
+</svg>

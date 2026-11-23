@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32" role="img" aria-label="45度排线平铺底纹" shape-rendering="geometricPrecision">
+  <title>45 度排线平铺底纹（印刷画册）</title>
+  <g fill="none" stroke="#111111" stroke-width="1" stroke-opacity="0.14" stroke-linecap="square">
+    <path d="M0 8 L8 0 M0 16 L16 0 M0 24 L24 0 M0 32 L32 0 M8 32 L32 8 M16 32 L32 16 M24 32 L32 24"/>
+  </g>
+  <g fill="none" stroke="#111111" stroke-width="1" stroke-opacity="0.26" stroke-linecap="square">
+    <path d="M0 32 L32 0"/>
+  </g>
+</svg>

@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128" fill="none" role="img" aria-label="Era 1 emblem: tribal sky-watching" shape-rendering="geometricPrecision">
+  <title>Era 1 emblem</title>
+  <defs>
+    <radialGradient id="iconBg" cx="50%" cy="50%" r="50%">
+      <stop offset="0" stop-color="#0B1118" stop-opacity=".85"/>
+      <stop offset=".72" stop-color="#080D13" stop-opacity=".7"/>
+      <stop offset="1" stop-color="#05080C" stop-opacity=".55"/>
+    </radialGradient>
+  </defs>
+  <circle cx="64" cy="64" r="58" fill="url(#iconBg)"/>
+  <circle cx="64" cy="64" r="56" stroke="#37E5FF" stroke-opacity=".36" stroke-width="1"/>
+  <circle cx="64" cy="64" r="50" stroke="#8FE9FF" stroke-opacity=".55" stroke-width="4" stroke-dasharray="1.1 7.63"/>
+  <circle cx="64" cy="64" r="44" stroke="#37E5FF" stroke-opacity=".15" stroke-width="1"/>
+  <path d="M53.42 35.52 A56 56 0 0 1 84.88 45.12" stroke="#FFC857" stroke-opacity=".85" stroke-width="2.2" stroke-linecap="round"/>
+  <path d="M100.28 84.62 A56 56 0 0 1 95.84 92.44" stroke="#37E5FF" stroke-opacity=".9" stroke-width="2" stroke-linecap="round"/>
+  <g>
+    <path d="M57 37.5 L78 44.5 L47 48.5 Z" stroke="#37E5FF" stroke-opacity=".3" stroke-width="1" stroke-dasharray="2 3"/>
+    <circle cx="57" cy="37.5" r="5" fill="#FFC857" fill-opacity=".92"/>
+    <circle cx="57" cy="37.5" r="8.6" stroke="#FFC857" stroke-opacity=".3" stroke-width="1"/>
+    <circle cx="78" cy="44.5" r="3.6" fill="#37E5FF" fill-opacity=".9"/>
+    <circle cx="78" cy="44.5" r="6.4" stroke="#37E5FF" stroke-opacity=".3" stroke-width="1"/>
+    <circle cx="47" cy="48.5" r="2.7" fill="#B48CFF" fill-opacity=".9"/>
+    <circle cx="47" cy="48.5" r="5" stroke="#B48CFF" stroke-opacity=".28" stroke-width="1"/>
+  </g>
+  <g stroke="#E8F2F7" fill="none">
+    <path d="M43 88 V72 M51 89 V70 M59 90 V68 M67 90 V68 M75 89 V70 M83 88 V72" stroke-opacity=".85" stroke-width="3"/>
+    <path d="M43 72 H51 M75 70 H83" stroke-opacity=".6" stroke-width="2.5"/>
+    <path d="M62 90 V59 H66 V90" stroke="#FFC857" stroke-opacity=".75" stroke-width="2"/>
+    <path d="M36 93 H92" stroke-opacity=".3" stroke-width="1"/>
+  </g>
+  <circle cx="64" cy="57" r="1.8" fill="#FFC857"/>
+  <path d="M36 93 l5 -7 M50 93 l5 -7 M76 93 l5 -7 M90 93 l5 -7" stroke="#37E5FF" stroke-opacity=".18" stroke-width="1"/>
+</svg>

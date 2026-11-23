@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128" fill="none" role="img" aria-label="版画线稿角标" shape-rendering="geometricPrecision">
+  <title>版画线稿角标（左上角，其余三角旋转/镜像使用）</title>
+  <g stroke="#111111" fill="none" stroke-linecap="square">
+    <path d="M2 30 V2 H30" stroke-width="2" stroke-opacity="0.92"/>
+    <path d="M7 40 V7 H40" stroke-width="1" stroke-opacity="0.34"/>
+    <path d="M14 52 V14 H52" stroke-width="1" stroke-opacity="0.18" stroke-dasharray="2 5"/>
+    <path d="M2 62 V56 M30 2 H36 M2 44 V38 M44 2 H50" stroke-width="2" stroke-opacity="0.55"/>
+    <path d="M56 14 H74 M56 19 H67 M14 56 V74 M19 56 V67" stroke-width="1" stroke-opacity="0.45"/>
+    <circle cx="56" cy="56" r="9" stroke-width="1" stroke-opacity="0.7"/>
+    <circle cx="56" cy="56" r="3" stroke-width="1" stroke-opacity="0.9"/>
+    <path d="M56 44 V49 M56 63 V68 M44 56 H49 M63 56 H68" stroke-width="1" stroke-opacity="0.5"/>
+  </g>
+  <rect x="24" y="24" width="10" height="10" fill="#FDFD1F" fill-opacity="0.9"/>
+  <path d="M24 38 h10" stroke="#111111" stroke-width="2" stroke-opacity="0.85"/>
+  <path d="M38 24 v10" stroke="#111111" stroke-width="2" stroke-opacity="0.85"/>
+  <g fill="#111111" fill-opacity="0.55">
+    <rect x="84" y="2" width="1" height="5"/><rect x="90" y="2" width="1" height="5"/><rect x="96" y="2" width="1" height="5"/>
+    <rect x="2" y="84" width="5" height="1"/><rect x="2" y="90" width="5" height="1"/><rect x="2" y="96" width="5" height="1"/>
+  </g>
+</svg>

@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="712" height="614" viewBox="187 239 712 614" fill="none" role="img" aria-label="纪元存续理事会徽记" shape-rendering="geometricPrecision">
+  <title>纪元存续理事会徽记 / council emblem mark</title>
+  <desc>小尺寸徽记：三颗银白天体 + 月牙轨道弧 + 右上箭头；无辉光、无文字、透明底。</desc>
+  <g id="council-emblem-mark">
+    <path d="M 216.305 639.471 A 364 364 0 0 0 853.028 639.471 L 790.056 604.564 A 292 292 0 0 1 279.278 604.564 Z" fill="#66717F"/>
+    <polygon points="872.932 529.308 869.941 652.276 770.234 597.007" fill="#D9E2EC"/>
+    <circle cx="360" cy="387" r="122" fill="#B7C3D1"/>
+    <circle cx="682" cy="417" r="84" fill="#B7C3D1"/>
+    <circle cx="562" cy="585" r="60" fill="#AAB7C6"/>
+  </g>
+</svg>
