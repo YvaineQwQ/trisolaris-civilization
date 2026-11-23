@@ -246,7 +246,7 @@ export function createEventDrawer(shell: GameShell): EventDrawerHandle {
     if (!current) return;
     title.textContent = current.title;
     short.textContent = current.short;
-    const src = current.illustration.startsWith("/") ? current.illustration : "/" + current.illustration;
+    const src = current.illustration.startsWith("http") ? current.illustration : "./" + current.illustration.replace(/^\/+/, "");
     if (image.getAttribute("src") !== src) {
       figure.classList.add("is-missing");
       image.src = src;

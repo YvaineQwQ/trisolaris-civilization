@@ -93,7 +93,8 @@ export function buildEventModal(shell: GameShell, close: () => void): ModalInsta
     fallback.appendChild(el("span", { cls: "tri-eventdoc-artkicker", text: "// EVENT PLATE" }));
     fallback.appendChild(el("span", { cls: "tri-eventdoc-artmark", text: "事件档案" }));
     fallback.appendChild(el("span", { cls: "tri-eventdoc-artid", text: active.defId }));
-    const src = active.illustration.startsWith("/") ? active.illustration : "/" + active.illustration;
+    /* 相对路径：dev / Netlify 根目录 / GitHub Pages 子路径都能加载。 */
+    const src = active.illustration.startsWith("http") ? active.illustration : "./" + active.illustration.replace(/^\/+/, "");
     const img = document.createElement("img");
     img.className = "tri-eventdoc-img";
     img.alt = active.title;
