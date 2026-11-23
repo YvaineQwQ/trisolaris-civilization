@@ -418,14 +418,16 @@ export function createGameScreen(ctx: UiContext): ScreenHandle {
     if (modalActive != null) return;
     if (outcomeReportId === report.id) return;
     outcomeReportId = report.id;
+    /* 即使报告到达时玩家已经手动暂停，也把这次暂停标记为“结算暂停”，
+       确认后统一恢复，避免报告关闭后停在无按钮的暂停遮罩上。 */
     if (!view.meta.paused) {
       try {
         safeApi()?.actions.togglePause();
-        autoPausedForOutcome = true;
       } catch (error) {
         console.warn("[trisolaris] pause for event outcome failed", error);
       }
     }
+    autoPausedForOutcome = true;
     modals?.open("eventResult");
   }
 
@@ -454,7 +456,7 @@ export function createGameScreen(ctx: UiContext): ScreenHandle {
   function updatePause(view: ViewModel): void {
     const finished = isFinished(view);
     /* v1.6.1：事件待决时显示非阻塞抽屉，不再让暂停遮罩盖住抉择/观测区。 */
-    const hasEventPrompt = Boolean(view.events?.active) || eventDrawer.visible();
+    const hasEventPrompt = Boolean(view.events?.active) || Boolean(view.events?.outcomeReport) || eventDrawer.visible();
     const shouldShow = view.meta.paused && !finished && !hasEventPrompt && (modals?.active() ?? null) == null;
     pauseOverlay.classList.toggle("tri-hidden", !shouldShow);
     if (shouldShow) {

@@ -13,6 +13,13 @@ GitHub：https://github.com/YvaineQwQ/trisolaris-civilization
 4. 字体：内置 HarmonyOS Sans SC 四档（Regular 400 / Medium 500 / Bold 700 / Black 900），中文主标题/正文/UI 标签按该层级；数字与终端读数使用等宽字体。
 5. 上一版的编年史、非阻塞事件抽屉、192 项科技树、六时代、设计系统保留。
 
+## 18:45 热修复
+
+- 结算报告 modal 的 update 每 100ms 重建按钮，真实鼠标点击会在 mousedown/mouseup 之间丢失；改为同 report id 不重建 DOM。
+- 结算暂停即使玩家已手动暂停也记录为“结算暂停”，确认后统一恢复；暂停遮罩不再覆盖结算/事件 UI。
+- 所有 modal 关闭后强制 requestRefresh，避免 onClose 已清状态但 UI 仍显示旧界面。
+- 修正「静默的春天 / 休养生息」扣粮、「流民潮 / 开门接纳」文本与数值矛盾。
+
 ## 验证
 
 - tsc：0 错误

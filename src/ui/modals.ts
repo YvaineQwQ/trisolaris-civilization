@@ -130,6 +130,8 @@ export function createModals(shell: GameShell): ModalsHandle {
       console.warn("[trisolaris] modal destroy failed", error);
     }
     clear(dialog);
+    /* 关闭任何模态后立即刷新一次视图，避免 onClose 已修改状态但 UI 仍显示旧画面。 */
+    shell.requestRefresh();
   }
 
   return {

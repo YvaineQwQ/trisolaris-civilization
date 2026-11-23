@@ -102,6 +102,7 @@ export function buildEventResultModal(shell: GameShell, close: () => void): Moda
     on(button, "click", () => {
       acknowledge();
       close();
+      shell.requestRefresh();
     });
   }
 
@@ -111,13 +112,17 @@ export function buildEventResultModal(shell: GameShell, close: () => void): Moda
     el: root,
     update(view: ViewModel) {
       const next = view.events?.outcomeReport ?? null;
-      if (next) {
-        report = next;
-        render();
-      }
+      if (!next) return;
+      /* 关键：不能在每次 100ms 视图刷新时重建 DOM，否则「确认结算」按钮
+         会在 mousedown/mouseup 之间被替换，真实点击永远落空。 */
+      if (report && report.id === next.id) return;
+      report = next;
+      acknowledged = false;
+      render();
     },
     onClose() {
       acknowledge();
+      shell.requestRefresh();
     },
     destroy() {
       clear(root);

@@ -941,7 +941,6 @@ export const EVENT_DEFS: GameEventDef[] = [
       ch("rest", "休养生息", "不安排重活，让文明喘口气", "这个春天没有人饿死，也没有人累死。纪年史后来只写了一句话：那年春天的风很轻。", {
         stability: 7,
         populationPct: 0.015,
-        resources: { food: -100 },
         influence: { hope: 1.6, unity: 1.2 },
       }),
     ],
@@ -1001,7 +1000,7 @@ export const EVENT_DEFS: GameEventDef[] = [
     repeatable: true,
     cooldownTurns: 14,
     choices: [
-      ch("admit", "开门接纳", "放进城，登记劳力，分给荒地", "新城墙外的窝棚在冬天前变成了街区。第二年春耕，城里的粮仓多收了两成。", {
+      ch("admit", "开门接纳", "放进城，登记劳力，分给荒地", "第一年冬天的粮仓见了底；第二年春耕，城里的粮仓多收了两成。", {
         populationPct: 0.04,
         resources: { food: -160 },
         stability: 2,
