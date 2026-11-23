@@ -75,7 +75,7 @@ npm run test:e2e   # 终端 B，约 17 分钟，55 项浏览器验收
 - **事件选择修复**：事件不再自动暂停；点击抉择后不会跳转暂停遮罩，模拟继续运行，30 秒后照常送达实际结算报告。
 - **星历 0 年**：新游戏从 `星历 0 年` 开始；编年史、事件摘要、底栏年份统一取整，不再出现 `2187.0000000001` 这类浮点尾巴。
 - **字体**：内置 HarmonyOS Sans SC Regular / Medium / Bold / Black（封面主字体），数字与终端读数继续使用等宽字体；中文标题 700/900，UI 标签 500，正文 400。
-- **在线地址**：GitHub Pages 永久镜像 https://yvaineqwq.github.io/trisolaris-civilization/ ；Netlify Drop 临时站 https://deft-donut-540274.netlify.app （访问密码 My-Drop-Site，需在 Netlify 页面 Claim 后永久保留）。
+- **在线地址**：GitHub Pages 永久镜像 https://yvaineqwq.github.io/trisolaris-civilization/ ；Netlify Drop 临时站 https://majestic-bubblegum-33ded9.netlify.app （访问密码 My-Drop-Site，需在 Netlify 页面 Claim 后永久保留）。
 
 ## v1.6 新增（2026-11）· 科技树与六时代重构
 
