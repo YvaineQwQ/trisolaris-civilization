@@ -10,8 +10,8 @@
 :root {
   /* ---- 字体角色 -------------------------------------------------- */
   --font-sans: "HarmonyOS Sans SC", "Noto Sans SC", "Noto Sans", "Microsoft YaHei", "PingFang SC", system-ui, sans-serif;
-  --font-display: "Archivo", "Novecento Sans Wide", "Arial Black", "Segoe UI Black", "Microsoft YaHei", sans-serif;
-  --font-latin: "Outfit", "Urbanist", "Century Gothic", "Segoe UI", "Microsoft YaHei", sans-serif;
+  --font-display: "Archivo", "Novecento Sans Wide", "Arial Black", "Segoe UI Black", "HarmonyOS Sans SC", "Noto Sans SC", "Microsoft YaHei", sans-serif;
+  --font-latin: "Outfit", "Urbanist", "Century Gothic", "Segoe UI", "HarmonyOS Sans SC", "Noto Sans SC", "Microsoft YaHei", sans-serif;
   --font-tech: "Space Grotesk", "JetBrains Mono", "Cascadia Mono", Consolas, ui-monospace, monospace;
   --font-mono: "JetBrains Mono", "Cascadia Mono", "Cascadia Code", Consolas, ui-monospace, monospace;
 
@@ -264,3 +264,19 @@ input[type="number"], .tri-input-number { font-family: var(--font-tech); font-va
   :root { --cut-md: 8px; }
 }
 .tri-root .tri-evdraw-band, .tri-root .tri-chronicle-filter, .tri-root .tri-techbook-count, .tri-root .tri-ticker-item, .tri-root .tri-evdraw-risk { border-radius: 999px !important; }
+/* v1.7 字体层级：HarmonyOS Sans SC 三档 + 等宽数据 */
+.tri-root .tri-btn-label,
+.tri-root .tri-btn,
+.tri-root .tri-tab,
+.tri-root .tri-dock-label,
+.tri-root .tri-chip,
+.tri-root .tri-kv-label,
+.tri-root .tri-field-label { font-weight: 500; }
+.tri-root h1,
+.tri-root .tri-menu-title,
+.tri-root .tri-ending-title,
+.tri-root .tri-modal-title-text h2,
+.tri-root .tri-drawer-title-text,
+.tri-root .tri-techbook-title { font-family: var(--font-display); font-weight: 900; letter-spacing: 0.02em; }
+.tri-root h2, .tri-root h3, .tri-root .tri-section-title, .tri-root .tri-panel-title, .tri-root .tri-hud-era { font-weight: 700; }
+.tri-root .tri-note, .tri-root .tri-eventdoc-text, .tri-root .tri-chronicle-item-detail, .tri-root .tri-evdraw-choicedesc { font-weight: 400; line-height: 1.65; }

@@ -75,7 +75,7 @@ export function createEventTicker(opts: { onOpenChronicle: () => void }): EventT
         tone: entry.category === "hazard" || entry.category === "environment" ? "major" : "normal",
         label: "事件",
         title: entry.title,
-        meta: entry.year + " 年 · " + entry.choiceLabel,
+        meta: Math.round(entry.year) + " 年 · " + entry.choiceLabel,
         turn: entry.turn,
       });
     }
@@ -89,7 +89,7 @@ export function createEventTicker(opts: { onOpenChronicle: () => void }): EventT
         tone: "death",
         label: "伤亡",
         title: log.message.length > 46 ? log.message.slice(0, 46) + "…" : log.message,
-        meta: log.year + " 年",
+        meta: Math.round(log.year) + " 年",
         turn: log.turn,
       });
     }
@@ -102,7 +102,7 @@ export function createEventTicker(opts: { onOpenChronicle: () => void }): EventT
         tone: "major",
         label: "大事",
         title: log.message.length > 44 ? log.message.slice(0, 44) + "…" : log.message,
-        meta: log.year + " 年",
+        meta: Math.round(log.year) + " 年",
         turn: log.turn,
       });
       break;

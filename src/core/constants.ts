@@ -33,7 +33,7 @@ export const TRAIL_INTERVAL = 0.02;
 export const MAX_TRAIL_POINTS = 1800;
 
 /** Simulation "current year" label base (fictional calendar). */
-export const CALENDAR_START_YEAR = 2187;
+export const CALENDAR_START_YEAR = 0;
 
 export const STAR_COLORS: Record<string, string> = {
   A: "#ff6b4a",

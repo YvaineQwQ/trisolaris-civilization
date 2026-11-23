@@ -453,7 +453,9 @@ export function createGameScreen(ctx: UiContext): ScreenHandle {
 
   function updatePause(view: ViewModel): void {
     const finished = isFinished(view);
-    const shouldShow = view.meta.paused && !finished && (modals?.active() ?? null) == null;
+    /* v1.6.1：事件待决时显示非阻塞抽屉，不再让暂停遮罩盖住抉择/观测区。 */
+    const hasEventPrompt = Boolean(view.events?.active) || eventDrawer.visible();
+    const shouldShow = view.meta.paused && !finished && !hasEventPrompt && (modals?.active() ?? null) == null;
     pauseOverlay.classList.toggle("tri-hidden", !shouldShow);
     if (shouldShow) {
       setText(

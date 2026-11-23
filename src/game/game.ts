@@ -394,8 +394,8 @@ export class Game implements GameApi, GameActions {
       return;
     }
 
-    // 11.5) Random event roll (v1.3). When an event fires the simulation pauses
-    // until the player chooses; all effects are applied inside the events system.
+    // 11.5) Random event roll. v1.6：事件只打开非阻塞抽屉，不暂停模拟，
+    // 玩家可以先观察数据再抉择；效果仍由事件系统统一落地。
     if (s.events) {
       const pending = maybeTriggerEvent(s.events, {
         civ: s.civ,
@@ -413,9 +413,8 @@ export class Game implements GameApi, GameActions {
         this.addLog(
           "event",
           "warning",
-          `随机事件触发：《${def?.title ?? pending.defId}》——模拟已暂停，等待你的抉择。`,
+          `随机事件触发：《${def?.title ?? pending.defId}》——右侧待决，模拟继续运行。`,
         );
-        this.paused = true;
       }
     }
 

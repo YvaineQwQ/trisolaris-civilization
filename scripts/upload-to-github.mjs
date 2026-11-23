@@ -18,11 +18,20 @@ const headers = {
   "User-Agent": "TRISOLARIS-uploader",
 };
 async function api(path, options = {}) {
-  const res = await fetch(API + path, { ...options, headers: { ...headers, ...(options.headers || {}) } });
-  const text = await res.text();
-  let data; try { data = JSON.parse(text); } catch { data = text; }
-  if (!res.ok) throw new Error(res.status + " " + path + " :: " + JSON.stringify(data).slice(0, 500));
-  return data;
+  let lastError = null;
+  for (let attempt = 0; attempt < 6; attempt += 1) {
+    const res = await fetch(API + path, { ...options, headers: { ...headers, ...(options.headers || {}) } });
+    const text = await res.text();
+    let data; try { data = JSON.parse(text); } catch { data = text; }
+    if (res.ok) return data;
+    lastError = new Error(res.status + " " + path + " :: " + JSON.stringify(data).slice(0, 500));
+    if ((res.status === 403 || res.status === 429) && attempt < 5) {
+      await new Promise((r) => setTimeout(r, 4000 * (attempt + 1)));
+      continue;
+    }
+    throw lastError;
+  }
+  throw lastError;
 }
 async function walk(dir, base = dir, out = []) {
   for (const entry of await readdir(dir, { withFileTypes: true })) {
@@ -61,13 +70,13 @@ try {
 }
 let parentSha = null;
 try { const ref = await api("/repos/" + owner + "/" + repoName + "/git/ref/heads/main"); parentSha = ref.object.sha; } catch {}
-const sourceRoot = join(process.cwd(), "release", "TRISOLARIS-v1.6-source");
+const sourceRoot = join(process.cwd(), "release", "TRISOLARIS-v1.7-source");
 const files = (await walk(sourceRoot)).sort();
 console.log("文件数:", files.length);
 const tree = new Array(files.length);
 let done = 0;
 let cursor = 0;
-const CONCURRENCY = 8;
+const CONCURRENCY = 3;
 async function worker() {
   while (true) {
     const index = cursor++;
@@ -83,7 +92,7 @@ async function worker() {
 }
 await Promise.all(Array.from({ length: CONCURRENCY }, () => worker()));
 const treeRes = await api("/repos/" + owner + "/" + repoName + "/git/trees", { method: "POST", body: JSON.stringify({ tree }) });
-const commit = await api("/repos/" + owner + "/" + repoName + "/git/commits", { method: "POST", body: JSON.stringify({ message: "TRISOLARIS v1.6.0 — 科技树192项 / 六时代 / 事件区间 / 编年史 / 新徽章 / 设计系统", tree: treeRes.sha, parents: parentSha ? [parentSha] : [] }) });
+const commit = await api("/repos/" + owner + "/" + repoName + "/git/commits", { method: "POST", body: JSON.stringify({ message: "TRISOLARIS v1.7.0 — 新徽章 / 事件选择修复 / 星历0年 / HarmonyOS Sans SC / Netlify", tree: treeRes.sha, parents: parentSha ? [parentSha] : [] }) });
 try { await api("/repos/" + owner + "/" + repoName + "/git/refs", { method: "POST", body: JSON.stringify({ ref: "refs/heads/main", sha: commit.sha }) }); }
 catch (e) { if (!String(e).includes(" 422 ")) throw e; await api("/repos/" + owner + "/" + repoName + "/git/refs/heads/main", { method: "PATCH", body: JSON.stringify({ sha: commit.sha, force: true }) }); }
 await api("/repos/" + owner + "/" + repoName, { method: "PATCH", body: JSON.stringify({ default_branch: "main" }) });

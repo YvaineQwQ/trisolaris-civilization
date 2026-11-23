@@ -16,7 +16,7 @@ export const STARTUP_MARKUP = `
       <b>三体纪元 · TRISOLARIS</b>
       <span>CIVILIZATION ARCHIVE / 文明档案</span>
     </div>
-    <span class="su-brand-build">V1.6 · CONTINUITY PROTOCOL</span>
+    <span class="su-brand-build">V1.7 · CONTINUITY PROTOCOL</span>
   </div>
 
   <div class="su-emblem-slot">
@@ -79,7 +79,7 @@ export const STARTUP_MARKUP = `
       <div class="su-doc-en">CIVILIZATION CONTINUITY PROTOCOL</div>
       <dl class="su-meta">
         <div><dt>档案编号 / FILE ID</dt><dd>TRS-EC-0042</dd></div>
-        <div><dt>建档时间 / ISSUED</dt><dd>2187.03.17 · 04:22</dd></div>
+        <div><dt>建档时间 / ISSUED</dt><dd>0000.03.17 · 04:22</dd></div>
         <div><dt>观测站 / STATION</dt><dd>马蹄星观测站 · HORSESHOE</dd></div>
         <div><dt>授权状态 / STATUS</dt><dd class="su-status-value">待授权 / PENDING</dd></div>
       </dl>
