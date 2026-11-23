@@ -26,4 +26,5 @@ GitHub：https://github.com/YvaineQwQ/trisolaris-civilization
 
 - release/TRISOLARIS-v1.7-source.zip
 - release/TRISOLARIS-v1.7-web.zip
-- Netlify Drop 临时站（1 小时内有效，需登录 Claim this site 认领）：https://calm-syrniki-f12d03.netlify.app
+- Netlify Drop 临时站（1 小时内有效，需登录 Claim this site 认领）：https://deft-donut-540274.netlify.app ，密码 My-Drop-Site
+- 永久镜像（GitHub Pages）：https://yvaineqwq.github.io/trisolaris-civilization/

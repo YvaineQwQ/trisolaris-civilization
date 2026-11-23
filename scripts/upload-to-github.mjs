@@ -97,7 +97,7 @@ try { await api("/repos/" + owner + "/" + repoName + "/git/refs", { method: "POS
 catch (e) { if (!String(e).includes(" 422 ")) throw e; await api("/repos/" + owner + "/" + repoName + "/git/refs/heads/main", { method: "PATCH", body: JSON.stringify({ sha: commit.sha, force: true }) }); }
 await api("/repos/" + owner + "/" + repoName, { method: "PATCH", body: JSON.stringify({ default_branch: "main" }) });
 try {
-  await api("/repos/" + owner + "/" + repoName + "/git/refs", { method: "POST", body: JSON.stringify({ ref: "refs/tags/v1.6.0", sha: commit.sha }) });
+  await api("/repos/" + owner + "/" + repoName + "/git/refs", { method: "POST", body: JSON.stringify({ ref: "refs/tags/v1.7.0", sha: commit.sha }) });
   console.log("标签: v1.6.0");
 } catch (e) {
   console.log("标签已存在或创建失败（可忽略）:", String(e).slice(0, 160));
